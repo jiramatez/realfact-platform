@@ -32,9 +32,10 @@ window.Pages.billing = {
     const verificationCount = invoices.filter(i => i.status === 'Pending Verification').length;
     const totalRevenue      = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + i.total, 0);
 
-    const subPlatforms = [...new Set(purchaseLog.map(p => p.subPlatform))];
-    const logTypes     = [...new Set(purchaseLog.map(p => p.type))];
-    const logStatuses  = [...new Set(purchaseLog.map(p => p.status))];
+    const invSubPlatforms = [...new Set(invoices.map(i => i.subPlatform).filter(Boolean))];
+    const subPlatforms    = [...new Set(purchaseLog.map(p => p.subPlatform))];
+    const logTypes        = [...new Set(purchaseLog.map(p => p.type))];
+    const logStatuses     = [...new Set(purchaseLog.map(p => p.status))];
 
     return `
       <div class="page-header">
@@ -98,6 +99,38 @@ window.Pages.billing = {
 
       <!-- Invoices Table -->
       <div id="billing-tab-invoices">
+        <div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
+          <div class="search-bar" style="min-width:200px;flex:1;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="inv-search" class="form-input" placeholder="ค้นหา Invoice ID หรือ Tenant...">
+          </div>
+          <div class="form-group" style="margin:0;min-width:160px;">
+            <select id="inv-filter-platform" class="form-input">
+              <option value="">Sub-Platform ทั้งหมด</option>
+              ${invSubPlatforms.map(sp => `<option value="${sp}">${sp}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;min-width:150px;">
+            <select id="inv-filter-type" class="form-input">
+              <option value="">ประเภททั้งหมด</option>
+              <option value="Subscription">Subscription</option>
+              <option value="Token Top-up">Token Top-up</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;min-width:190px;">
+            <select id="inv-filter-status" class="form-input">
+              <option value="">สถานะทั้งหมด</option>
+              <option value="Paid">Paid</option>
+              <option value="Issued">Issued</option>
+              <option value="Pending Verification">Pending Verification</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-outline btn-sm" id="inv-export-csv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+            <button class="btn btn-outline btn-sm" id="inv-export-pdf"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -106,9 +139,9 @@ window.Pages.billing = {
                 <th>จำนวนเงิน</th><th>VAT</th><th>รวมทั้งสิ้น</th><th>สถานะ</th><th>วันครบกำหนด</th><th>ช่องทาง</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="inv-table-body">
               ${invoices.map(inv => `
-                <tr>
+                <tr data-platform="${inv.subPlatform || ''}" data-type="${inv.type}" data-status="${inv.status}" data-search="${inv.id.toLowerCase()} ${inv.tenantName.toLowerCase()}">
                   <td class="mono text-sm">${inv.id}</td>
                   <td class="font-600">${inv.tenantName}</td>
                   <td>${inv.type === 'Token Top-up' ? '<span class="chip chip-orange">Token Top-up</span>' : '<span class="chip chip-blue">Subscription</span>'}</td>
@@ -123,18 +156,23 @@ window.Pages.billing = {
             </tbody>
           </table>
         </div>
+        <div class="text-sm text-muted p-8" id="inv-count">${invoices.length} รายการ</div>
       </div>
 
       <!-- Purchase Log -->
       <div id="billing-tab-purchase-log" class="hidden">
         <div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
+          <div class="search-bar" style="min-width:200px;flex:1;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="pl-search" class="form-input" placeholder="ค้นหา Tenant หรือ Ref...">
+          </div>
           <div class="form-group" style="margin:0;min-width:160px;">
             <select id="pl-filter-platform" class="form-input">
               <option value="">Sub-Platform ทั้งหมด</option>
               ${subPlatforms.map(sp => `<option value="${sp}">${sp}</option>`).join('')}
             </select>
           </div>
-          <div class="form-group" style="margin:0;min-width:160px;">
+          <div class="form-group" style="margin:0;min-width:150px;">
             <select id="pl-filter-type" class="form-input">
               <option value="">ประเภททั้งหมด</option>
               ${logTypes.map(t => `<option value="${t}">${t}</option>`).join('')}
@@ -146,7 +184,7 @@ window.Pages.billing = {
               ${logStatuses.map(s => `<option value="${s}">${s}</option>`).join('')}
             </select>
           </div>
-          <div class="flex gap-8 ml-auto">
+          <div class="flex gap-8">
             <button class="btn btn-outline btn-sm" id="pl-export-csv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
             <button class="btn btn-outline btn-sm" id="pl-export-pdf"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
           </div>
@@ -161,7 +199,7 @@ window.Pages.billing = {
             </thead>
             <tbody id="pl-table-body">
               ${purchaseLog.map(p => `
-                <tr data-platform="${p.subPlatform}" data-type="${p.type}" data-status="${p.status}">
+                <tr data-platform="${p.subPlatform}" data-type="${p.type}" data-status="${p.status}" data-search="${p.tenantName.toLowerCase()} ${p.ref.toLowerCase()}">
                   <td class="text-sm text-muted">${p.date}</td>
                   <td class="font-600">${p.tenantName}</td>
                   <td class="text-sm">${p.subPlatform}</td>
@@ -175,6 +213,7 @@ window.Pages.billing = {
             </tbody>
           </table>
         </div>
+        <div class="text-sm text-muted p-8" id="pl-count">${purchaseLog.length} รายการ</div>
       </div>
     `;
   },
@@ -194,21 +233,95 @@ window.Pages.billing = {
       });
     });
 
-    // Purchase Log filters
-    const plFP = document.getElementById('pl-filter-platform');
-    const plFT = document.getElementById('pl-filter-type');
-    const plFS = document.getElementById('pl-filter-status');
-    function applyPLFilters() {
-      const platform = plFP ? plFP.value : '';
-      const type     = plFT ? plFT.value : '';
-      const status   = plFS ? plFS.value : '';
-      document.querySelectorAll('#pl-table-body tr').forEach(row => {
-        row.style.display =
-          (!platform || row.dataset.platform === platform) &&
-          (!type     || row.dataset.type     === type)     &&
-          (!status   || row.dataset.status   === status)   ? '' : 'none';
+    // Invoice filters
+    const invSearch = document.getElementById('inv-search');
+    const invFP     = document.getElementById('inv-filter-platform');
+    const invFT     = document.getElementById('inv-filter-type');
+    const invFS     = document.getElementById('inv-filter-status');
+    function applyInvFilters() {
+      const query    = (invSearch?.value || '').toLowerCase();
+      const platform = invFP?.value || '';
+      const type     = invFT?.value || '';
+      const status   = invFS?.value || '';
+      let count = 0;
+      document.querySelectorAll('#inv-table-body tr').forEach(row => {
+        const match =
+          (!query    || (row.dataset.search || '').includes(query)) &&
+          (!platform || row.dataset.platform === platform)          &&
+          (!type     || row.dataset.type     === type)              &&
+          (!status   || row.dataset.status   === status);
+        row.style.display = match ? '' : 'none';
+        if (match) count++;
       });
+      const countEl = document.getElementById('inv-count');
+      if (countEl) countEl.textContent = `${count} รายการ`;
     }
+    invSearch?.addEventListener('input',  applyInvFilters);
+    invFP?.addEventListener('change', applyInvFilters);
+    invFT?.addEventListener('change', applyInvFilters);
+    invFS?.addEventListener('change', applyInvFilters);
+
+    // Invoice Export CSV
+    document.getElementById('inv-export-csv')?.addEventListener('click', () => {
+      const headers = ['เลขที่ใบแจ้งหนี้','Tenant','Sub-Platform','ประเภท','รายละเอียด','จำนวนเงิน','VAT','รวมทั้งสิ้น','สถานะ','วันครบกำหนด','ช่องทาง'];
+      const visible = [...document.querySelectorAll('#inv-table-body tr')].filter(r => r.style.display !== 'none');
+      const ids     = visible.map(r => r.querySelector('td.mono')?.textContent.trim());
+      const rows    = d.invoices.filter(i => ids.includes(i.id));
+      const csv = [headers, ...rows.map(i => [
+        i.id, i.tenantName, i.subPlatform || '-', i.type, i.description, i.amount, i.vat, i.total, i.status, i.dueDate, i.method || '-',
+      ])].map(r => r.map(v => _billingCsvCell(v)).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = `invoices_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    });
+
+    // Invoice Export PDF
+    document.getElementById('inv-export-pdf')?.addEventListener('click', () => {
+      const visible = [...document.querySelectorAll('#inv-table-body tr')].filter(r => r.style.display !== 'none');
+      const ids     = visible.map(r => r.querySelector('td.mono')?.textContent.trim());
+      const rows    = d.invoices.filter(i => ids.includes(i.id)).map(i =>
+        `<tr><td>${i.id}</td><td>${i.tenantName}</td><td>${i.subPlatform || '-'}</td><td>${i.type}</td>
+         <td>${i.description}</td><td>${i.total.toLocaleString('th-TH',{minimumFractionDigits:2})} THB</td>
+         <td>${i.status}</td><td>${i.dueDate}</td><td>${i.method || '-'}</td></tr>`
+      ).join('');
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoices</title>
+        <style>body{font-family:sans-serif;font-size:12px;padding:20px;}
+        table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:6px 8px;}
+        th{background:#f5f5f5;}</style></head><body>
+        <h2>ใบแจ้งหนี้ — ${new Date().toLocaleDateString('th-TH')}</h2>
+        <table><thead><tr><th>เลขที่</th><th>Tenant</th><th>Sub-Platform</th><th>ประเภท</th>
+        <th>รายละเอียด</th><th>รวมทั้งสิ้น</th><th>สถานะ</th><th>ครบกำหนด</th><th>ช่องทาง</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <script>window.onload=function(){window.print();}<\/script></body></html>`;
+      const w = window.open('', '_blank'); w.document.write(html); w.document.close();
+    });
+
+    // Purchase Log filters
+    const plSearch = document.getElementById('pl-search');
+    const plFP     = document.getElementById('pl-filter-platform');
+    const plFT     = document.getElementById('pl-filter-type');
+    const plFS     = document.getElementById('pl-filter-status');
+    function applyPLFilters() {
+      const query    = (plSearch?.value || '').toLowerCase();
+      const platform = plFP?.value || '';
+      const type     = plFT?.value || '';
+      const status   = plFS?.value || '';
+      let count = 0;
+      document.querySelectorAll('#pl-table-body tr').forEach(row => {
+        const match =
+          (!query    || (row.dataset.search || '').includes(query)) &&
+          (!platform || row.dataset.platform === platform)          &&
+          (!type     || row.dataset.type     === type)              &&
+          (!status   || row.dataset.status   === status);
+        row.style.display = match ? '' : 'none';
+        if (match) count++;
+      });
+      const countEl = document.getElementById('pl-count');
+      if (countEl) countEl.textContent = `${count} รายการ`;
+    }
+    plSearch?.addEventListener('input',  applyPLFilters);
     if (plFP) plFP.addEventListener('change', applyPLFilters);
     if (plFT) plFT.addEventListener('change', applyPLFilters);
     if (plFS) plFS.addEventListener('change', applyPLFilters);

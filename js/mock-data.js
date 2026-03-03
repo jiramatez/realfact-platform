@@ -100,12 +100,12 @@ window.MockData = {
 
   // ─── Invoices ───
   invoices: [
-    { id: 'INV-202603-00001', tenantId: 'T-001', tenantName: 'ABC Corporation', type: 'Subscription', description: 'Avatar Pro - March 2026', amount: 4990, vat: 349.30, total: 5339.30, status: 'Paid', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-02', method: 'Card (2C2P)' },
-    { id: 'INV-202603-00002', tenantId: 'T-003', tenantName: 'Thai Finance Group', type: 'Subscription', description: 'Avatar Pro - March 2026', amount: 4990, vat: 349.30, total: 5339.30, status: 'Paid', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-01', method: 'Card (2C2P)' },
-    { id: 'INV-202603-00003', tenantId: 'T-002', tenantName: 'XYZ Trading', type: 'Subscription', description: 'Avatar Starter - March 2026', amount: 990, vat: 69.30, total: 1059.30, status: 'Issued', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null, method: null },
-    { id: 'INV-202603-00004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', type: 'Subscription', description: 'Avatar Pro - March 2026', amount: 4990, vat: 349.30, total: 5339.30, status: 'Pending Verification', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null, method: 'Bank Transfer' },
-    { id: 'INV-202602-00012', tenantId: 'T-001', tenantName: 'ABC Corporation', type: 'Token Top-up', description: 'Token Top-up (5,000 tokens)', amount: 2500, vat: 175.00, total: 2675.00, status: 'Paid', issuedDate: '2026-02-14', dueDate: '2026-02-28', paidDate: '2026-02-14', method: 'Card (2C2P)' },
-    { id: 'INV-202602-00008', tenantId: 'T-008', tenantName: 'Sunrise Education', type: 'Subscription', description: 'Avatar Starter - Feb 2026', amount: 990, vat: 69.30, total: 1059.30, status: 'Overdue', issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: null, method: null },
+    { id: 'INV-202603-00001', tenantId: 'T-001', tenantName: 'ABC Corporation',    subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Paid',                 issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-02', method: 'Card (2C2P)' },
+    { id: 'INV-202603-00002', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Paid',                 issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-01', method: 'Card (2C2P)' },
+    { id: 'INV-202603-00003', tenantId: 'T-002', tenantName: 'XYZ Trading',        subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - March 2026', amount: 990,  vat: 69.30,  total: 1059.30, status: 'Issued',               issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: null },
+    { id: 'INV-202603-00004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Pending Verification', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: 'Bank Transfer' },
+    { id: 'INV-202602-00012', tenantId: 'T-001', tenantName: 'ABC Corporation',    subPlatform: 'Avatar', type: 'Token Top-up', description: 'Token Top-up (5,000 tokens)', amount: 2500, vat: 175.00, total: 2675.00, status: 'Paid',                 issuedDate: '2026-02-14', dueDate: '2026-02-28', paidDate: '2026-02-14', method: 'Card (2C2P)' },
+    { id: 'INV-202602-00008', tenantId: 'T-008', tenantName: 'Sunrise Education',  subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Overdue',              issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: null,         method: null },
   ],
 
   // ─── Purchase Log ───
@@ -333,6 +333,106 @@ window.MockData = {
   paymentChannels: {
     'avatar':  { card2c2p: true,  bankTransfer: true,  promptPay: true  },
     'booking': { card2c2p: false, bankTransfer: true,  promptPay: true  },
+  },
+
+  // ─── Analytics: Revenue Trend monthly (Sep 25 – Feb 26) ───
+  revenueTrend: [
+    { month: 'Sep 25', subscriptions: 10500, tokenTopups:     0 },
+    { month: 'Oct 25', subscriptions: 14200, tokenTopups:  2100 },
+    { month: 'Nov 25', subscriptions: 18900, tokenTopups:  5400 },
+    { month: 'Dec 25', subscriptions: 24800, tokenTopups:  9700 },
+    { month: 'Jan 26', subscriptions: 31500, tokenTopups: 14900 },
+    { month: 'Feb 26', subscriptions: 38500, tokenTopups: 19200 },
+  ],
+
+  // ─── Analytics: Revenue by Sub-Platform monthly ───
+  revenueBySubPlatform: [
+    { month: 'Sep 25', avatar:  6500, booking:  4000 },
+    { month: 'Oct 25', avatar:  9200, booking:  5000 },
+    { month: 'Nov 25', avatar: 15600, booking:  3300 },
+    { month: 'Dec 25', avatar: 19800, booking:  4700 },
+    { month: 'Jan 26', avatar: 29200, booking:  2300 },
+    { month: 'Feb 26', avatar: 44300, booking: 13400 },
+  ],
+
+  // ─── Analytics: Sub-Platform Revenue current period ───
+  subPlatformRevenue: [
+    { name: 'Live Interact', code: 'avatar',  revenue: 20970 },
+    { name: 'AI Booking',    code: 'booking', revenue: 10580 },
+  ],
+
+  // ─── Analytics: Daily Revenue Feb 2026 ───
+  dailyRevenueFeb: [
+    { date: '02-01', revenue: 31500 },
+    { date: '02-03', revenue:  1200 },
+    { date: '02-05', revenue:   980 },
+    { date: '02-07', revenue:  1450 },
+    { date: '02-09', revenue:   760 },
+    { date: '02-11', revenue:  1180 },
+    { date: '02-14', revenue: 18200 },
+    { date: '02-15', revenue:   890 },
+    { date: '02-17', revenue:  1320 },
+    { date: '02-18', revenue:   990 },
+  ],
+
+  // ─── Analytics: Revenue by Plan Tier ───
+  revenueByPlanTier: [
+    { label: 'Live Interact — Enterprise', subs: 1, revenue: 14990, color: '#f15b26' },
+    { label: 'AI Booking — Enterprise',    subs: 1, revenue:  9990, color: '#3b82f6' },
+    { label: 'Live Interact — Pro',        subs: 1, revenue:  4990, color: '#f15b26' },
+    { label: 'AI Booking — Pro',           subs: 2, revenue:  3960, color: '#3b82f6' },
+    { label: 'Live Interact — Starter',    subs: 3, revenue:  2970, color: '#f15b26' },
+  ],
+
+  // ─── Analytics: Top Tenants by Spend ───
+  topTenantsBySpend: [
+    { rank: 1, name: 'GHI Co',              subscriptions: 2, revenue: 24980 },
+    { rank: 2, name: 'ABC Corp',             subscriptions: 2, revenue:  5580 },
+    { rank: 3, name: 'Thai Finance Group',   subscriptions: 1, revenue:  4990 },
+    { rank: 4, name: 'Northern Star Hotel',  subscriptions: 1, revenue:  4990 },
+    { rank: 5, name: 'XYZ Trading',          subscriptions: 1, revenue:  2970 },
+  ],
+
+  // ─── Analytics: Daily API Calls (last 7 days — F-A10.2) ───
+  dailyApiCalls: [
+    { date: '02-25', calls: 1842, inputTokens: 243000, outputTokens: 141000 },
+    { date: '02-26', calls: 2105, inputTokens: 287600, outputTokens: 168400 },
+    { date: '02-27', calls: 2384, inputTokens: 312400, outputTokens: 189200 },
+    { date: '02-28', calls:  980, inputTokens: 128600, outputTokens:  74800 },
+    { date: '03-01', calls: 2241, inputTokens: 298500, outputTokens: 175600 },
+    { date: '03-02', calls: 2567, inputTokens: 341200, outputTokens: 204800 },
+    { date: '03-03', calls: 1562, inputTokens: 198400, outputTokens: 117600 },
+  ],
+
+  // ─── Analytics: Top Customers by API Calls (F-A10.2) ───
+  topCustomers: [
+    { tenantName: 'Thai Finance Group',      apiCalls: 12450 },
+    { tenantName: 'ABC Corporation',         apiCalls:  9830 },
+    { tenantName: 'Smart Retail Co.',        apiCalls:  8240 },
+    { tenantName: 'Digital Agency Thailand', apiCalls:  6780 },
+    { tenantName: 'FutureTech Solutions',    apiCalls:  5920 },
+    { tenantName: 'Bangkok Hospitality',     apiCalls:  4830 },
+    { tenantName: 'Thai E-Commerce Hub',     apiCalls:  3960 },
+    { tenantName: 'MediCare Thailand',       apiCalls:  3120 },
+    { tenantName: 'EDU Platform Group',      apiCalls:  2480 },
+    { tenantName: 'Logistics Pro Co.',       apiCalls:  1840 },
+  ],
+
+  // ─── Analytics: Service Categories (F-A10.3) ───
+  serviceCategories: [
+    { category: 'LLM',       count: 2 },
+    { category: 'Platform',  count: 1 },
+    { category: 'TTS',       count: 1 },
+    { category: 'Embedding', count: 1 },
+  ],
+
+  // ─── Analytics: KPI Summary ───
+  analyticsKPIs: {
+    revenueYTD:           89293.50,
+    apiCallsToday:        1562,
+    apiCallsThisWeek:     4129,
+    apiCallsThisMonth:    6370,
+    totalTokensThisMonth: 1336100,
   },
 
   // ─── Helpers ───

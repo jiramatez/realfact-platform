@@ -18,6 +18,9 @@
     'plans-tokens':        { title: 'Token Packages',        module: 'plansTokens',        ctx: 'backoffice' },
     'plans-bonus':         { title: 'Welcome Bonus',         module: 'plansBonus',         ctx: 'backoffice' },
     'payment-settings':    { title: 'Payment Settings',      module: 'paymentSettings',    ctx: 'backoffice' },
+    'analytics-revenue':   { title: 'Revenue & Billing',      module: 'analyticsRevenue',   ctx: 'backoffice' },
+    'analytics-usage':     { title: 'API Usage Analytics',    module: 'analyticsUsage',     ctx: 'backoffice' },
+    'analytics-customers': { title: 'Customers & Services',   module: 'analyticsCustomers', ctx: 'backoffice' },
     'billing':           { title: 'Billing & Payments', module: 'billing',        ctx: 'backoffice' },
     'billing-verify':    { title: 'ตรวจสอบการชำระ',    module: 'billingVerify',  ctx: 'backoffice' },
     'billing-credit':    { title: 'Credit & Refunds',   module: 'billingCredit',  ctx: 'backoffice' },
@@ -272,6 +275,14 @@
         creditBadge.textContent = creditCount;
         creditBadge.classList.toggle('hidden', creditCount === 0);
       }
+
+      // Parent billing header badge: sum of all sub-badges
+      var billingTotal = verifyCount + overdueCount + creditCount;
+      var parentBillingBadge = document.getElementById('badge-parent-billing');
+      if (parentBillingBadge) {
+        parentBillingBadge.textContent = billingTotal;
+        parentBillingBadge.classList.toggle('hidden', billingTotal === 0);
+      }
     },
 
     // ─── Cost Badge Updater ───
@@ -287,6 +298,13 @@
       if (badge) {
         badge.textContent = pendingCount;
         badge.classList.toggle('hidden', pendingCount === 0);
+      }
+
+      // Parent cost header badge: same total
+      var parentCostBadge = document.getElementById('badge-parent-cost');
+      if (parentCostBadge) {
+        parentCostBadge.textContent = pendingCount;
+        parentCostBadge.classList.toggle('hidden', pendingCount === 0);
       }
     },
 

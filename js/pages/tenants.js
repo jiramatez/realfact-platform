@@ -18,7 +18,7 @@ window.Pages.tenants = {
       const c        = window.Pages.tenants._spColors[sub.subPlatformCode] || '#6b7280';
       const dotColor = sub.status === 'Active' ? c : sub.status === 'Pending' ? '#f59e0b' : '#ef4444';
       const badge    = sub.status === 'Pending'
-        ? `<span style="background:#f59e0b;color:#000;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:3px;">PENDING</span>`
+        ? `<a href="#billing-verify" style="background:#f59e0b;color:#000;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:3px;text-decoration:none;" title="รอ verify payment">PENDING PAYMENT</a>`
         : '';
       return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;border:1px solid ${c}50;background:${c}15;font-size:11px;font-weight:600;color:${c};">
         <span style="width:6px;height:6px;border-radius:50%;background:${dotColor};flex-shrink:0;"></span>
@@ -36,16 +36,14 @@ window.Pages.tenants = {
       .reduce((sum, s) => sum + s.price, 0);
   },
 
-  // ─── Action buttons: view + approve/reject per pending sub ───
+  // ─── Action buttons: view + link to billing-verify if pending payment ───
   _actionBtns(tenantId) {
     const d       = window.MockData;
     const pending = ((d.tenantSubscriptions || {})[tenantId] || []).filter(s => s.status === 'Pending');
     let html = `<button class="btn btn-sm btn-outline tenant-detail-btn" data-id="${tenantId}" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>`;
-    pending.forEach(sub => {
-      html += `
-        <button class="btn btn-sm btn-success sub-approve-btn" data-tenant="${tenantId}" data-sub="${sub.subPlatformCode}" title="อนุมัติ ${sub.label}"><i class="fa-solid fa-check"></i></button>
-        <button class="btn btn-sm btn-danger sub-reject-btn"   data-tenant="${tenantId}" data-sub="${sub.subPlatformCode}" title="ปฏิเสธ ${sub.label}"><i class="fa-solid fa-xmark"></i></button>`;
-    });
+    if (pending.length > 0) {
+      html += `<a href="#billing-verify" class="btn btn-sm btn-warning" title="รอตรวจสอบ payment ${pending.length} รายการ" style="font-size:11px;"><i class="fa-solid fa-receipt"></i> Verify</a>`;
+    }
     return `<div class="flex gap-4 justify-end">${html}</div>`;
   },
 
@@ -62,9 +60,9 @@ window.Pages.tenants = {
     const self = window.Pages.tenants;
 
     // Aggregate subscription stats
-    const allSubs       = Object.values(d.tenantSubscriptions || {}).flat();
-    const pendingCount  = allSubs.filter(s => s.status === 'Pending').length;
-    const activeSubsCnt = allSubs.filter(s => s.status === 'Active').length;
+    const allSubs        = Object.values(d.tenantSubscriptions || {}).flat();
+    const pendingCount   = (d.invoices || []).filter(i => i.status === 'Pending Verification').length;
+    const activeSubsCnt  = allSubs.filter(s => s.status === 'Active').length;
 
     return `
       <!-- Page Header -->
@@ -88,13 +86,13 @@ window.Pages.tenants = {
           <div class="stat-value mono">${d.formatNumber(s.totalTenants)}</div>
           <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +3 เดือนนี้</div>
         </div>
-        <div class="stat-card" style="${pendingCount > 0 ? 'border:1.5px solid var(--warning);' : ''}">
+        <div class="stat-card" style="${pendingCount > 0 ? 'border:1.5px solid var(--warning);cursor:pointer;' : ''}" onclick="${pendingCount > 0 ? "location.hash='billing-verify'" : ''}">
           <div class="stat-header">
-            <span class="stat-label">Pending Approval</span>
-            <div class="stat-icon ${pendingCount > 0 ? 'yellow' : 'gray'}"><i class="fa-solid fa-clock"></i></div>
+            <span class="stat-label">รอ Verify Payment</span>
+            <div class="stat-icon ${pendingCount > 0 ? 'yellow' : 'gray'}"><i class="fa-solid fa-receipt"></i></div>
           </div>
           <div class="stat-value mono ${pendingCount > 0 ? 'text-warning' : ''}">${pendingCount}</div>
-          <div class="stat-change ${pendingCount > 0 ? 'down' : 'up'}">${pendingCount > 0 ? 'รอตรวจสอบการชำระ' : 'ไม่มีรายการรอ'}</div>
+          <div class="stat-change ${pendingCount > 0 ? 'down' : 'up'}">${pendingCount > 0 ? 'คลิกเพื่อตรวจสอบ' : 'ไม่มีรายการรอ'}</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
@@ -235,35 +233,6 @@ window.Pages.tenants = {
       el.addEventListener('click', e => { e.preventDefault(); self._showModal(el.dataset.id); });
     });
 
-    // ─── Approve Subscription ───
-    document.querySelectorAll('.sub-approve-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sub = ((d.tenantSubscriptions || {})[btn.dataset.tenant] || []).find(s => s.subPlatformCode === btn.dataset.sub);
-        if (sub) {
-          sub.status    = 'Active';
-          sub.renewDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        }
-        App.toast(`อนุมัติ ${btn.dataset.sub} subscription แล้ว`, 'success');
-        self._rerender();
-      });
-    });
-
-    // ─── Reject Subscription ───
-    document.querySelectorAll('.sub-reject-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        App.confirm(`ยืนยันการปฏิเสธ <strong>${btn.dataset.sub}</strong> subscription?`, {
-          title: 'ปฏิเสธ Subscription', confirmText: 'ปฏิเสธ', type: 'danger',
-        }).then(ok => {
-          if (!ok) return;
-          const subs = (d.tenantSubscriptions || {})[btn.dataset.tenant] || [];
-          const idx  = subs.findIndex(s => s.subPlatformCode === btn.dataset.sub);
-          if (idx !== -1) subs.splice(idx, 1);
-          App.toast(`ปฏิเสธ ${btn.dataset.sub} subscription แล้ว`, 'error');
-          self._rerender();
-        });
-      });
-    });
-
     // ─── Export CSV ───
     document.getElementById('btn-export-tenants')?.addEventListener('click', () => {
       const rows = [
@@ -301,10 +270,9 @@ window.Pages.tenants = {
       const chip   = sub.status === 'Active'   ? `<span class="chip chip-green">Active</span>`
                    : sub.status === 'Pending'  ? `<span class="chip chip-yellow">Pending</span>`
                    :                             `<span class="chip chip-red">${sub.status}</span>`;
-      const approveRejectBtns = sub.status === 'Pending' ? `
-        <button class="btn btn-sm btn-success modal-approve-btn" data-tenant="${t.id}" data-sub="${sub.subPlatformCode}"><i class="fa-solid fa-check"></i> อนุมัติ</button>
-        <button class="btn btn-sm btn-danger  modal-reject-btn"  data-tenant="${t.id}" data-sub="${sub.subPlatformCode}"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>` : `
-        <button class="btn btn-sm btn-outline" title="หยุดชั่วคราว"><i class="fa-solid fa-pause"></i></button>`;
+      const pendingAction = sub.status === 'Pending'
+        ? `<a href="#billing-verify" onclick="App.closeModal()" class="btn btn-sm btn-warning" style="font-size:11px;" title="ไปตรวจสอบสลิป"><i class="fa-solid fa-receipt"></i> ตรวจสอบ</a>`
+        : '';
       return `
         <div class="flex items-center gap-12 p-12 mb-8" style="background:var(--surface2);border-radius:8px;border-left:3px solid ${c};">
           <div style="width:36px;height:36px;border-radius:8px;background:${c};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;">${icon}</div>
@@ -313,7 +281,7 @@ window.Pages.tenants = {
             <div class="text-xs text-muted">${sub.price > 0 ? d.formatCurrency(sub.price) + '/mo' : 'Free'}${sub.renewDate ? '  ·  Renews: ' + sub.renewDate : ''}</div>
           </div>
           ${chip}
-          <div class="flex gap-6">${approveRejectBtns}</div>
+          ${pendingAction}
         </div>`;
     }).join('');
 
@@ -449,29 +417,6 @@ window.Pages.tenants = {
         </div>
       </div>
     `);
-
-    // Approve from modal
-    document.querySelectorAll('.modal-approve-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sub = ((d.tenantSubscriptions || {})[btn.dataset.tenant] || []).find(s => s.subPlatformCode === btn.dataset.sub);
-        if (sub) { sub.status = 'Active'; sub.renewDate = new Date(Date.now() + 30*24*60*60*1000).toISOString().slice(0,10); }
-        App.toast('อนุมัติ subscription แล้ว', 'success');
-        App.closeModal();
-        window.Pages.tenants._rerender();
-      });
-    });
-
-    // Reject from modal
-    document.querySelectorAll('.modal-reject-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const subs = (d.tenantSubscriptions || {})[btn.dataset.tenant] || [];
-        const idx  = subs.findIndex(s => s.subPlatformCode === btn.dataset.sub);
-        if (idx !== -1) subs.splice(idx, 1);
-        App.toast('ปฏิเสธ subscription แล้ว', 'error');
-        App.closeModal();
-        window.Pages.tenants._rerender();
-      });
-    });
 
     // Suspend
     document.getElementById('modal-suspend-btn')?.addEventListener('click', () => {

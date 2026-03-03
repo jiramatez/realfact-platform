@@ -50,6 +50,7 @@
           <div class="nav-group-header has-sub" data-toggle="cost-sub">
             <i class="fa-solid fa-calculator"></i>
             <span class="nav-label">Cost & Pricing</span>
+            <span class="nav-badge hidden" id="badge-parent-cost">0</span>
             <i class="fa-solid fa-chevron-down nav-chevron"></i>
           </div>
           <div class="nav-sub-group" id="cost-sub">
@@ -93,6 +94,7 @@
           <div class="nav-group-header has-sub" data-toggle="billing-sub">
             <i class="fa-solid fa-file-invoice-dollar"></i>
             <span class="nav-label">Billing</span>
+            <span class="nav-badge hidden" id="badge-parent-billing">0</span>
             <i class="fa-solid fa-chevron-down nav-chevron"></i>
           </div>
           <div class="nav-sub-group" id="billing-sub">
@@ -127,6 +129,26 @@
           <a href="#payment-settings" class="nav-item" data-page="payment-settings">
             <i class="fa-solid fa-building-columns"></i>
             <span class="nav-label">Payment Settings</span>
+          </a>
+        </div>
+
+        <!-- ══ ANALYTICS — Platform Reports ══ -->
+        <div class="nav-group" data-context="backoffice">
+          <div class="nav-section">
+            <i class="fa-solid fa-chart-column nav-section-icon"></i>
+            <span class="nav-section-label">ANALYTICS</span>
+          </div>
+          <a href="#analytics-revenue" class="nav-item" data-page="analytics-revenue">
+            <i class="fa-solid fa-baht-sign"></i>
+            <span class="nav-label">Revenue & Billing</span>
+          </a>
+          <a href="#analytics-usage" class="nav-item" data-page="analytics-usage">
+            <i class="fa-solid fa-bolt"></i>
+            <span class="nav-label">API Usage</span>
+          </a>
+          <a href="#analytics-customers" class="nav-item" data-page="analytics-customers">
+            <i class="fa-solid fa-users-rectangle"></i>
+            <span class="nav-label">Customers & Services</span>
           </a>
         </div>
 
@@ -232,6 +254,7 @@
   </div>
 
   <!-- ═══ SCRIPTS ═══ -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="js/mock-data.js"></script>
   <script src="js/pages/dashboard.js"></script>
   <script src="js/pages/avatar-dashboard.js"></script>
@@ -247,6 +270,7 @@
   <script src="js/pages/cost-pricing.js"></script>
   <script src="js/pages/plans-packages.js"></script>
   <script src="js/pages/payment-settings.js"></script>
+  <script src="js/pages/dashboard-analytics.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
