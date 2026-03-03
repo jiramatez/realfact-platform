@@ -10,17 +10,24 @@
     'dashboard':       { title: 'Dashboard',         module: 'dashboard',       ctx: 'backoffice' },
     'sub-platforms':   { title: 'Sub-Platforms',      module: 'subPlatforms',    ctx: 'backoffice' },
     'tenants':         { title: 'Tenant Management',  module: 'tenants',         ctx: 'backoffice' },
-    'cost-pricing':      { title: 'Cost & Pricing',     module: 'costPricing',     ctx: 'backoffice' },
-    'plans-packages':    { title: 'Plans & Packages',  module: 'plansPackages',   ctx: 'backoffice' },
-    'payment-settings':  { title: 'Payment Settings',  module: 'paymentSettings', ctx: 'backoffice' },
+    'cost-pricing':        { title: 'Cost Configuration',    module: 'costPricing',        ctx: 'backoffice' },
+    'cost-margin':         { title: 'Margin Configuration',  module: 'costMargin',         ctx: 'backoffice' },
+    'cost-snapshots':      { title: 'Pricing Snapshots',     module: 'costSnapshots',      ctx: 'backoffice' },
+    'cost-change-requests':{ title: 'Change Requests',       module: 'costChangeRequests', ctx: 'backoffice' },
+    'plans-packages':      { title: 'Subscription Plans',    module: 'plansPackages',      ctx: 'backoffice' },
+    'plans-tokens':        { title: 'Token Packages',        module: 'plansTokens',        ctx: 'backoffice' },
+    'plans-bonus':         { title: 'Welcome Bonus',         module: 'plansBonus',         ctx: 'backoffice' },
+    'payment-settings':    { title: 'Payment Settings',      module: 'paymentSettings',    ctx: 'backoffice' },
     'billing':           { title: 'Billing & Payments', module: 'billing',        ctx: 'backoffice' },
+    'billing-verify':    { title: 'ตรวจสอบการชำระ',    module: 'billingVerify',  ctx: 'backoffice' },
+    'billing-credit':    { title: 'Credit & Refunds',   module: 'billingCredit',  ctx: 'backoffice' },
+    'billing-overdue':   { title: 'ค้างชำระ',           module: 'billingOverdue', ctx: 'backoffice' },
     'avatar-dashboard': { title: 'Avatar Dashboard',    module: 'avatarDashboard', ctx: 'avatar' },
     'avatar-tenants':   { title: 'Avatar Tenants',      module: 'avatarTenants',   ctx: 'avatar' },
     'hardware':         { title: 'Hardware Inventory',  module: 'hardware',        ctx: 'avatar' },
     'devices':          { title: 'Device Operations',   module: 'devices',         ctx: 'avatar' },
-    'service-builder':  { title: 'Service Builder',     module: 'serviceBuilder',  ctx: 'avatar' },
+    'service-builder':  { title: 'Assign Avatar',        module: 'serviceBuilder',  ctx: 'avatar' },
     'knowledge-base':   { title: 'Knowledge Base',      module: 'knowledgeBase',   ctx: 'avatar' },
-    'avatar-settings':  { title: 'Avatar Defaults',     module: 'avatarSettings',  ctx: 'avatar' },
   };
 
   const contextMeta = {
@@ -42,6 +49,14 @@
       el.classList.toggle('active', el.dataset.page === page);
     });
 
+    // Expand/collapse sub-menus based on current page
+    document.querySelectorAll('.nav-sub-group').forEach(function(group) {
+      var header = document.querySelector('[data-toggle="' + group.id + '"]');
+      var hasActive = !!group.querySelector('.nav-item[data-page="' + page + '"]');
+      group.classList.toggle('open', hasActive);
+      if (header) header.classList.toggle('open', hasActive);
+    });
+
     // Update topbar
     pageTitle.textContent = r.title;
 
@@ -53,6 +68,8 @@
       content.offsetHeight; // trigger reflow
       content.style.animation = '';
       if (mod.init) mod.init();
+      App.updateBillingBadges();
+      App.updateCostBadges();
     } else {
       content.innerHTML = `
         <div class="empty-state">
@@ -149,6 +166,18 @@
     });
   });
 
+  // ─── Sub-menu Toggle (header click) ───
+  document.querySelectorAll('.nav-group-header.has-sub').forEach(function(header) {
+    header.addEventListener('click', function() {
+      var groupId = header.dataset.toggle;
+      var group = document.getElementById(groupId);
+      if (!group) return;
+      var isOpen = group.classList.contains('open');
+      group.classList.toggle('open', !isOpen);
+      header.classList.toggle('open', !isOpen);
+    });
+  });
+
   // ─── Sidebar Lock ───
   const sidebar = document.getElementById('sidebar');
   const lockBtn = document.getElementById('sidebar-lock');
@@ -169,6 +198,11 @@
     document.body.classList.toggle('light-mode', !isDark);
     themeIcon.textContent = isDark ? '\u{1F319}' : '\u{2600}\u{FE0F}';
     localStorage.setItem('rfaTheme', isDark ? 'dark' : 'light');
+    const favicon    = document.getElementById('favicon');
+    const brandLogo  = document.getElementById('brand-logo-img');
+    const logoSrc    = isDark ? 'assets/Favicon-DarkMode.svg' : 'assets/Favicon-LightMode.svg';
+    if (favicon)   favicon.href = logoSrc;
+    if (brandLogo) brandLogo.src = logoSrc;
   }
   applyTheme();
 
@@ -200,6 +234,60 @@
     },
     navigate(page) {
       location.hash = page;
+    },
+
+    // ─── Billing Badge Updater ───
+    updateBillingBadges() {
+      const d = window.MockData;
+      if (!d) return;
+
+      // Verify badge: invoices pending slip verification
+      var verifyCount = (d.invoices || []).filter(function(i) {
+        return i.status === 'Pending Verification';
+      }).length;
+      var verifyBadge = document.getElementById('badge-billing-verify');
+      if (verifyBadge) {
+        verifyBadge.textContent = verifyCount;
+        verifyBadge.classList.toggle('hidden', verifyCount === 0);
+      }
+
+      // Overdue badge: invoices overdue
+      var overdueCount = (d.invoices || []).filter(function(i) {
+        return i.status === 'Overdue';
+      }).length;
+      var overdueBadge = document.getElementById('badge-billing-overdue');
+      if (overdueBadge) {
+        overdueBadge.textContent = overdueCount;
+        overdueBadge.classList.toggle('hidden', overdueCount === 0);
+      }
+
+      // Credit badge: pending credit requests + pending refund requests
+      var creditCount = ((d.creditRequests || []).filter(function(c) {
+        return c.status === 'Pending';
+      }).length) + ((d.refundRequests || []).filter(function(r) {
+        return r.status === 'Pending';
+      }).length);
+      var creditBadge = document.getElementById('badge-billing-credit');
+      if (creditBadge) {
+        creditBadge.textContent = creditCount;
+        creditBadge.classList.toggle('hidden', creditCount === 0);
+      }
+    },
+
+    // ─── Cost Badge Updater ───
+    updateCostBadges() {
+      const d = window.MockData;
+      if (!d) return;
+      var pendingCount = ((d.costChangeRequests || []).filter(function(r) {
+        return r.status === 'Pending';
+      }).length) + ((d.marginChangeRequests || []).filter(function(r) {
+        return r.status === 'Pending';
+      }).length);
+      var badge = document.getElementById('badge-cost-change-requests');
+      if (badge) {
+        badge.textContent = pendingCount;
+        badge.classList.toggle('hidden', pendingCount === 0);
+      }
     },
 
     // ─── Toast Notification (replaces alert) ───
@@ -284,5 +372,7 @@
   // ─── Init ───
   applyContext(currentCtx, false);
   onHashChange();
+  App.updateBillingBadges();
+  App.updateCostBadges();
 
 })();

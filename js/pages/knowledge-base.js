@@ -116,9 +116,10 @@ window.Pages.knowledgeBase = {
               : '<span class="text-muted text-sm">ยังไม่มี Preset เชื่อมต่อ</span>'}
           </div>
 
-          <!-- Last Updated -->
+          <!-- Last Updated / Modified -->
           <div class="text-xs text-muted mb-14">
-            <i class="fa-solid fa-clock"></i> อัปเดตล่าสุด: ${kb.lastUpdated}
+            <i class="fa-solid fa-clock"></i> แก้ไขล่าสุด: <span class="mono">${kb.modifiedDate || kb.lastUpdated || '-'}</span>
+            ${kb.modifiedBy ? `&nbsp;·&nbsp;<i class="fa-solid fa-user"></i> ${kb.modifiedBy.split('@')[0]}` : ''}
           </div>
 
           <!-- Footer -->
@@ -740,6 +741,8 @@ window.Pages.knowledgeBase = {
                 status:      initDocs.length ? 'Processing' : 'Ready',
                 lastUpdated: new Date().toISOString().slice(0, 10),
                 presets:     [],
+                modifiedDate: new Date().toISOString().slice(0, 10),
+                modifiedBy:   'admin@realfact.ai',
               };
 
               d.knowledgeBases.push(newKB);

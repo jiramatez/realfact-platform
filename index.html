@@ -13,6 +13,9 @@
   <!-- Font Awesome 6.5.1 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- Favicon (swapped by theme toggle) -->
+  <link id="favicon" rel="icon" type="image/svg+xml" href="assets/Favicon-DarkMode.svg">
+
   <!-- Design System CSS -->
   <link rel="stylesheet" href="css/main.css">
 </head>
@@ -21,7 +24,7 @@
     <!-- ═══ SIDEBAR ═══ -->
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <div class="brand-logo">RF</div>
+        <img id="brand-logo-img" src="assets/Favicon-DarkMode.svg" alt="RealFact" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">
         <span class="brand-text">REALFACT</span>
       </div>
 
@@ -44,22 +47,79 @@
             <i class="fa-solid fa-users"></i>
             <span class="nav-label">Tenants</span>
           </a>
-          <a href="#cost-pricing" class="nav-item" data-page="cost-pricing">
+          <div class="nav-group-header has-sub" data-toggle="cost-sub">
             <i class="fa-solid fa-calculator"></i>
             <span class="nav-label">Cost & Pricing</span>
-          </a>
-          <a href="#plans-packages" class="nav-item" data-page="plans-packages">
+            <i class="fa-solid fa-chevron-down nav-chevron"></i>
+          </div>
+          <div class="nav-sub-group" id="cost-sub">
+            <a href="#cost-pricing" class="nav-item nav-sub" data-page="cost-pricing">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Cost Configuration</span>
+            </a>
+            <a href="#cost-margin" class="nav-item nav-sub" data-page="cost-margin">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Margin Config</span>
+            </a>
+            <a href="#cost-snapshots" class="nav-item nav-sub" data-page="cost-snapshots">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Snapshots</span>
+            </a>
+            <a href="#cost-change-requests" class="nav-item nav-sub" data-page="cost-change-requests">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Change Requests</span>
+              <span class="nav-badge hidden" id="badge-cost-change-requests">0</span>
+            </a>
+          </div>
+          <div class="nav-group-header has-sub" data-toggle="plans-sub">
             <i class="fa-solid fa-tags"></i>
             <span class="nav-label">Plans & Packages</span>
-          </a>
+            <i class="fa-solid fa-chevron-down nav-chevron"></i>
+          </div>
+          <div class="nav-sub-group" id="plans-sub">
+            <a href="#plans-packages" class="nav-item nav-sub" data-page="plans-packages">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Subscription Plans</span>
+            </a>
+            <a href="#plans-tokens" class="nav-item nav-sub" data-page="plans-tokens">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Token Packages</span>
+            </a>
+            <a href="#plans-bonus" class="nav-item nav-sub" data-page="plans-bonus">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Welcome Bonus</span>
+            </a>
+          </div>
           <a href="#payment-settings" class="nav-item" data-page="payment-settings">
             <i class="fa-solid fa-building-columns"></i>
             <span class="nav-label">Payment Settings</span>
           </a>
-          <a href="#billing" class="nav-item" data-page="billing">
+          <div class="nav-group-header has-sub" data-toggle="billing-sub">
             <i class="fa-solid fa-file-invoice-dollar"></i>
             <span class="nav-label">Billing</span>
-          </a>
+            <i class="fa-solid fa-chevron-down nav-chevron"></i>
+          </div>
+          <div class="nav-sub-group" id="billing-sub">
+            <a href="#billing" class="nav-item nav-sub" data-page="billing">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Overview & Invoices</span>
+            </a>
+            <a href="#billing-verify" class="nav-item nav-sub" data-page="billing-verify">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">ตรวจสอบการชำระ</span>
+              <span class="nav-badge hidden" id="badge-billing-verify">0</span>
+            </a>
+            <a href="#billing-credit" class="nav-item nav-sub" data-page="billing-credit">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">Credit & Refunds</span>
+              <span class="nav-badge hidden" id="badge-billing-credit">0</span>
+            </a>
+            <a href="#billing-overdue" class="nav-item nav-sub" data-page="billing-overdue">
+              <i class="fa-solid fa-minus"></i>
+              <span class="nav-label">ค้างชำระ</span>
+              <span class="nav-badge hidden" id="badge-billing-overdue">0</span>
+            </a>
+          </div>
         </div>
 
         <!-- ══ AVATAR — Sub-Platform Modules ══ -->
@@ -85,16 +145,12 @@
             <span class="nav-label">Devices</span>
           </a>
           <a href="#service-builder" class="nav-item" data-page="service-builder">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span class="nav-label">Service Builder</span>
+            <i class="fa-solid fa-link"></i>
+            <span class="nav-label">Assign Avatar</span>
           </a>
           <a href="#knowledge-base" class="nav-item" data-page="knowledge-base">
             <i class="fa-solid fa-book"></i>
             <span class="nav-label">Knowledge Base</span>
-          </a>
-          <a href="#avatar-settings" class="nav-item" data-page="avatar-settings">
-            <i class="fa-solid fa-sliders"></i>
-            <span class="nav-label">Avatar Defaults</span>
           </a>
         </div>
       </div>
@@ -137,7 +193,7 @@
                 <div class="ctx-dropdown-icon avatar-icon"><i class="fa-solid fa-robot"></i></div>
                 <div class="ctx-dropdown-info">
                   <span class="ctx-dropdown-name">RealFact Avatar</span>
-                  <span class="ctx-dropdown-desc">Hardware · Devices · Service Builder · KB · Defaults</span>
+                  <span class="ctx-dropdown-desc">Hardware · Devices · Assign Avatar · KB · Defaults</span>
                 </div>
                 <i class="fa-solid fa-check ctx-dropdown-check"></i>
               </div>
@@ -148,11 +204,7 @@
           <span class="topbar-page text-muted" id="page-title">Dashboard</span>
         </div>
         <div class="topbar-right">
-          <div class="balance-chip" title="Total Token Balance">
-            <i class="fa-solid fa-coins"></i>
-            <span class="mono balance-amount">154,200</span>
-            <span class="balance-unit">TOKENS</span>
-          </div>
+          
           <button class="topbar-btn" id="theme-toggle" title="Toggle Theme">
             <span id="theme-icon">&#127769;</span>
           </button>

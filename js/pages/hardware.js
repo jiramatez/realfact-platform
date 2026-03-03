@@ -34,6 +34,12 @@ window.Pages.hardware = {
     const activated     = devices.filter(dv => dv.status === 'Activated').length;
     const decommissioned = devices.filter(dv => dv.status === 'Decommissioned').length;
 
+    // Unique tenants for filter dropdown
+    const hwTenantMap = {};
+    devices.filter(dv => dv.soldTo).forEach(dv => { hwTenantMap[dv.soldTo] = dv.soldToName; });
+    const hwTenantOptions = Object.entries(hwTenantMap)
+      .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+
     return `
       <!-- Page Header -->
       <div class="page-header">
@@ -100,12 +106,16 @@ window.Pages.hardware = {
             <i class="fa-solid fa-search"></i>
             <input type="text" id="hw-search" placeholder="ค้นหา S/N, ชื่ออุปกรณ์, Register Code...">
           </div>
-          <select class="form-input" id="hw-status-filter" style="width:180px;">
+          <select class="form-input" id="hw-status-filter" style="width:160px;">
             <option value="">ทุกสถานะ</option>
             <option value="Registered">Registered</option>
             <option value="Sold">Sold</option>
             <option value="Activated">Activated</option>
             <option value="Decommissioned">Decommissioned</option>
+          </select>
+          <select class="form-input" id="hw-tenant-filter" style="width:180px;">
+            <option value="">Tenant ทั้งหมด</option>
+            ${hwTenantOptions}
           </select>
         </div>
 
@@ -122,12 +132,13 @@ window.Pages.hardware = {
                 <th>ขายให้</th>
                 <th>วันที่เปิดใช้</th>
                 <th>ออนไลน์</th>
+                <th>แก้ไขล่าสุด</th>
                 <th>การดำเนินการ</th>
               </tr>
             </thead>
             <tbody id="hw-device-tbody">
               ${devices.map(dv => `
-                <tr data-sn="${dv.sn}" data-status="${dv.status}" data-search="${dv.sn} ${dv.name} ${dv.registerCode} ${dv.soldToName || ''}">
+                <tr data-sn="${dv.sn}" data-status="${dv.status}" data-tenant="${dv.soldTo || ''}" data-search="${dv.sn} ${dv.name} ${dv.registerCode} ${dv.soldToName || ''}">
                   <td class="mono">${dv.sn}</td>
                   <td>
                     <span class="font-600 hw-edit-name" data-sn="${dv.sn}" style="cursor:pointer;border-bottom:1px dashed var(--text-dim);" title="คลิกเพื่อแก้ไขชื่อ">${dv.name}</span>
@@ -142,6 +153,7 @@ window.Pages.hardware = {
                       ? '<span class="status-badge online"><span class="status-dot"></span> Online</span>'
                       : '<span class="status-badge offline"><span class="status-dot"></span> Offline</span>'}
                   </td>
+                  <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${dv.modifiedDate || '-'}</div>${dv.modifiedBy ? `<div class="text-xs text-dim">${dv.modifiedBy.split('@')[0]}</div>` : ''}</td>
                   <td>
                     <div class="flex gap-6">
                       ${dv.status === 'Sold' ? `
@@ -234,21 +246,25 @@ window.Pages.hardware = {
     });
 
     // ─── Search / Filter ───
-    const searchInput = document.getElementById('hw-search');
+    const searchInput  = document.getElementById('hw-search');
     const statusFilter = document.getElementById('hw-status-filter');
+    const tenantFilter = document.getElementById('hw-tenant-filter');
     const rows         = document.querySelectorAll('#hw-device-tbody tr');
 
     function filterDevices() {
       const term   = (searchInput.value || '').toLowerCase();
       const status = statusFilter.value;
+      const tenant = tenantFilter ? tenantFilter.value : '';
       rows.forEach(row => {
         const matchSearch = !term   || row.dataset.search.toLowerCase().includes(term);
         const matchStatus = !status || row.dataset.status === status;
-        row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+        const matchTenant = !tenant || row.dataset.tenant === tenant;
+        row.style.display = (matchSearch && matchStatus && matchTenant) ? '' : 'none';
       });
     }
     searchInput.addEventListener('input', filterDevices);
     statusFilter.addEventListener('change', filterDevices);
+    if (tenantFilter) tenantFilter.addEventListener('change', filterDevices);
 
     // ─── 1. Add Device Modal ───
     document.getElementById('btn-add-device').addEventListener('click', () => {
@@ -320,6 +336,8 @@ window.Pages.hardware = {
             soldDate: null,
             activationDate: null,
             online: false,
+            modifiedDate: today,
+            modifiedBy: 'admin@realfact.ai',
           });
 
           window.App.closeModal();
@@ -387,10 +405,12 @@ window.Pages.hardware = {
 
           const dev = d.devices.find(dv => dv.sn === devSn);
           if (dev) {
-            dev.status      = 'Sold';
-            dev.soldTo      = tenantId;
-            dev.soldToName  = tenantName;
-            dev.soldDate    = saleDate;
+            dev.status       = 'Sold';
+            dev.soldTo       = tenantId;
+            dev.soldToName   = tenantName;
+            dev.soldDate     = saleDate;
+            dev.modifiedDate = new Date().toISOString().split('T')[0];
+            dev.modifiedBy   = 'admin@realfact.ai';
           }
 
           window.App.closeModal();
@@ -471,6 +491,8 @@ window.Pages.hardware = {
               soldTo: null, soldToName: null, activatedBy: null,
               regDate: today, soldDate: null, activationDate: null,
               online: false,
+              modifiedDate: today,
+              modifiedBy: 'admin@realfact.ai',
             });
             imported++;
           });
@@ -582,8 +604,10 @@ window.Pages.hardware = {
           type: 'danger'
         }).then(ok => {
           if (!ok) return;
-          dev.status = 'Decommissioned';
-          dev.online = false;
+          dev.status       = 'Decommissioned';
+          dev.online       = false;
+          dev.modifiedDate = new Date().toISOString().split('T')[0];
+          dev.modifiedBy   = 'admin@realfact.ai';
           self._refresh();
           App.toast(`ปลดประจำการอุปกรณ์สำเร็จ: ${sn}`, 'success');
         });

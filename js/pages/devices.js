@@ -21,6 +21,10 @@ window.Pages.devices = {
     const sessions         = d.sessions;
     const assignLogs       = d.assignLogs;
 
+    // Unique tenant names for log filters
+    const sessionTenants = [...new Set(sessions.map(se => se.tenantName).filter(Boolean))].sort();
+    const assignTenants  = [...new Set(assignLogs.map(al => al.tenantName).filter(Boolean))].sort();
+
     // Build a lookup for latest session per device
     const latestSessionByDevice = {};
     sessions.forEach(se => {
@@ -57,57 +61,63 @@ window.Pages.devices = {
           </div>`
         : ''}
 
-      <!-- Device Grid -->
-      <div class="section-title"><i class="fa-solid fa-server text-primary"></i> อุปกรณ์ที่เปิดใช้งาน</div>
-      <div class="grid-3 mb-24" id="dev-device-grid">
+      <!-- Device Compact List -->
+      <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin:0;">
+          <i class="fa-solid fa-server text-primary"></i> อุปกรณ์ที่เปิดใช้งาน
+          <span class="chip chip-gray" style="font-size:11px;margin-left:6px;">${activatedDevices.length} เครื่อง</span>
+        </div>
+      </div>
+      <div class="grid-2 mb-20" id="dev-device-grid">
         ${activatedDevices.map(dv => {
-          const isOnline     = dv.online;
-          const lastSession  = latestSessionByDevice[dv.sn];
+          const isOnline      = dv.online;
+          const lastSession   = latestSessionByDevice[dv.sn];
           const currentPreset = currentPresetByDevice[dv.sn];
           const activeSession = sessions.find(se => se.deviceSn === dv.sn && se.status === 'active');
-          const tenantName   = dv.soldToName || '-';
+          const tenantName    = dv.soldToName || '-';
+          const presetName    = currentPreset ? currentPreset.name : (lastSession ? lastSession.presetName : '—');
+          const borderColor   = isOnline ? 'var(--primary)' : 'var(--border)';
 
           return `
-            <div class="entity-card${!isOnline ? ' inactive' : ''}" data-device-sn="${dv.sn}" style="cursor:pointer;">
-              <div class="entity-thumb" style="position:relative;">
-                <i class="fa-solid fa-display" style="color:${isOnline ? 'var(--primary)' : 'var(--text-dim)'};"></i>
-                ${isOnline
-                  ? `<div style="position:absolute;top:10px;right:10px;">
-                      <span class="status-badge online"><span class="status-dot"></span> Online</span>
-                    </div>
-                    ${activeSession
-                      ? '<div style="position:absolute;top:10px;left:10px;"><span class="status-badge session"><span class="status-dot"></span> Session</span></div>'
-                      : ''
-                    }
-                    <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none;">
-                      <div style="position:absolute;left:0;right:0;height:30%;background:linear-gradient(180deg,rgba(241,91,38,.12),transparent);animation:scan 2.5s linear infinite;"></div>
-                    </div>`
-                  : `<div style="position:absolute;top:10px;right:10px;">
-                      <span class="status-badge offline"><span class="status-dot"></span> Offline</span>
-                    </div>`
-                }
-              </div>
-              <div class="entity-body">
-                <div class="font-600 mb-4">${dv.name}</div>
-                <div class="text-sm text-muted mb-4"><span class="mono">${dv.sn}</span></div>
-                <div class="text-sm text-muted mb-4">${dv.modelName}</div>
-                <div class="text-sm"><i class="fa-solid fa-building text-muted"></i> ${tenantName}</div>
-              </div>
-              <div class="entity-footer">
-                <div class="text-sm">
-                  <span class="text-muted uppercase">Preset:</span>
-                  <span class="font-600">${currentPreset ? currentPreset.name : (lastSession ? lastSession.presetName : '-')}</span>
+            <div class="card p-14" data-device-sn="${dv.sn}" style="cursor:pointer;border-left:3px solid ${borderColor};transition:border-color .2s;">
+              <div class="flex items-center gap-12">
+                <!-- Icon -->
+                <div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;
+                  background:${isOnline ? 'var(--primary-dim)' : 'rgba(107,114,128,.1)'};
+                  display:flex;align-items:center;justify-content:center;">
+                  <i class="fa-solid fa-display" style="font-size:15px;color:${isOnline ? 'var(--primary)' : 'var(--text-dim)'};"></i>
                 </div>
-                <div class="text-sm text-muted">
-                  ${lastSession ? lastSession.start : 'ยังไม่มีเซสชัน'}
+                <!-- Info -->
+                <div class="flex-1" style="min-width:0;">
+                  <div class="flex items-center gap-8 mb-3">
+                    <span class="font-600 truncate">${dv.name}</span>
+                    ${isOnline
+                      ? `<span class="status-badge online" style="font-size:10px;"><span class="status-dot"></span> Online</span>`
+                      : `<span class="status-badge offline" style="font-size:10px;"><span class="status-dot"></span> Offline</span>`}
+                    ${activeSession ? `<span class="status-badge session" style="font-size:10px;"><span class="status-dot"></span> Session</span>` : ''}
+                  </div>
+                  <div class="text-xs text-muted truncate">
+                    <span class="mono">${dv.sn}</span>
+                    <span style="margin:0 4px;opacity:.4;">·</span>${dv.modelName}
+                    <span style="margin:0 4px;opacity:.4;">·</span><i class="fa-solid fa-building" style="margin-right:3px;"></i>${tenantName}
+                  </div>
                 </div>
-                <!-- Action buttons -->
-                <div class="flex gap-6 mt-8" style="flex-wrap:wrap;">
-                  <button class="btn btn-sm btn-outline dev-btn-assign-preset" data-sn="${dv.sn}" data-model="${dv.model}">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Assign Preset
+                <!-- Preset -->
+                <div class="text-xs" style="min-width:110px;max-width:130px;text-align:right;flex-shrink:0;">
+                  <div class="text-dim uppercase" style="font-size:10px;letter-spacing:.5px;margin-bottom:2px;">Preset</div>
+                  <div class="font-600 truncate" style="font-size:12px;">${presetName}</div>
+                </div>
+                <!-- Actions -->
+                <div class="flex gap-6" style="flex-shrink:0;">
+                  <button class="btn btn-sm btn-outline dev-btn-assign-preset"
+                    data-sn="${dv.sn}" data-model="${dv.model}"
+                    title="Assign Preset">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline dev-btn-transfer" data-sn="${dv.sn}">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> โอน
+                  <button class="btn btn-sm btn-outline dev-btn-transfer"
+                    data-sn="${dv.sn}"
+                    title="โอนอุปกรณ์">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
                   </button>
                 </div>
               </div>
@@ -124,16 +134,20 @@ window.Pages.devices = {
 
       <!-- Session Log Tab -->
       <div id="tab-session-log">
-        <!-- Date Range Filter -->
-        <div class="flex items-center gap-12 mb-12">
+        <!-- Date Range + Tenant Filter -->
+        <div class="flex items-center gap-12 mb-12 flex-wrap">
           <div class="flex items-center gap-8">
             <label class="form-label" style="margin:0;white-space:nowrap;">ตั้งแต่:</label>
-            <input type="date" class="form-input" id="session-date-from" style="width:160px;">
+            <input type="date" class="form-input" id="session-date-from" style="width:150px;">
           </div>
           <div class="flex items-center gap-8">
             <label class="form-label" style="margin:0;white-space:nowrap;">ถึง:</label>
-            <input type="date" class="form-input" id="session-date-to" style="width:160px;">
+            <input type="date" class="form-input" id="session-date-to" style="width:150px;">
           </div>
+          <select class="form-input" id="session-tenant-filter" style="width:190px;">
+            <option value="">Tenant ทั้งหมด</option>
+            ${sessionTenants.map(n => `<option value="${n}">${n}</option>`).join('')}
+          </select>
           <button class="btn btn-sm btn-outline" id="session-date-clear">
             <i class="fa-solid fa-xmark"></i> ล้างตัวกรอง
           </button>
@@ -162,7 +176,7 @@ window.Pages.devices = {
             </thead>
             <tbody id="session-tbody">
               ${sessions.map(se => `
-                <tr data-date="${se.start ? se.start.split(' ')[0] : ''}">
+                <tr data-date="${se.start ? se.start.split(' ')[0] : ''}" data-tenant="${se.tenantName || ''}">
                   <td class="mono">${se.id}</td>
                   <td>
                     <div class="font-600">${se.deviceName}</div>
@@ -183,16 +197,20 @@ window.Pages.devices = {
 
       <!-- Assign Log Tab -->
       <div id="tab-assign-log" class="hidden">
-        <!-- Date Range Filter -->
-        <div class="flex items-center gap-12 mb-12">
+        <!-- Date Range + Tenant Filter -->
+        <div class="flex items-center gap-12 mb-12 flex-wrap">
           <div class="flex items-center gap-8">
             <label class="form-label" style="margin:0;white-space:nowrap;">ตั้งแต่:</label>
-            <input type="date" class="form-input" id="assign-date-from" style="width:160px;">
+            <input type="date" class="form-input" id="assign-date-from" style="width:150px;">
           </div>
           <div class="flex items-center gap-8">
             <label class="form-label" style="margin:0;white-space:nowrap;">ถึง:</label>
-            <input type="date" class="form-input" id="assign-date-to" style="width:160px;">
+            <input type="date" class="form-input" id="assign-date-to" style="width:150px;">
           </div>
+          <select class="form-input" id="assign-tenant-filter" style="width:190px;">
+            <option value="">Tenant ทั้งหมด</option>
+            ${assignTenants.map(n => `<option value="${n}">${n}</option>`).join('')}
+          </select>
           <button class="btn btn-sm btn-outline" id="assign-date-clear">
             <i class="fa-solid fa-xmark"></i> ล้างตัวกรอง
           </button>
@@ -212,7 +230,7 @@ window.Pages.devices = {
             </thead>
             <tbody id="assign-tbody">
               ${assignLogs.map(al => `
-                <tr data-date="${al.timestamp ? al.timestamp.split(' ')[0] : ''}">
+                <tr data-date="${al.timestamp ? al.timestamp.split(' ')[0] : ''}" data-tenant="${al.tenantName || ''}">
                   <td class="mono">${al.id}</td>
                   <td class="mono text-sm">${al.timestamp}</td>
                   <td>
@@ -281,60 +299,70 @@ window.Pages.devices = {
       if (tokEl) tokEl.textContent = d.formatNumber(totalTokens);
     }
 
-    function filterSessionsByDate() {
-      const fromVal = document.getElementById('session-date-from').value;
-      const toVal   = document.getElementById('session-date-to').value;
-      const rows    = document.querySelectorAll('#session-tbody tr');
+    function filterSessions() {
+      const fromVal  = document.getElementById('session-date-from').value;
+      const toVal    = document.getElementById('session-date-to').value;
+      const tenant   = document.getElementById('session-tenant-filter')?.value || '';
+      const rows     = document.querySelectorAll('#session-tbody tr');
       rows.forEach(row => {
         const rowDate = row.dataset.date || '';
-        const afterFrom = !fromVal || rowDate >= fromVal;
-        const beforeTo  = !toVal   || rowDate <= toVal;
-        row.style.display = (afterFrom && beforeTo) ? '' : 'none';
+        const afterFrom   = !fromVal || rowDate >= fromVal;
+        const beforeTo    = !toVal   || rowDate <= toVal;
+        const matchTenant = !tenant  || row.dataset.tenant === tenant;
+        row.style.display = (afterFrom && beforeTo && matchTenant) ? '' : 'none';
       });
       computeSessionSummary();
     }
 
-    const sessionFrom  = document.getElementById('session-date-from');
-    const sessionTo    = document.getElementById('session-date-to');
-    const sessionClear = document.getElementById('session-date-clear');
+    const sessionFrom   = document.getElementById('session-date-from');
+    const sessionTo     = document.getElementById('session-date-to');
+    const sessionTenantF = document.getElementById('session-tenant-filter');
+    const sessionClear  = document.getElementById('session-date-clear');
 
-    if (sessionFrom) sessionFrom.addEventListener('change', filterSessionsByDate);
-    if (sessionTo)   sessionTo.addEventListener('change', filterSessionsByDate);
+    if (sessionFrom)   sessionFrom.addEventListener('change', filterSessions);
+    if (sessionTo)     sessionTo.addEventListener('change', filterSessions);
+    if (sessionTenantF) sessionTenantF.addEventListener('change', filterSessions);
     if (sessionClear) {
       sessionClear.addEventListener('click', () => {
-        if (sessionFrom) sessionFrom.value = '';
-        if (sessionTo)   sessionTo.value   = '';
-        filterSessionsByDate();
+        if (sessionFrom)   sessionFrom.value   = '';
+        if (sessionTo)     sessionTo.value     = '';
+        if (sessionTenantF) sessionTenantF.value = '';
+        filterSessions();
       });
     }
 
     // Initial summary on load
     computeSessionSummary();
 
-    // ─── Assign Log date filter ───
-    function filterAssignsByDate() {
-      const fromVal = document.getElementById('assign-date-from').value;
-      const toVal   = document.getElementById('assign-date-to').value;
-      const rows    = document.querySelectorAll('#assign-tbody tr');
+    // ─── Assign Log filter (date + tenant) ───
+    function filterAssigns() {
+      const fromVal  = document.getElementById('assign-date-from').value;
+      const toVal    = document.getElementById('assign-date-to').value;
+      const tenant   = document.getElementById('assign-tenant-filter')?.value || '';
+      const rows     = document.querySelectorAll('#assign-tbody tr');
       rows.forEach(row => {
         const rowDate = row.dataset.date || '';
-        const afterFrom = !fromVal || rowDate >= fromVal;
-        const beforeTo  = !toVal   || rowDate <= toVal;
-        row.style.display = (afterFrom && beforeTo) ? '' : 'none';
+        const afterFrom   = !fromVal || rowDate >= fromVal;
+        const beforeTo    = !toVal   || rowDate <= toVal;
+        const matchTenant = !tenant  || row.dataset.tenant === tenant;
+        row.style.display = (afterFrom && beforeTo && matchTenant) ? '' : 'none';
       });
     }
 
-    const assignFrom  = document.getElementById('assign-date-from');
-    const assignTo    = document.getElementById('assign-date-to');
-    const assignClear = document.getElementById('assign-date-clear');
+    const assignFrom    = document.getElementById('assign-date-from');
+    const assignTo      = document.getElementById('assign-date-to');
+    const assignTenantF = document.getElementById('assign-tenant-filter');
+    const assignClear   = document.getElementById('assign-date-clear');
 
-    if (assignFrom) assignFrom.addEventListener('change', filterAssignsByDate);
-    if (assignTo)   assignTo.addEventListener('change', filterAssignsByDate);
+    if (assignFrom)    assignFrom.addEventListener('change', filterAssigns);
+    if (assignTo)      assignTo.addEventListener('change', filterAssigns);
+    if (assignTenantF) assignTenantF.addEventListener('change', filterAssigns);
     if (assignClear) {
       assignClear.addEventListener('click', () => {
-        if (assignFrom) assignFrom.value = '';
-        if (assignTo)   assignTo.value   = '';
-        filterAssignsByDate();
+        if (assignFrom)    assignFrom.value    = '';
+        if (assignTo)      assignTo.value      = '';
+        if (assignTenantF) assignTenantF.value = '';
+        filterAssigns();
       });
     }
 

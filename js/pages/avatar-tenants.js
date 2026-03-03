@@ -45,6 +45,15 @@ window.Pages.avatarTenants = {
     );
   },
 
+  // ─── Current preset running on a device (latest assign log) ───
+  _currentPreset(deviceSn) {
+    let latest = null;
+    (window.MockData.assignLogs || []).forEach(al => {
+      if (al.deviceSn === deviceSn && (!latest || al.timestamp > latest.timestamp)) latest = al;
+    });
+    return latest ? latest.newPresetName : null;
+  },
+
   _rerender() {
     const ct = document.getElementById('content');
     ct.innerHTML = window.Pages.avatarTenants.render();
@@ -74,7 +83,7 @@ window.Pages.avatarTenants = {
         </div>
         <div class="page-header-actions">
           <button class="btn btn-outline" onclick="location.hash='service-builder'">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Service Builder
+            <i class="fa-solid fa-link"></i> Assign Avatar
           </button>
           <button class="btn btn-primary" onclick="location.hash='devices'">
             <i class="fa-solid fa-display"></i> จัดการ Devices
@@ -150,10 +159,10 @@ window.Pages.avatarTenants = {
               <th>TENANT</th>
               <th>AVATAR PLAN</th>
               <th>DEVICES</th>
-              <th>PRESETS ASSIGNED</th>
               <th>TOKEN BALANCE</th>
               <th>RENEW DATE</th>
               <th>STATUS</th>
+              <th>แก้ไขล่าสุด</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -186,23 +195,16 @@ window.Pages.avatarTenants = {
                   </div>
                 </td>
                 <td>
-                  ${presets.length > 0
-                    ? `<div style="display:flex;flex-direction:column;gap:3px;">
-                        ${presets.slice(0, 2).map(p => `<span class="text-xs font-500" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;" title="${p.name}">${p.name}</span>`).join('')}
-                        ${presets.length > 2 ? `<span class="text-xs text-muted">+${presets.length - 2} more</span>` : ''}
-                      </div>`
-                    : `<span class="text-muted text-sm">—</span>`}
-                </td>
-                <td>
                   <span class="mono font-600 ${t.tokenBalance < 500 ? 'text-error' : t.tokenBalance < 2000 ? 'text-warning' : ''}">${d.formatNumber(t.tokenBalance)}</span>
                   <span class="text-xs text-muted"> tokens</span>
                 </td>
                 <td class="text-sm text-muted mono">${sub.renewDate || '—'}</td>
                 <td>${self._statusChip(sub.status)}</td>
+                <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${t.modifiedDate || '-'}</div>${t.modifiedBy ? `<div class="text-xs text-dim">${t.modifiedBy.split('@')[0]}</div>` : ''}</td>
                 <td>
                   <div class="flex gap-4 justify-end">
                     <button class="btn btn-sm btn-outline av-tenant-detail-btn" data-id="${t.id}" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
-                    <button class="btn btn-sm btn-outline" onclick="location.hash='service-builder'" title="จัดการ Preset"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                    <button class="btn btn-sm btn-outline" onclick="location.hash='service-builder'" title="Assign Avatar"><i class="fa-solid fa-link"></i></button>
                     ${sub.status === 'Pending' ? `
                       <button class="btn btn-sm btn-success av-approve-btn" data-id="${t.id}" title="อนุมัติ"><i class="fa-solid fa-check"></i></button>
                       <button class="btn btn-sm btn-danger  av-reject-btn"  data-id="${t.id}" title="ปฏิเสธ"><i class="fa-solid fa-xmark"></i></button>` : ''}
@@ -259,9 +261,14 @@ window.Pages.avatarTenants = {
     document.querySelectorAll('.av-approve-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const sub = self._avatarSub(btn.dataset.id);
+        const tenant = d.tenants.find(t => t.id === btn.dataset.id);
         if (sub) {
           sub.status    = 'Active';
           sub.renewDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        }
+        if (tenant) {
+          tenant.modifiedDate = new Date().toISOString().split('T')[0];
+          tenant.modifiedBy   = 'admin@realfact.ai';
         }
         App.toast('อนุมัติ Avatar subscription แล้ว', 'success');
         self._rerender();
@@ -278,6 +285,11 @@ window.Pages.avatarTenants = {
           const subs = (d.tenantSubscriptions || {})[btn.dataset.id] || [];
           const idx  = subs.findIndex(s => s.subPlatformCode === 'avatar');
           if (idx !== -1) subs.splice(idx, 1);
+          const tenant = d.tenants.find(t => t.id === btn.dataset.id);
+          if (tenant) {
+            tenant.modifiedDate = new Date().toISOString().split('T')[0];
+            tenant.modifiedBy   = 'admin@realfact.ai';
+          }
           App.toast('ปฏิเสธ Avatar subscription แล้ว', 'error');
           self._rerender();
         });
@@ -308,16 +320,32 @@ window.Pages.avatarTenants = {
         <span class="chip chip-green" style="font-size:10px;">${p.status}</span>
       </div>`).join('');
 
-    const deviceRows = devList.map(dv => `
+    const deviceRows = devList.map(dv => {
+      const runningPreset = self._currentPreset(dv.sn);
+      return `
       <div class="flex items-center gap-12 p-10 mb-8" style="background:var(--surface2);border-radius:8px;">
-        <i class="fa-solid fa-display text-muted"></i>
-        <div class="flex-1">
-          <div class="font-600 text-sm">${dv.name}</div>
-          <div class="text-xs text-muted mono">${dv.sn} · ${dv.modelName}</div>
+        <div style="width:32px;height:32px;border-radius:8px;background:var(--primary-dim);
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-display" style="font-size:13px;color:var(--primary);"></i>
         </div>
-        <span class="chip ${dv.online ? 'chip-green' : 'chip-gray'}">${dv.online ? 'Online' : 'Offline'}</span>
-        <span class="chip chip-blue" style="font-size:10px;">${dv.status}</span>
-      </div>`).join('');
+        <div class="flex-1 min-w-0">
+          <div class="font-600 text-sm truncate">${dv.name}</div>
+          <div class="text-xs text-muted mono">${dv.sn} · ${dv.modelName}</div>
+          <div class="text-xs mt-3">
+            <i class="fa-solid fa-robot" style="color:var(--primary);margin-right:4px;opacity:.8;"></i>
+            ${runningPreset
+              ? `<span class="font-500">${runningPreset}</span>`
+              : '<span class="text-muted">ยังไม่มี Preset ที่ใช้งาน</span>'}
+          </div>
+        </div>
+        <div class="flex gap-4 items-center flex-shrink-0">
+          <span class="chip ${dv.online ? 'chip-green' : 'chip-gray'}" style="font-size:10px;">
+            ${dv.online ? 'Online' : 'Offline'}
+          </span>
+          <span class="chip chip-blue" style="font-size:10px;">${dv.status}</span>
+        </div>
+      </div>`;
+    }).join('');
 
     const actRows = acts.map(act => `
       <tr>
@@ -379,11 +407,12 @@ window.Pages.avatarTenants = {
         <div class="card p-16 mb-16">
           <div class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-8">
-              <i class="fa-solid fa-wand-magic-sparkles" style="color:#f15b26"></i>
-              <span class="font-700 text-sm uppercase">Presets Assigned (${presets.length})</span>
+              <i class="fa-solid fa-robot" style="color:var(--primary);"></i>
+              <span class="font-700 text-sm uppercase">Avatar Presets ที่ใช้ได้ (${presets.length})</span>
+              <span class="chip chip-gray" style="font-size:10px;">pool</span>
             </div>
             <button class="btn btn-sm btn-outline" onclick="location.hash='service-builder';App.closeModal()">
-              <i class="fa-solid fa-arrow-right"></i> Service Builder
+              <i class="fa-solid fa-link"></i> Assign Avatar
             </button>
           </div>
           ${presets.length === 0 ? '<div class="text-sm text-muted">ยังไม่มี Preset ที่ assign</div>' : presetRows}
@@ -392,9 +421,10 @@ window.Pages.avatarTenants = {
         <!-- Devices -->
         <div class="card p-16 mb-16">
           <div class="flex items-center justify-between mb-12">
-            <div class="flex items-center gap-8">
+            <div class="flex items-center gap-8 flex-wrap">
               <i class="fa-solid fa-display text-muted"></i>
               <span class="font-700 text-sm uppercase">Devices (${devList.length})</span>
+              <span class="text-xs text-muted" style="font-weight:400;">— แต่ละเครื่องใช้ 1 Preset ขณะ runtime</span>
             </div>
             <button class="btn btn-sm btn-outline" onclick="location.hash='devices';App.closeModal()">
               <i class="fa-solid fa-arrow-right"></i> Device Operations

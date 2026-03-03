@@ -1,11 +1,11 @@
 /* ================================================================
-   Service Builder — Avatar Preset Management
+   Page Module — Assign Avatar
+   Avatars are pushed from AI Framework; Admin assigns them to Tenants
    ================================================================ */
 
 window.Pages = window.Pages || {};
 window.Pages.serviceBuilder = {
 
-  // ─── Helper: re-render page in place ───
   _rerender() {
     const ct = document.getElementById('content');
     if (ct) {
@@ -14,643 +14,477 @@ window.Pages.serviceBuilder = {
     }
   },
 
-  // ─── Helper: build create/edit form HTML ───
-  _buildPresetFormHtml(preset) {
-    const d = window.MockData;
-    const isEdit = !!preset;
-    const p = preset || {};
-
-    const kbOptions = d.knowledgeBases.map(kb =>
-      `<option value="${kb.id}" ${p.kbId === kb.id ? 'selected' : ''}>${kb.name} (${kb.tenantName})</option>`
-    ).join('');
-
-    const avatarList = [
-      'Female Thai Professional',
-      'Male Thai Formal',
-      'Female Thai Casual',
-      'Female Thai Medical',
-      'Male Thai Hospitality',
-    ];
-    const voiceList = [
-      'Thai Female Warm',
-      'Thai Male Standard',
-      'Thai Female Friendly',
-      'Thai Female Calm',
-      'Thai Male Warm',
-    ];
-
-    const avatarOptions = avatarList.map(a =>
-      `<option value="${a}" ${p.avatarName === a ? 'selected' : ''}>${a}</option>`
-    ).join('');
-
-    const voiceOptions = voiceList.map(v =>
-      `<option value="${v}" ${p.voiceName === v ? 'selected' : ''}>${v}</option>`
-    ).join('');
-
-    const modelChecks = d.deviceModels.filter(m => m.status === 'Active').map(m => {
-      const checked = p.compatibleModels && p.compatibleModels.includes(m.id) ? 'checked' : '';
-      return `<label class="flex items-center gap-8 mb-8" style="cursor:pointer">
-        <input type="checkbox" value="${m.id}" name="compatModels" ${checked}> ${m.name}
-      </label>`;
-    }).join('');
-
-    const titleText = isEdit
-      ? `<i class="fa-solid fa-pen"></i> แก้ไข Preset`
-      : `<i class="fa-solid fa-plus"></i> สร้าง Preset ใหม่`;
-    const saveBtnText = isEdit ? 'บันทึกการแก้ไข' : 'บันทึก';
-
-    return `
-      <div class="modal-content" style="max-width:560px;margin:5vh auto;background:var(--card-bg);border-radius:16px;padding:28px;position:relative;max-height:85vh;overflow-y:auto">
-        <button class="btn btn-ghost modal-close-btn" style="position:absolute;top:12px;right:12px" onclick="App.closeModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-        <h3 class="heading mb-20">${titleText}</h3>
-
-        <div class="form-group mb-16">
-          <label class="form-label uppercase">ชื่อ PRESET</label>
-          <input type="text" class="form-input w-full" id="pf-name" placeholder="ระบุชื่อ Preset" value="${p.name || ''}">
-        </div>
-
-        <div class="form-row mb-16" style="display:flex;gap:12px">
-          <div class="form-group" style="flex:1">
-            <label class="form-label uppercase">AVATAR</label>
-            <select class="form-input w-full" id="pf-avatar">
-              <option value="">เลือก Avatar</option>
-              ${avatarOptions}
-            </select>
-          </div>
-          <div class="form-group" style="flex:1">
-            <label class="form-label uppercase">VOICE</label>
-            <select class="form-input w-full" id="pf-voice">
-              <option value="">เลือก Voice</option>
-              ${voiceOptions}
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group mb-4">
-          <label class="form-label uppercase">AGENT PROMPT</label>
-          <textarea class="form-input w-full" id="pf-prompt" rows="4" placeholder="ระบุบทบาทของ Agent...">${p.agentPrompt || ''}</textarea>
-        </div>
-
-        <!-- System Prompt Preview -->
-        <div class="mb-16">
-          <button type="button" class="btn btn-ghost btn-sm" id="pf-preview-btn" style="font-size:0.8rem">
-            <i class="fa-solid fa-eye"></i> Preview System Prompt
-          </button>
-          <div id="pf-preview-box" style="display:none;margin-top:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:0.85rem;color:var(--text-muted);font-family:monospace;line-height:1.6;white-space:pre-wrap"></div>
-        </div>
-
-        <div class="form-group mb-16">
-          <label class="form-label uppercase">KNOWLEDGE BASE</label>
-          <select class="form-input w-full" id="pf-kb">
-            <option value="">ไม่เลือก (ไม่มี KB)</option>
-            ${kbOptions}
-          </select>
-        </div>
-
-        <div class="form-group mb-20">
-          <label class="form-label uppercase">รุ่นอุปกรณ์ที่รองรับ</label>
-          ${modelChecks}
-        </div>
-
-        <div class="divider mb-16"></div>
-
-        <div class="flex justify-end gap-12">
-          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-          <button class="btn btn-primary" id="pf-save-btn">
-            <i class="fa-solid fa-check"></i> ${saveBtnText}
-          </button>
-        </div>
-      </div>`;
-  },
-
   render() {
     const d = window.MockData;
-    const presets = d.presets;
-    const totalPresets = presets.length;
-    const activePresets = presets.filter(p => p.status === 'Active').length;
-    const defaultPreset = presets.find(p => p.isDefault);
+    const avatars = d.presets;
+    const totalAvatars  = avatars.length;
+    const activeAvatars = avatars.filter(p => p.status === 'Active').length;
+    const defaultCount = avatars.filter(p => p.isDefault).length;
 
     const avatarIcons = {
-      'Female Thai Professional': '<i class="fa-solid fa-user-tie" style="font-size:2rem"></i>',
-      'Male Thai Formal': '<i class="fa-solid fa-user" style="font-size:2rem"></i>',
-      'Female Thai Casual': '<i class="fa-solid fa-face-smile" style="font-size:2rem"></i>',
-      'Female Thai Medical': '<i class="fa-solid fa-user-doctor" style="font-size:2rem"></i>',
-      'Male Thai Hospitality': '<i class="fa-solid fa-concierge-bell" style="font-size:2rem"></i>',
+      'Female Thai Professional': 'fa-user-tie',
+      'Male Thai Formal':         'fa-user',
+      'Female Thai Casual':       'fa-face-smile',
+      'Female Thai Medical':      'fa-user-doctor',
+      'Male Thai Hospitality':    'fa-concierge-bell',
     };
 
-    function renderPresetCard(p) {
-      const icon = avatarIcons[p.avatarName] || '<i class="fa-solid fa-user-circle" style="font-size:2rem"></i>';
-      const chips = [];
-      if (p.suggested) chips.push('<span class="chip chip-blue">Suggested</span>');
-      if (p.isDefault) chips.push('<span class="chip chip-orange">System Default</span>');
+    function renderAvatarCard(p) {
+      const iconClass = avatarIcons[p.avatarName] || 'fa-user-circle';
+
+      // Assigned tenant chips (max 2 visible + overflow)
+      const tenantChips = p.assignedTenants.map(tid => {
+        const t = d.tenants.find(tn => tn.id === tid);
+        return t ? `<span class="chip chip-gray" style="font-size:10px;">${t.name}</span>` : '';
+      });
+      const visibleChips = tenantChips.slice(0, 2).join('');
+      const overflowChip = tenantChips.length > 2
+        ? `<span class="chip chip-gray" style="font-size:10px;">+${tenantChips.length - 2}</span>` : '';
 
       return `
-        <div class="entity-card card-hover ${p.status === 'Draft' ? 'text-muted' : ''}" data-preset-id="${p.id}" style="${p.status === 'Draft' ? 'opacity:0.7' : ''}">
-          <div class="entity-thumb flex flex-col items-center gap-8">
-            ${icon}
-            <div class="flex gap-8 flex-wrap">${chips.join('')}</div>
+        <div class="card p-16 card-hover" data-avatar-id="${p.id}"
+          style="${p.status === 'Draft' ? 'opacity:0.65;' : ''}cursor:pointer;
+            border-left:3px solid ${p.status === 'Active' ? 'var(--primary)' : 'var(--border)'};">
+
+          <!-- Top row: icon + name + status + default toggle -->
+          <div class="flex items-start gap-10 mb-10">
+            <div style="width:36px;height:36px;border-radius:10px;flex-shrink:0;
+              background:var(--primary-dim);
+              display:flex;align-items:center;justify-content:center;">
+              <i class="fa-solid ${iconClass}" style="font-size:15px;color:var(--primary);"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-700 truncate mb-2" style="font-size:13px;">${p.name}</div>
+              <div class="flex items-center gap-6 flex-wrap">
+                ${d.statusChip(p.status)}
+                ${p.suggested ? '<span class="chip chip-blue" style="font-size:10px;">Suggested</span>' : ''}
+              </div>
+            </div>
+            <button class="avatar-toggle-default btn btn-sm"
+              data-id="${p.id}" onclick="event.stopPropagation()"
+              title="${p.isDefault ? 'ยกเลิก System Default' : 'ตั้งเป็น System Default'}"
+              style="flex-shrink:0;padding:4px 8px;
+                ${p.isDefault
+                  ? 'background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4);'
+                  : 'opacity:.4;'}">
+              <i class="fa-solid fa-star"></i>
+            </button>
           </div>
-          <div class="entity-body">
-            <div class="font-700 mb-4">${p.name}</div>
-            <div class="text-muted text-sm mb-4">${p.avatarName} / ${p.voiceName}</div>
-            <div class="text-sm">${p.kbName ? '<i class="fa-solid fa-book text-primary"></i> ' + p.kbName : '<span class="text-muted">ไม่มี KB</span>'}</div>
+
+          <!-- Meta row -->
+          <div class="flex-col gap-4 mb-10" style="font-size:11px;color:var(--text-muted);">
+            <div class="truncate">
+              <i class="fa-solid fa-user" style="width:13px;"></i> ${p.avatarName}
+            </div>
+            <div class="truncate">
+              <i class="fa-solid fa-microphone" style="width:13px;"></i> ${p.voiceName}
+            </div>
+            <div class="truncate">
+              <i class="fa-solid fa-book" style="width:13px;color:var(--primary);opacity:.8;"></i>
+              ${p.kbName || '<span style="opacity:.5;">ไม่มี KB</span>'}
+            </div>
           </div>
-          <div class="entity-footer flex items-center justify-between flex-wrap gap-8">
-            ${d.statusChip(p.status)}
-            <span class="text-sm text-muted"><i class="fa-solid fa-building"></i> <span class="mono">${p.assignedTenants.length}</span> ผู้เช่า</span>
-            <span class="text-sm text-muted"><i class="fa-solid fa-display"></i> <span class="mono">${p.compatibleModels.length}</span> รุ่น</span>
+
+          <!-- Divider -->
+          <div style="height:1px;background:var(--border);margin:8px 0;"></div>
+
+          <!-- Bottom row: assigned tenants + assign button -->
+          <div class="flex items-center justify-between gap-8">
+            <div class="flex items-center gap-4 flex-wrap" style="min-width:0;flex:1;">
+              ${p.assignedTenants.length === 0
+                ? '<span style="font-size:11px;color:var(--text-dim);">ยังไม่ Assign</span>'
+                : visibleChips + overflowChip}
+            </div>
+            <button class="btn btn-sm btn-primary avatar-assign-btn" data-id="${p.id}"
+              onclick="event.stopPropagation()" style="flex-shrink:0;">
+              <i class="fa-solid fa-link"></i> Assign
+            </button>
           </div>
         </div>`;
     }
 
+    // Build tenant options for filter
+    const allTenantIds = [...new Set(avatars.flatMap(p => p.assignedTenants))];
+    const tenantOptions = d.tenants
+      .filter(t => allTenantIds.includes(t.id))
+      .map(t => `<option value="${t.id}">${t.name} (${t.id})</option>`)
+      .join('');
+
     return `
-      <div>
-        <!-- Page Header -->
-        <div class="page-header">
-          <h2 class="heading">SERVICE BUILDER</h2>
-          <div class="page-header-actions">
-            <button class="btn btn-primary" id="btn-create-preset">
-              <i class="fa-solid fa-plus"></i> สร้าง Preset
-            </button>
-          </div>
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="heading">ASSIGN AVATAR</h1>
+          <div class="text-sm text-muted mt-2">มอบหมาย Avatar ให้ Tenant — Avatar ถูกส่งมาจาก AI Framework</div>
         </div>
+      </div>
 
-        <!-- Stats Row -->
-        <div class="grid-3 gap-20 mb-24">
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon blue"><i class="fa-solid fa-layer-group"></i></span>
-            </div>
-            <div class="stat-value mono">${d.formatNumber(totalPresets)}</div>
-            <div class="stat-label uppercase">สร้างแล้วทั้งหมด</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon green"><i class="fa-solid fa-circle-check"></i></span>
-            </div>
-            <div class="stat-value mono">${d.formatNumber(activePresets)}</div>
-            <div class="stat-label uppercase">PRESET ที่ใช้งาน</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon orange"><i class="fa-solid fa-star"></i></span>
-            </div>
-            <div class="stat-value text-sm">${defaultPreset ? defaultPreset.name : '-'}</div>
-            <div class="stat-label uppercase">SYSTEM DEFAULT</div>
-          </div>
+      <!-- Info Banner -->
+      <div class="banner-info mb-20">
+        <div class="banner-icon"><i class="fa-solid fa-circle-info text-primary"></i></div>
+        <div class="flex-1 text-sm">
+          Avatar ทั้งหมดถูก <strong>sync จาก AI Framework</strong> อัตโนมัติ
+          — Admin เพียงเลือก Assign ให้ TenantID ที่ต้องการ
         </div>
+      </div>
 
-        <!-- Tab Bar -->
-        <div class="tab-bar mb-20">
+      <!-- Stats (compact) -->
+      <div class="grid-3 gap-16 mb-20">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Avatar ทั้งหมด</span>
+            <div class="stat-icon blue"><i class="fa-solid fa-robot"></i></div>
+          </div>
+          <div class="stat-value mono">${totalAvatars}</div>
+          <div class="stat-change up">${activeAvatars} Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Tenants ที่ Assign แล้ว</span>
+            <div class="stat-icon green"><i class="fa-solid fa-building"></i></div>
+          </div>
+          <div class="stat-value mono">${new Set(avatars.flatMap(p => p.assignedTenants)).size}</div>
+          <div class="stat-change up">Unique Tenants</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">System Default</span>
+            <div class="stat-icon orange"><i class="fa-solid fa-star"></i></div>
+          </div>
+          <div class="stat-value mono">${defaultCount}</div>
+          <div class="stat-change up">Demo Avatar${defaultCount !== 1 ? 's' : ''} พร้อมใช้</div>
+        </div>
+      </div>
+
+      <!-- Filter Row: Tab + Tenant filter -->
+      <div class="flex items-center gap-12 mb-16 flex-wrap">
+        <div class="tab-bar">
           <div class="tab-item active" data-tab="all">ทั้งหมด</div>
-          <div class="tab-item" data-tab="assigned">ถูกกำหนดแล้ว</div>
+          <div class="tab-item" data-tab="assigned">Assign แล้ว</div>
+          <div class="tab-item" data-tab="unassigned">ยังไม่ Assign</div>
           <div class="tab-item" data-tab="default">System Default</div>
         </div>
-
-        <!-- Preset Grid -->
-        <div class="grid-3 gap-20" id="preset-grid">
-          ${presets.map(p => renderPresetCard(p)).join('')}
+        <div class="flex items-center gap-8 ml-auto">
+          <i class="fa-solid fa-filter text-muted text-sm"></i>
+          <select class="form-input" id="avatar-tenant-filter" style="min-width:200px;">
+            <option value="">Tenant ทั้งหมด</option>
+            ${tenantOptions}
+          </select>
         </div>
-      </div>`;
+      </div>
+
+      <!-- Avatar Grid -->
+      <div class="grid-3 gap-14" id="avatar-grid">
+        ${avatars.map(p => renderAvatarCard(p)).join('')}
+      </div>
+    `;
   },
 
   init() {
-    const d = window.MockData;
-    const presets = d.presets;
+    const d    = window.MockData;
     const self = window.Pages.serviceBuilder;
 
-    const avatarIcons = {
-      'Female Thai Professional': '<i class="fa-solid fa-user-tie" style="font-size:2rem"></i>',
-      'Male Thai Formal': '<i class="fa-solid fa-user" style="font-size:2rem"></i>',
-      'Female Thai Casual': '<i class="fa-solid fa-face-smile" style="font-size:2rem"></i>',
-      'Female Thai Medical': '<i class="fa-solid fa-user-doctor" style="font-size:2rem"></i>',
-      'Male Thai Hospitality': '<i class="fa-solid fa-concierge-bell" style="font-size:2rem"></i>',
-    };
+    // ─── Combined filter: Tab + Tenant ───
+    let activeTab    = 'all';
+    let activeTenant = '';
 
-    // ─── Tab Switching ───
+    function applyFilters() {
+      document.querySelectorAll('#avatar-grid .card').forEach(card => {
+        const p = d.presets.find(pr => pr.id === card.dataset.avatarId);
+        if (!p) return;
+        let show = true;
+        if (activeTab === 'assigned')   show = p.assignedTenants.length > 0;
+        if (activeTab === 'unassigned') show = p.assignedTenants.length === 0;
+        if (activeTab === 'default')    show = !!p.isDefault;
+        if (show && activeTenant)       show = p.assignedTenants.includes(activeTenant);
+        card.style.display = show ? '' : 'none';
+      });
+    }
+
     document.querySelectorAll('.tab-item[data-tab]').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.tab-item[data-tab]').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-
-        const filter = tab.dataset.tab;
-        const cards = document.querySelectorAll('#preset-grid .entity-card');
-        cards.forEach(card => {
-          const id = card.dataset.presetId;
-          const preset = presets.find(p => p.id === id);
-          if (!preset) return;
-
-          let show = true;
-          if (filter === 'assigned') show = preset.assignedTenants.length > 0;
-          if (filter === 'default') show = !!preset.isDefault;
-
-          card.style.display = show ? '' : 'none';
-        });
+        activeTab = tab.dataset.tab;
+        applyFilters();
       });
     });
 
-    // ─── Bind system prompt preview inside active modal ───
-    function bindPreviewBtn() {
-      const previewBtn = document.getElementById('pf-preview-btn');
-      const previewBox = document.getElementById('pf-preview-box');
-      if (previewBtn && previewBox) {
-        previewBtn.addEventListener('click', () => {
-          const promptVal = (document.getElementById('pf-prompt') || {}).value || '';
-          const assembled = `คุณคือ ${promptVal || '{inject_input}'} ตอบคำถามเป็นภาษาไทย สุภาพและเป็นมิตร`;
-          if (previewBox.style.display === 'none') {
-            previewBox.textContent = assembled;
-            previewBox.style.display = 'block';
-            previewBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> ซ่อน System Prompt';
-          } else {
-            previewBox.style.display = 'none';
-            previewBtn.innerHTML = '<i class="fa-solid fa-eye"></i> Preview System Prompt';
-          }
+    document.getElementById('avatar-tenant-filter')?.addEventListener('change', function () {
+      activeTenant = this.value;
+      // Auto-switch to "assigned" tab when a tenant is selected
+      if (activeTenant && activeTab === 'unassigned') {
+        activeTab = 'all';
+        document.querySelectorAll('.tab-item[data-tab]').forEach(t => {
+          t.classList.toggle('active', t.dataset.tab === 'all');
         });
       }
-    }
+      applyFilters();
+    });
 
-    // ─── Open detail modal for a preset ───
+    // ─── Open Detail Modal (card click, not button) ───
+    document.querySelectorAll('#avatar-grid .card').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        const p = d.presets.find(pr => pr.id === card.dataset.avatarId);
+        if (p) openDetailModal(p);
+      });
+    });
+
+    // ─── Assign Button on card ───
+    document.querySelectorAll('.avatar-assign-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = d.presets.find(pr => pr.id === btn.dataset.id);
+        if (p) openAssignModal(p);
+      });
+    });
+
+    // ─── Toggle System Default ───
+    document.querySelectorAll('.avatar-toggle-default').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = d.presets.find(pr => pr.id === btn.dataset.id);
+        if (!p) return;
+        p.isDefault = !p.isDefault;
+        self._rerender();
+        App.toast(
+          p.isDefault
+            ? `<i class="fa-solid fa-star" style="color:#fb923c;"></i> ตั้ง "${p.name}" เป็น System Default แล้ว`
+            : `ยกเลิก Default ของ "${p.name}" แล้ว`,
+          p.isDefault ? 'success' : 'info'
+        );
+      });
+    });
+
+    // ─── Detail Modal (read-only info) ───
     function openDetailModal(p) {
+      const avatarIcons = {
+        'Female Thai Professional': 'fa-user-tie',
+        'Male Thai Formal':         'fa-user',
+        'Female Thai Casual':       'fa-face-smile',
+        'Female Thai Medical':      'fa-user-doctor',
+        'Male Thai Hospitality':    'fa-concierge-bell',
+      };
+      const iconClass = avatarIcons[p.avatarName] || 'fa-user-circle';
+
       const tenantNames = p.assignedTenants.map(tid => {
         const t = d.tenants.find(tn => tn.id === tid);
-        return t ? t.name : tid;
-      });
+        return t ? `<span class="chip chip-blue" style="margin-bottom:4px;">${t.name}</span>` : '';
+      }).join(' ');
 
       const modelNames = p.compatibleModels.map(mid => {
         const m = d.deviceModels.find(dm => dm.id === mid);
-        return m ? m.name : mid;
-      });
+        return m ? `<span class="chip chip-gray" style="margin-bottom:4px;">${m.name}</span>` : '';
+      }).join(' ');
 
-      const icon = avatarIcons[p.avatarName] || '<i class="fa-solid fa-user-circle"></i>';
-      const isSuggested = !!p.suggested;
-
-      const modalHtml = `
-        <div class="modal-content" style="max-width:600px;margin:5vh auto;background:var(--card-bg);border-radius:16px;padding:28px;position:relative;max-height:85vh;overflow-y:auto">
-          <button class="btn btn-ghost modal-close-btn" style="position:absolute;top:12px;right:12px" onclick="App.closeModal()">
+      window.App.showModal(`
+        <div class="modal modal-wide">
+          <button class="modal-close" onclick="App.closeModal()">
             <i class="fa-solid fa-xmark"></i>
           </button>
 
-          <div class="flex items-center gap-16 mb-20">
-            ${icon}
-            <div>
-              <h3 class="heading mb-4">${p.name}</h3>
-              <div class="text-muted text-sm"><span class="mono">${p.id}</span></div>
+          <!-- Header -->
+          <div class="flex items-center gap-16 mb-4">
+            <div style="width:52px;height:52px;border-radius:14px;background:var(--primary-dim);
+              display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid ${iconClass}" style="font-size:22px;color:var(--primary);"></i>
             </div>
-            <div class="ml-auto">${d.statusChip(p.status)}</div>
-          </div>
-
-          <div class="divider mb-16"></div>
-
-          <!-- Avatar -->
-          <div class="flex items-start gap-12 mb-16">
-            <span class="stat-icon blue" style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px">
-              <i class="fa-solid fa-user"></i>
-            </span>
-            <div>
-              <div class="text-xs uppercase text-muted mb-4">AVATAR</div>
-              <div class="font-600">${p.avatarName}</div>
+            <div class="flex-1 min-w-0">
+              <div class="modal-title" style="margin-bottom:0;">${p.name}</div>
+              <div class="mono text-xs text-muted">${p.id}</div>
             </div>
+            <div>${d.statusChip(p.status)}</div>
+          </div>
+          <div class="modal-subtitle">
+            ${p.suggested ? '<span class="chip chip-blue" style="margin-right:6px;">Suggested</span>' : ''}
+            ${p.isDefault ? '<span class="chip chip-orange">System Default</span>' : ''}
           </div>
 
-          <!-- Voice -->
-          <div class="flex items-start gap-12 mb-16">
-            <span class="stat-icon green" style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px">
-              <i class="fa-solid fa-microphone"></i>
-            </span>
-            <div>
-              <div class="text-xs uppercase text-muted mb-4">VOICE</div>
-              <div class="font-600">${p.voiceName}</div>
-            </div>
-          </div>
-
-          <!-- Agent -->
-          <div class="flex items-start gap-12 mb-16">
-            <span class="stat-icon purple" style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px">
-              <i class="fa-solid fa-brain"></i>
-            </span>
-            <div>
-              <div class="text-xs uppercase text-muted mb-4">AGENT PROMPT</div>
-              <div class="font-600 text-sm" style="line-height:1.6">${p.agentPrompt}</div>
-            </div>
-          </div>
-
-          <!-- Knowledge Base -->
-          <div class="flex items-start gap-12 mb-20">
-            <span class="stat-icon orange" style="min-width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px">
-              <i class="fa-solid fa-book"></i>
-            </span>
-            <div>
-              <div class="text-xs uppercase text-muted mb-4">KNOWLEDGE BASE</div>
-              <div class="font-600">${p.kbName || '<span class="text-muted">ไม่มี KB</span>'}</div>
-            </div>
-          </div>
-
-          <div class="divider mb-16"></div>
-
-          <!-- Assigned Tenants -->
-          <div class="mb-16">
-            <div class="text-xs uppercase text-muted mb-8"><i class="fa-solid fa-building"></i> ผู้เช่าที่กำหนด</div>
-            ${tenantNames.length > 0
-              ? tenantNames.map(n => `<span class="chip chip-blue mb-4">${n}</span> `).join('')
-              : '<span class="text-muted text-sm">ยังไม่มีผู้เช่า</span>'}
-          </div>
-
-          <!-- Compatible Models -->
-          <div class="mb-20">
-            <div class="text-xs uppercase text-muted mb-8"><i class="fa-solid fa-display"></i> รุ่นอุปกรณ์ที่รองรับ</div>
-            ${modelNames.length > 0
-              ? modelNames.map(n => `<span class="chip chip-gray mb-4">${n}</span> `).join('')
-              : '<span class="text-muted text-sm">ไม่มีข้อมูล</span>'}
-          </div>
-
-          <div class="divider mb-16"></div>
-
-          <!-- Suggested Toggle -->
-          <div class="flex items-center justify-between mb-16">
-            <div>
-              <div class="font-600 mb-2">Suggested</div>
-              <div class="text-sm text-muted">แสดง Preset นี้เป็นตัวเลือกแนะนำให้ผู้เช่า</div>
-            </div>
-            <label class="flex items-center gap-8" style="cursor:pointer">
-              <div style="position:relative;width:44px;height:24px">
-                <input type="checkbox" id="detail-suggested-toggle" ${isSuggested ? 'checked' : ''} style="opacity:0;width:0;height:0;position:absolute">
-                <div id="detail-suggested-track" style="position:absolute;inset:0;border-radius:12px;background:${isSuggested ? 'var(--primary)' : 'var(--border)'};transition:background 0.2s;cursor:pointer">
-                  <div style="position:absolute;top:2px;left:${isSuggested ? '22px' : '2px'};width:20px;height:20px;border-radius:50%;background:#fff;transition:left 0.2s" id="detail-suggested-thumb"></div>
-                </div>
+          <!-- Info rows -->
+          <div class="grid-2 gap-12 mb-16">
+            <div class="card p-16">
+              <div class="text-xs text-muted uppercase mb-6">Avatar</div>
+              <div class="font-600 text-sm">
+                <i class="fa-solid fa-user text-primary" style="margin-right:6px;"></i>${p.avatarName}
               </div>
-              <span class="text-sm font-600" id="detail-suggested-label">${isSuggested ? 'เปิด' : 'ปิด'}</span>
-            </label>
+            </div>
+            <div class="card p-16">
+              <div class="text-xs text-muted uppercase mb-6">Voice</div>
+              <div class="font-600 text-sm">
+                <i class="fa-solid fa-microphone text-primary" style="margin-right:6px;"></i>${p.voiceName}
+              </div>
+            </div>
           </div>
 
-          <!-- Actions -->
-          <div class="flex justify-end gap-12 flex-wrap">
-            <button class="btn btn-danger btn-sm" id="detail-btn-delete"><i class="fa-solid fa-trash"></i> ลบ</button>
-            <button class="btn btn-outline btn-sm" id="detail-btn-assign"><i class="fa-solid fa-building"></i> Assign ให้ Tenant</button>
-            <button class="btn btn-primary btn-sm" id="detail-btn-edit"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+          <div class="card p-16 mb-16">
+            <div class="text-xs text-muted uppercase mb-6">Agent Prompt</div>
+            <div class="text-sm" style="line-height:1.7;color:var(--text);">${p.agentPrompt}</div>
           </div>
-        </div>`;
 
-      window.App.showModal(modalHtml);
+          <div class="card p-16 mb-16">
+            <div class="text-xs text-muted uppercase mb-6">Knowledge Base</div>
+            <div class="font-600 text-sm">
+              ${p.kbName
+                ? `<i class="fa-solid fa-book text-primary" style="margin-right:6px;"></i>${p.kbName}`
+                : '<span class="text-muted">ไม่มี KB</span>'}
+            </div>
+          </div>
 
-      // Wire suggested toggle
+          <div class="card p-16 mb-16">
+            <div class="text-xs text-muted uppercase mb-8">Tenants ที่ Assign แล้ว
+              <span class="chip chip-gray" style="font-size:10px;margin-left:6px;">${p.assignedTenants.length}</span>
+            </div>
+            ${tenantNames || '<span class="text-muted text-sm">ยังไม่มี Tenant</span>'}
+          </div>
+
+          <div class="card p-16 mb-20">
+            <div class="text-xs text-muted uppercase mb-8">รุ่นอุปกรณ์ที่รองรับ</div>
+            ${modelNames || '<span class="text-muted text-sm">ไม่มีข้อมูล</span>'}
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+            <button class="btn btn-primary" id="detail-open-assign">
+              <i class="fa-solid fa-link"></i> Assign ให้ Tenant
+            </button>
+          </div>
+        </div>
+      `);
+
       setTimeout(() => {
-        const toggleInput = document.getElementById('detail-suggested-toggle');
-        const track = document.getElementById('detail-suggested-track');
-        const thumb = document.getElementById('detail-suggested-thumb');
-        const label = document.getElementById('detail-suggested-label');
-
-        if (track) {
-          track.addEventListener('click', () => {
-            const newVal = !p.suggested;
-            p.suggested = newVal;
-            track.style.background = newVal ? 'var(--primary)' : 'var(--border)';
-            thumb.style.left = newVal ? '22px' : '2px';
-            label.textContent = newVal ? 'เปิด' : 'ปิด';
-            self._rerender();
-            // Re-open this modal after re-render
-            setTimeout(() => {
-              const updatedP = d.presets.find(pr => pr.id === p.id);
-              if (updatedP) openDetailModal(updatedP);
-            }, 50);
-          });
-        }
-
-        // Wire Edit button
-        const editBtn = document.getElementById('detail-btn-edit');
-        if (editBtn) {
-          editBtn.addEventListener('click', () => {
-            App.closeModal();
-            openEditModal(p);
-          });
-        }
-
-        // Wire Delete button
-        const deleteBtn = document.getElementById('detail-btn-delete');
-        if (deleteBtn) {
-          deleteBtn.addEventListener('click', () => {
-            if (p.assignedTenants.length > 0) {
-              App.toast(`Preset นี้ถูก Assign ให้ ${p.assignedTenants.length} Tenant อยู่ กรุณา Unassign ก่อนลบ`, 'error');
-              return;
-            }
-            App.confirm(`ยืนยันการลบ Preset "${p.name}" หรือไม่?`, { title: 'ลบ Preset', confirmText: 'ลบ', cancelText: 'ยกเลิก', type: 'danger' }).then(ok => {
-              if (!ok) return;
-              const idx = d.presets.findIndex(pr => pr.id === p.id);
-              if (idx !== -1) d.presets.splice(idx, 1);
-              App.closeModal();
-              self._rerender();
-              App.toast(`ลบ Preset "${p.name}" สำเร็จ`, 'success');
-            });
-          });
-        }
-
-        // Wire Assign button
-        const assignBtn = document.getElementById('detail-btn-assign');
-        if (assignBtn) {
-          assignBtn.addEventListener('click', () => {
-            App.closeModal();
-            openAssignModal(p);
-          });
-        }
+        document.getElementById('detail-open-assign')?.addEventListener('click', () => {
+          App.closeModal();
+          openAssignModal(p);
+        });
       }, 50);
     }
 
-    // ─── Open edit modal for a preset ───
-    function openEditModal(p) {
-      const formHtml = self._buildPresetFormHtml(p);
-      window.App.showModal(formHtml);
-
-      setTimeout(() => {
-        bindPreviewBtn();
-
-        const saveBtn = document.getElementById('pf-save-btn');
-        if (saveBtn) {
-          saveBtn.addEventListener('click', () => {
-            const name   = (document.getElementById('pf-name') || {}).value || '';
-            const avatar = (document.getElementById('pf-avatar') || {}).value || '';
-            const voice  = (document.getElementById('pf-voice') || {}).value || '';
-            const prompt = (document.getElementById('pf-prompt') || {}).value || '';
-            const kbSel  = document.getElementById('pf-kb');
-            const kbId   = kbSel ? kbSel.value : '';
-
-            if (!name.trim()) { App.toast('กรุณาระบุชื่อ Preset', 'error'); return; }
-            if (!avatar)      { App.toast('กรุณาเลือก Avatar', 'error'); return; }
-            if (!voice)       { App.toast('กรุณาเลือก Voice', 'error'); return; }
-
-            const checked = [...document.querySelectorAll('input[name="compatModels"]:checked')].map(c => c.value);
-            const kb = kbId ? d.knowledgeBases.find(k => k.id === kbId) : null;
-
-            p.name             = name.trim();
-            p.avatarName       = avatar;
-            p.voiceName        = voice;
-            p.agentPrompt      = prompt.trim();
-            p.kbId             = kb ? kb.id : null;
-            p.kbName           = kb ? kb.name : null;
-            p.compatibleModels = checked;
-
-            App.closeModal();
-            self._rerender();
-            App.toast(`อัปเดต Preset "${p.name}" สำเร็จ`, 'success');
-          });
-        }
-      }, 50);
-    }
-
-    // ─── Open assign-to-tenant modal ───
+    // ─── Assign Modal (with Tenant search) ───
     function openAssignModal(p) {
-      const planSlots = { 'Free': 1, 'Starter': 5, 'Pro': null };
+      const planSlots    = { 'Free': 1, 'Starter': 5, 'Pro': null };
       const activeTenants = d.tenants.filter(t => t.status === 'Active');
 
-      const tenantChecks = activeTenants.map(t => {
-        const isAssigned = p.assignedTenants.includes(t.id);
-        const slotLimit = planSlots[t.plan];
-        const slotLabel = slotLimit === null ? 'ไม่จำกัด' : `${slotLimit} Preset`;
-        const slotWarning = slotLimit !== null && !isAssigned
-          ? `<span class="text-xs" style="color:#f59e0b"> (Plan: ${t.plan} — สูงสุด ${slotLabel})</span>`
-          : `<span class="text-xs text-muted"> (${t.plan} — ${slotLabel})</span>`;
+      const tenantItemsHtml = activeTenants.map(t => {
+        const isAssigned  = p.assignedTenants.includes(t.id);
+        const slotLimit   = planSlots[t.plan];
+        const slotLabel   = slotLimit === null ? 'ไม่จำกัด' : `${slotLimit} Avatar`;
+        const currentCount = d.presets.filter(pr => pr.id !== p.id && pr.assignedTenants.includes(t.id)).length;
+        const wouldExceed  = slotLimit !== null && !isAssigned && (currentCount + 1) > slotLimit;
+
         return `
-          <label class="flex items-center gap-10 mb-10" style="cursor:pointer;padding:10px;border-radius:8px;border:1px solid var(--border)">
-            <input type="checkbox" name="assignTenant" value="${t.id}" ${isAssigned ? 'checked' : ''}>
-            <div>
-              <div class="font-600">${t.name}</div>
-              <div class="text-xs text-muted">${t.id}${slotWarning}</div>
+          <label class="flex items-center gap-12 assign-tenant-item"
+            data-name="${t.name.toLowerCase()}"
+            style="padding:12px 16px;border-radius:10px;
+              border:1px solid ${isAssigned ? 'var(--primary)' : 'var(--border)'};
+              background:${isAssigned ? 'var(--primary-dim)' : 'var(--surface2)'};
+              cursor:pointer;transition:border-color .15s,background .15s;">
+            <input type="checkbox" name="assignTenant" value="${t.id}"
+              ${isAssigned ? 'checked' : ''}
+              style="width:16px;height:16px;accent-color:var(--primary);flex-shrink:0;">
+            <div class="flex-1 min-w-0">
+              <div class="font-600 text-sm">${t.name}</div>
+              <div class="text-xs text-muted mono">${t.id}</div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="text-xs font-600">${t.plan}</div>
+              <div class="text-xs ${wouldExceed ? 'text-warning' : 'text-muted'}">${slotLabel}</div>
             </div>
           </label>`;
       }).join('');
 
-      const modalHtml = `
-        <div class="modal-content" style="max-width:520px;margin:5vh auto;background:var(--card-bg);border-radius:16px;padding:28px;position:relative;max-height:85vh;overflow-y:auto">
-          <button class="btn btn-ghost" style="position:absolute;top:12px;right:12px" onclick="App.closeModal()">
+      window.App.showModal(`
+        <div class="modal modal-wide">
+          <button class="modal-close" onclick="App.closeModal()">
             <i class="fa-solid fa-xmark"></i>
           </button>
 
-          <h3 class="heading mb-4"><i class="fa-solid fa-building"></i> Assign Preset ให้ Tenant</h3>
-          <div class="text-muted text-sm mb-20">${p.name}</div>
-
-          <div class="banner-info mb-16" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:10px 14px;font-size:0.85rem">
-            <i class="fa-solid fa-circle-info" style="color:#f59e0b"></i>
-            <span style="margin-left:6px">Free = 1 Preset, Starter = 5 Presets, Pro = ไม่จำกัด</span>
+          <div class="modal-title">
+            <i class="fa-solid fa-link text-primary"></i> Assign Avatar ให้ Tenant
+          </div>
+          <div class="modal-subtitle">
+            Avatar: <strong>${p.name}</strong>
+            <span class="chip chip-gray" style="margin-left:8px;font-size:11px;">
+              Assign แล้ว ${p.assignedTenants.length} Tenant
+            </span>
           </div>
 
-          <div class="form-group mb-20">
-            <label class="form-label uppercase mb-10">เลือก Tenant (Active เท่านั้น)</label>
-            ${tenantChecks || '<div class="text-muted text-sm">ไม่มี Tenant ที่ Active</div>'}
+          <!-- Slot Info -->
+          <div class="alert-warning mb-16">
+            <i class="fa-solid fa-circle-info"></i>
+            <span class="text-sm">
+              <strong>Free</strong> = 1 Avatar &nbsp;·&nbsp;
+              <strong>Starter</strong> = 5 Avatars &nbsp;·&nbsp;
+              <strong>Pro</strong> = ไม่จำกัด
+            </span>
           </div>
 
-          <div class="divider mb-16"></div>
-          <div class="flex justify-end gap-12">
+          <!-- Search -->
+          <div class="search-bar mb-12">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="assign-tenant-search" placeholder="ค้นหา Tenant...">
+          </div>
+
+          <!-- Tenant List -->
+          <div class="flex-col gap-8 mb-4" id="assign-tenant-list"
+            style="max-height:320px;overflow-y:auto;padding-right:2px;">
+            ${tenantItemsHtml || '<div class="text-muted text-sm p-16 text-center">ไม่มี Tenant ที่ Active</div>'}
+          </div>
+
+          <div class="modal-actions">
             <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-            <button class="btn btn-primary" id="btn-save-assign"><i class="fa-solid fa-check"></i> บันทึก</button>
+            <button class="btn btn-primary" id="btn-save-assign">
+              <i class="fa-solid fa-check"></i> บันทึก
+            </button>
           </div>
-        </div>`;
-
-      window.App.showModal(modalHtml);
+        </div>
+      `);
 
       setTimeout(() => {
-        const saveBtn = document.getElementById('btn-save-assign');
-        if (saveBtn) {
-          saveBtn.addEventListener('click', () => {
-            // Validate slot limits
-            const selected = [...document.querySelectorAll('input[name="assignTenant"]:checked')].map(c => c.value);
-            let limitError = null;
-            const planSlots = { 'Free': 1, 'Starter': 5, 'Pro': null };
-            for (const tid of selected) {
-              const tenant = d.tenants.find(t => t.id === tid);
-              if (!tenant) continue;
-              const limit = planSlots[tenant.plan];
-              if (limit === null) continue;
-              // Count how many presets this tenant is currently assigned to (across all presets)
-              const currentCount = d.presets.filter(pr => pr.id !== p.id && pr.assignedTenants.includes(tid)).length;
-              // +1 for this new assignment (only if not already assigned)
-              const alreadyHas = p.assignedTenants.includes(tid);
-              const wouldHave = currentCount + 1;
-              if (!alreadyHas && wouldHave > limit) {
-                limitError = `${tenant.name} (${tenant.plan}) ถึงขีดจำกัด ${limit} Preset แล้ว`;
-                break;
-              }
-            }
-            if (limitError) {
-              App.toast(limitError, 'warning');
-              return;
-            }
-
-            p.assignedTenants = selected;
-            App.closeModal();
-            self._rerender();
-            App.toast(`อัปเดตการ Assign สำเร็จ`, 'success');
+        // ─── Live search filter ───
+        const searchInput = document.getElementById('assign-tenant-search');
+        if (searchInput) {
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            document.querySelectorAll('.assign-tenant-item').forEach(item => {
+              item.style.display = (!q || item.dataset.name.includes(q)) ? '' : 'none';
+            });
           });
         }
+
+        // ─── Checkbox border highlight ───
+        document.querySelectorAll('input[name="assignTenant"]').forEach(chk => {
+          chk.addEventListener('change', () => {
+            const label = chk.closest('label');
+            if (label) {
+              label.style.borderColor = chk.checked ? 'var(--primary)' : 'var(--border)';
+              label.style.background  = chk.checked ? 'var(--primary-dim)' : 'var(--surface2)';
+            }
+          });
+        });
+
+        // ─── Save ───
+        document.getElementById('btn-save-assign')?.addEventListener('click', () => {
+          const selected = [...document.querySelectorAll('input[name="assignTenant"]:checked')]
+            .map(c => c.value);
+
+          // Validate slot limits
+          for (const tid of selected) {
+            const tenant = d.tenants.find(t => t.id === tid);
+            if (!tenant) continue;
+            const limit = planSlots[tenant.plan];
+            if (limit === null) continue;
+            const currentCount = d.presets.filter(pr => pr.id !== p.id && pr.assignedTenants.includes(tid)).length;
+            if (!p.assignedTenants.includes(tid) && (currentCount + 1) > limit) {
+              App.toast(`${tenant.name} (${tenant.plan}) เกินขีดจำกัด ${limit} Avatar แล้ว`, 'warning');
+              return;
+            }
+          }
+
+          p.assignedTenants = selected;
+          App.closeModal();
+          self._rerender();
+          App.toast(`Assign Avatar สำเร็จ — ${selected.length} Tenant`, 'success');
+        });
       }, 50);
     }
-
-    // ─── Preset Card Click -> Detail Modal ───
-    document.querySelectorAll('#preset-grid .entity-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const id = card.dataset.presetId;
-        const p = presets.find(pr => pr.id === id);
-        if (!p) return;
-        openDetailModal(p);
-      });
-    });
-
-    // ─── Create Preset Button ───
-    const createBtn = document.getElementById('btn-create-preset');
-    if (createBtn) {
-      createBtn.addEventListener('click', () => {
-        const formHtml = self._buildPresetFormHtml(null);
-        window.App.showModal(formHtml);
-
-        setTimeout(() => {
-          bindPreviewBtn();
-
-          const saveBtn = document.getElementById('pf-save-btn');
-          if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-              const name   = (document.getElementById('pf-name') || {}).value || '';
-              const avatar = (document.getElementById('pf-avatar') || {}).value || '';
-              const voice  = (document.getElementById('pf-voice') || {}).value || '';
-              const prompt = (document.getElementById('pf-prompt') || {}).value || '';
-              const kbSel  = document.getElementById('pf-kb');
-              const kbId   = kbSel ? kbSel.value : '';
-
-              if (!name.trim()) { App.toast('กรุณาระบุชื่อ Preset', 'error'); return; }
-              if (!avatar)      { App.toast('กรุณาเลือก Avatar', 'error'); return; }
-              if (!voice)       { App.toast('กรุณาเลือก Voice', 'error'); return; }
-
-              const checked = [...document.querySelectorAll('input[name="compatModels"]:checked')].map(c => c.value);
-              const kb = kbId ? d.knowledgeBases.find(k => k.id === kbId) : null;
-
-              // Generate new ID
-              const maxId = d.presets.reduce((max, p) => {
-                const n = parseInt(p.id.replace('P-', ''), 10) || 0;
-                return Math.max(max, n);
-              }, 0);
-              const newId = `P-${String(maxId + 1).padStart(3, '0')}`;
-
-              const newPreset = {
-                id: newId,
-                name: name.trim(),
-                avatarName: avatar,
-                voiceName: voice,
-                agentPrompt: prompt.trim(),
-                kbId: kb ? kb.id : null,
-                kbName: kb ? kb.name : null,
-                assignedTenants: [],
-                compatibleModels: checked,
-                suggested: false,
-                status: 'Active',
-              };
-
-              d.presets.push(newPreset);
-              App.closeModal();
-              self._rerender();
-              App.toast(`สร้าง Preset "${newPreset.name}" สำเร็จ`, 'success');
-            });
-          }
-        }, 50);
-      });
-    }
-  }
+  },
 };

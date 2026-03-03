@@ -25,7 +25,7 @@ window.Pages.tenants = {
         ${sub.label}&nbsp;(${sub.plan})${badge}
       </span>`;
     });
-    return `<div style="display:flex;flex-direction:column;gap:5px;">${chips.join('')}</div>`;
+    return `<div style="flex-direction:column;gap:5px;">${chips.join('')}</div>`;
   },
 
   // ─── Monthly revenue from active subscriptions ───
@@ -147,6 +147,7 @@ window.Pages.tenants = {
               <th>TOKEN BALANCE</th>
               <th>MONTHLY REVENUE</th>
               <th>JOINED</th>
+              <th>แก้ไขล่าสุด</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -180,6 +181,7 @@ window.Pages.tenants = {
                   <span class="text-xs text-muted"> THB</span>
                 </td>
                 <td class="text-sm text-muted mono">${t.regDate}</td>
+                <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${t.modifiedDate || '-'}</div>${t.modifiedBy ? `<div class="text-xs text-dim">${t.modifiedBy.split('@')[0]}</div>` : ''}</td>
                 <td>${self._actionBtns(t.id)}</td>
               </tr>`;
             }).join('')}
@@ -289,6 +291,7 @@ window.Pages.tenants = {
     const subs       = (d.tenantSubscriptions || {})[tenantId] || [];
     const activities = (d.tokenActivities     || {})[tenantId] || [];
     const meta       = (d.tenantMeta          || {})[tenantId] || {};
+    const cl         = (d.creditLines         || []).find(x => x.tenantId === tenantId) || null;
     const spColor    = window.Pages.tenants._spColors;
     const spIcon     = { avatar: 'AV', booking: 'BK' };
 
@@ -369,6 +372,48 @@ window.Pages.tenants = {
           </div>
         </div>
 
+        <!-- Credit Line -->
+        <div class="card p-16 mb-16" ${cl && cl.status === 'Suspended' ? 'style="border-left:3px solid var(--error);"' : cl ? 'style="border-left:3px solid #8b5cf6;"' : ''}>
+          <div class="flex items-center gap-8 mb-12">
+            <i class="fa-solid fa-handshake-angle" style="color:#8b5cf6"></i>
+            <span class="font-700 text-sm uppercase">Credit Line</span>
+            <span style="margin-left:auto;">${
+              cl
+                ? (cl.status === 'Active'
+                    ? '<span class="chip chip-green">Active</span>'
+                    : '<span class="chip chip-red">Suspended</span>')
+                : '<span class="text-sm text-muted">ไม่มีวงเงินเครดิต</span>'
+            }</span>
+          </div>
+          ${cl ? (() => {
+            const usedPct  = Math.min(100, Math.round(cl.usedAmount / cl.creditLimit * 100));
+            const barColor = usedPct > 80 ? 'var(--error)' : usedPct > 50 ? 'var(--warning)' : 'var(--success)';
+            return `
+            <div class="grid-3 gap-16 mb-10">
+              <div>
+                <div class="text-xs text-muted uppercase mb-4">วงเงินสูงสุด</div>
+                <div class="mono font-700" style="font-size:22px;">${d.formatCurrency(cl.creditLimit)}</div>
+              </div>
+              <div>
+                <div class="text-xs text-muted uppercase mb-4">ใช้ไปแล้ว</div>
+                <div class="mono font-700 text-warning" style="font-size:22px;">${d.formatCurrency(cl.usedAmount)}</div>
+              </div>
+              <div>
+                <div class="text-xs text-muted uppercase mb-4">คงเหลือ</div>
+                <div class="mono font-700 ${cl.availableCredit === 0 ? 'text-error' : 'text-success'}" style="font-size:22px;">${d.formatCurrency(cl.availableCredit)}</div>
+              </div>
+            </div>
+            <div class="progress-bar mb-8">
+              <div class="progress-fill" style="width:${usedPct}%;background:${barColor};"></div>
+            </div>
+            <div class="flex gap-20 text-xs text-muted">
+              <span>รอบบิล: <strong>${cl.billingCycle} วัน</strong></span>
+              <span>เงื่อนไข: <strong>${cl.paymentTerms}</strong></span>
+              <span>อนุมัติเมื่อ: <strong class="mono">${cl.approvedDate}</strong></span>
+            </div>`;
+          })() : '<div class="text-sm text-muted">Tenant นี้ไม่ได้ใช้งาน Credit Line</div>'}
+        </div>
+
         <!-- Subscriptions -->
         <div class="card p-16 mb-16">
           <div class="flex items-center gap-8 mb-12">
@@ -433,7 +478,7 @@ window.Pages.tenants = {
       App.confirm(`ระงับ Tenant <strong>${t.name}</strong>?`, { type: 'danger', confirmText: 'ระงับ' }).then(ok => {
         if (!ok) return;
         const tenant = d.tenants.find(x => x.id === tenantId);
-        if (tenant) { tenant.status = 'Suspended'; d.stats.activeTenants = Math.max(0, d.stats.activeTenants - 1); d.stats.suspendedTenants++; }
+        if (tenant) { tenant.status = 'Suspended'; d.stats.activeTenants = Math.max(0, d.stats.activeTenants - 1); d.stats.suspendedTenants++; tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = 'admin@realfact.ai'; }
         App.toast('ระงับ Tenant แล้ว', 'error');
         App.closeModal();
         window.Pages.tenants._rerender();
@@ -443,7 +488,7 @@ window.Pages.tenants = {
     // Restore
     document.getElementById('modal-restore-btn')?.addEventListener('click', () => {
       const tenant = d.tenants.find(x => x.id === tenantId);
-      if (tenant) { tenant.status = 'Active'; d.stats.activeTenants++; d.stats.suspendedTenants = Math.max(0, d.stats.suspendedTenants - 1); }
+      if (tenant) { tenant.status = 'Active'; d.stats.activeTenants++; d.stats.suspendedTenants = Math.max(0, d.stats.suspendedTenants - 1); tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = 'admin@realfact.ai'; }
       App.toast('คืนสถานะ Tenant แล้ว', 'success');
       App.closeModal();
       window.Pages.tenants._rerender();

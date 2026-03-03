@@ -29,54 +29,54 @@ window.MockData = {
 
   // ─── Device Models ───
   deviceModels: [
-    { id: 'DM-001', name: 'AvatarRealfact Pro 55"', size: '55"', resolution: '4K (3840x2160)', spec: 'Intel i7, 32GB RAM, 512GB SSD', status: 'Active', thumbnail: null },
-    { id: 'DM-002', name: 'AvatarRealfact Mini 32"', size: '32"', resolution: '1080p (1920x1080)', spec: 'Intel i5, 16GB RAM, 256GB SSD', status: 'Active', thumbnail: null },
-    { id: 'DM-003', name: 'AvatarRealfact Compact 27"', size: '27"', resolution: '1080p (1920x1080)', spec: 'Intel i5, 16GB RAM, 256GB SSD', status: 'Discontinued', thumbnail: null },
-    { id: 'DM-004', name: 'AvatarRealfact Ultra 65"', size: '65"', resolution: '4K (3840x2160)', spec: 'Intel i9, 64GB RAM, 1TB SSD', status: 'Active', thumbnail: null },
+    { id: 'DM-001', name: 'AvatarRealfact Pro 55"',     size: '55"', resolution: '4K (3840x2160)',   spec: 'Intel i7, 32GB RAM, 512GB SSD', status: 'Active',       thumbnail: null, modifiedDate: '2026-01-10', modifiedBy: 'j.smith@realfact.ai' },
+    { id: 'DM-002', name: 'AvatarRealfact Mini 32"',    size: '32"', resolution: '1080p (1920x1080)', spec: 'Intel i5, 16GB RAM, 256GB SSD', status: 'Active',       thumbnail: null, modifiedDate: '2026-01-10', modifiedBy: 'j.smith@realfact.ai' },
+    { id: 'DM-003', name: 'AvatarRealfact Compact 27"', size: '27"', resolution: '1080p (1920x1080)', spec: 'Intel i5, 16GB RAM, 256GB SSD', status: 'Discontinued', thumbnail: null, modifiedDate: '2025-09-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'DM-004', name: 'AvatarRealfact Ultra 65"',   size: '65"', resolution: '4K (3840x2160)',   spec: 'Intel i9, 64GB RAM, 1TB SSD',  status: 'Active',       thumbnail: null, modifiedDate: '2026-02-05', modifiedBy: 'j.smith@realfact.ai' },
   ],
 
   // ─── Hardware Inventory (Devices) ───
   devices: [
-    { sn: 'RF-2024-00001', name: 'ตู้ล็อบบี้ ชั้น 1', model: 'DM-001', modelName: 'Pro 55"', registerCode: 'AV-X7K9M2', status: 'Activated', soldTo: 'T-001', soldToName: 'ABC Corporation', activatedBy: 'T-001', regDate: '2025-11-15', soldDate: '2025-12-01', activationDate: '2025-12-05', online: true },
-    { sn: 'RF-2024-00002', name: 'ตู้ต้อนรับ สาขาสยาม', model: 'DM-002', modelName: 'Mini 32"', registerCode: 'AV-B3P5Q8', status: 'Activated', soldTo: 'T-001', soldToName: 'ABC Corporation', activatedBy: 'T-001', regDate: '2025-11-15', soldDate: '2025-12-01', activationDate: '2025-12-08', online: true },
-    { sn: 'RF-2024-00003', name: 'Kiosk ชั้น 3 อาคาร A', model: 'DM-001', modelName: 'Pro 55"', registerCode: 'AV-D9H2L6', status: 'Activated', soldTo: 'T-002', soldToName: 'XYZ Trading', activatedBy: 'T-002', regDate: '2025-12-01', soldDate: '2025-12-15', activationDate: '2025-12-20', online: false },
-    { sn: 'RF-2024-00004', name: 'ตู้หน้าสำนักงาน', model: 'DM-004', modelName: 'Ultra 65"', registerCode: 'AV-F4N7R3', status: 'Activated', soldTo: 'T-003', soldToName: 'Thai Finance Group', activatedBy: 'T-003', regDate: '2025-12-10', soldDate: '2026-01-05', activationDate: '2026-01-10', online: true },
-    { sn: 'RF-2024-00005', name: 'Device #5', model: 'DM-002', modelName: 'Mini 32"', registerCode: 'AV-G8T2W5', status: 'Sold', soldTo: 'T-004', soldToName: 'Bangkok Tech Co.', activatedBy: null, regDate: '2026-01-15', soldDate: '2026-02-01', activationDate: null, online: false },
-    { sn: 'RF-2024-00006', name: 'Device #6', model: 'DM-001', modelName: 'Pro 55"', registerCode: 'AV-J6Y9K4', status: 'Registered', soldTo: null, soldToName: null, activatedBy: null, regDate: '2026-02-20', soldDate: null, activationDate: null, online: false },
-    { sn: 'RF-2024-00007', name: 'ตู้ทดสอบ QA', model: 'DM-003', modelName: 'Compact 27"', registerCode: 'AV-M2C8V7', status: 'Decommissioned', soldTo: 'T-001', soldToName: 'ABC Corporation', activatedBy: 'T-001', regDate: '2025-06-01', soldDate: '2025-07-01', activationDate: '2025-07-05', online: false },
-    { sn: 'RF-2025-00008', name: 'ตู้สาขาเชียงใหม่', model: 'DM-002', modelName: 'Mini 32"', registerCode: 'AV-P5E3A9', status: 'Activated', soldTo: 'T-005', soldToName: 'Northern Star Hotel', activatedBy: 'T-005', regDate: '2026-01-20', soldDate: '2026-02-10', activationDate: '2026-02-15', online: true },
-    { sn: 'RF-2025-00009', name: 'ตู้ Reception Tower B', model: 'DM-004', modelName: 'Ultra 65"', registerCode: 'AV-S7U4Z1', status: 'Activated', soldTo: 'T-003', soldToName: 'Thai Finance Group', activatedBy: 'T-003', regDate: '2026-02-01', soldDate: '2026-02-15', activationDate: '2026-02-20', online: true },
-    { sn: 'RF-2025-00010', name: 'Device #10', model: 'DM-001', modelName: 'Pro 55"', registerCode: 'AV-W3H6B8', status: 'Sold', soldTo: 'T-006', soldToName: 'Phuket Resort & Spa', activatedBy: null, regDate: '2026-02-25', soldDate: '2026-03-01', activationDate: null, online: false },
+    { sn: 'RF-2024-00001', name: 'ตู้ล็อบบี้ ชั้น 1',       model: 'DM-001', modelName: 'Pro 55"',     registerCode: 'AV-X7K9M2', status: 'Activated',     soldTo: 'T-001', soldToName: 'ABC Corporation',     activatedBy: 'T-001', regDate: '2025-11-15', soldDate: '2025-12-01', activationDate: '2025-12-05', online: true,  modifiedDate: '2025-12-05', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00002', name: 'ตู้ต้อนรับ สาขาสยาม',     model: 'DM-002', modelName: 'Mini 32"',    registerCode: 'AV-B3P5Q8', status: 'Activated',     soldTo: 'T-001', soldToName: 'ABC Corporation',     activatedBy: 'T-001', regDate: '2025-11-15', soldDate: '2025-12-01', activationDate: '2025-12-08', online: true,  modifiedDate: '2025-12-08', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00003', name: 'Kiosk ชั้น 3 อาคาร A',    model: 'DM-001', modelName: 'Pro 55"',     registerCode: 'AV-D9H2L6', status: 'Activated',     soldTo: 'T-002', soldToName: 'XYZ Trading',         activatedBy: 'T-002', regDate: '2025-12-01', soldDate: '2025-12-15', activationDate: '2025-12-20', online: false, modifiedDate: '2025-12-20', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00004', name: 'ตู้หน้าสำนักงาน',         model: 'DM-004', modelName: 'Ultra 65"',   registerCode: 'AV-F4N7R3', status: 'Activated',     soldTo: 'T-003', soldToName: 'Thai Finance Group', activatedBy: 'T-003', regDate: '2025-12-10', soldDate: '2026-01-05', activationDate: '2026-01-10', online: true,  modifiedDate: '2026-01-10', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00005', name: 'Device #5',                model: 'DM-002', modelName: 'Mini 32"',    registerCode: 'AV-G8T2W5', status: 'Sold',          soldTo: 'T-004', soldToName: 'Bangkok Tech Co.',   activatedBy: null,    regDate: '2026-01-15', soldDate: '2026-02-01', activationDate: null,         online: false, modifiedDate: '2026-02-01', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00006', name: 'Device #6',                model: 'DM-001', modelName: 'Pro 55"',     registerCode: 'AV-J6Y9K4', status: 'Registered',    soldTo: null,    soldToName: null,                activatedBy: null,    regDate: '2026-02-20', soldDate: null,         activationDate: null,         online: false, modifiedDate: '2026-02-20', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2024-00007', name: 'ตู้ทดสอบ QA',             model: 'DM-003', modelName: 'Compact 27"', registerCode: 'AV-M2C8V7', status: 'Decommissioned', soldTo: 'T-001', soldToName: 'ABC Corporation',   activatedBy: 'T-001', regDate: '2025-06-01', soldDate: '2025-07-01', activationDate: '2025-07-05', online: false, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
+    { sn: 'RF-2025-00008', name: 'ตู้สาขาเชียงใหม่',        model: 'DM-002', modelName: 'Mini 32"',    registerCode: 'AV-P5E3A9', status: 'Activated',     soldTo: 'T-005', soldToName: 'Northern Star Hotel', activatedBy: 'T-005', regDate: '2026-01-20', soldDate: '2026-02-10', activationDate: '2026-02-15', online: true,  modifiedDate: '2026-02-15', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2025-00009', name: 'ตู้ Reception Tower B',    model: 'DM-004', modelName: 'Ultra 65"',   registerCode: 'AV-S7U4Z1', status: 'Activated',     soldTo: 'T-003', soldToName: 'Thai Finance Group', activatedBy: 'T-003', regDate: '2026-02-01', soldDate: '2026-02-15', activationDate: '2026-02-20', online: true,  modifiedDate: '2026-02-20', modifiedBy: 'admin@realfact.ai' },
+    { sn: 'RF-2025-00010', name: 'Device #10',               model: 'DM-001', modelName: 'Pro 55"',     registerCode: 'AV-W3H6B8', status: 'Sold',          soldTo: 'T-006', soldToName: 'Phuket Resort & Spa', activatedBy: null,   regDate: '2026-02-25', soldDate: '2026-03-01', activationDate: null,         online: false, modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Tenants ───
   tenants: [
-    { id: 'T-001', name: 'ABC Corporation', plan: 'Pro', planPrice: 4990, members: 4, devices: 2, tokenBalance: 15420, bonusTokens: 800, purchasedTokens: 14620, status: 'Active', email: 'admin@abccorp.co.th', phone: '02-123-4567', regDate: '2025-11-01', lastActive: '2026-03-02' },
-    { id: 'T-002', name: 'XYZ Trading', plan: 'Starter', planPrice: 990, members: 2, devices: 1, tokenBalance: 3250, bonusTokens: 500, purchasedTokens: 2750, status: 'Active', email: 'contact@xyztrading.com', phone: '02-234-5678', regDate: '2025-12-15', lastActive: '2026-03-01' },
-    { id: 'T-003', name: 'Thai Finance Group', plan: 'Pro', planPrice: 4990, members: 8, devices: 2, tokenBalance: 42800, bonusTokens: 1500, purchasedTokens: 41300, status: 'Active', email: 'it@thaifinance.co.th', phone: '02-345-6789', regDate: '2026-01-05', lastActive: '2026-03-02' },
-    { id: 'T-004', name: 'Bangkok Tech Co.', plan: 'Starter', planPrice: 990, members: 3, devices: 0, tokenBalance: 1000, bonusTokens: 1000, purchasedTokens: 0, status: 'Active', email: 'info@bkktech.co.th', phone: '02-456-7890', regDate: '2026-02-01', lastActive: '2026-02-28' },
-    { id: 'T-005', name: 'Northern Star Hotel', plan: 'Pro', planPrice: 4990, members: 5, devices: 1, tokenBalance: 8900, bonusTokens: 1200, purchasedTokens: 7700, status: 'Active', email: 'reception@northernstar.co.th', phone: '053-123-456', regDate: '2026-01-20', lastActive: '2026-03-02' },
-    { id: 'T-006', name: 'Phuket Resort & Spa', plan: 'Starter', planPrice: 990, members: 2, devices: 0, tokenBalance: 1000, bonusTokens: 1000, purchasedTokens: 0, status: 'Active', email: 'admin@phuketresort.com', phone: '076-234-567', regDate: '2026-02-25', lastActive: '2026-03-01' },
-    { id: 'T-007', name: 'Metro Hospital', plan: 'Free', planPrice: 0, members: 1, devices: 0, tokenBalance: 100, bonusTokens: 100, purchasedTokens: 0, status: 'Active', email: 'it@metrohospital.co.th', phone: '02-567-8901', regDate: '2026-02-28', lastActive: '2026-03-01' },
-    { id: 'T-008', name: 'Sunrise Education', plan: 'Starter', planPrice: 990, members: 3, devices: 1, tokenBalance: 450, bonusTokens: 0, purchasedTokens: 450, status: 'Suspended', email: 'admin@sunrise-edu.ac.th', phone: '02-678-9012', regDate: '2025-10-15', lastActive: '2026-01-20' },
+    { id: 'T-001', name: 'ABC Corporation',    plan: 'Pro',     planPrice: 4990, members: 4, devices: 2, tokenBalance: 15420, bonusTokens: 800,  purchasedTokens: 14620, status: 'Active',    email: 'admin@abccorp.co.th',           phone: '02-123-4567', regDate: '2025-11-01', lastActive: '2026-03-02', modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-002', name: 'XYZ Trading',        plan: 'Starter', planPrice: 990,  members: 2, devices: 1, tokenBalance: 3250,  bonusTokens: 500,  purchasedTokens: 2750,  status: 'Active',    email: 'contact@xyztrading.com',        phone: '02-234-5678', regDate: '2025-12-15', lastActive: '2026-03-01', modifiedDate: '2026-02-10', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-003', name: 'Thai Finance Group', plan: 'Pro',     planPrice: 4990, members: 8, devices: 2, tokenBalance: 42800, bonusTokens: 1500, purchasedTokens: 41300, status: 'Active',    email: 'it@thaifinance.co.th',          phone: '02-345-6789', regDate: '2026-01-05', lastActive: '2026-03-02', modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-004', name: 'Bangkok Tech Co.',   plan: 'Starter', planPrice: 990,  members: 3, devices: 0, tokenBalance: 1000,  bonusTokens: 1000, purchasedTokens: 0,     status: 'Active',    email: 'info@bkktech.co.th',            phone: '02-456-7890', regDate: '2026-02-01', lastActive: '2026-02-28', modifiedDate: '2026-02-01', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-005', name: 'Northern Star Hotel',plan: 'Pro',     planPrice: 4990, members: 5, devices: 1, tokenBalance: 8900,  bonusTokens: 1200, purchasedTokens: 7700,  status: 'Active',    email: 'reception@northernstar.co.th',  phone: '053-123-456', regDate: '2026-01-20', lastActive: '2026-03-02', modifiedDate: '2026-02-15', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-006', name: 'Phuket Resort & Spa',plan: 'Starter', planPrice: 990,  members: 2, devices: 0, tokenBalance: 1000,  bonusTokens: 1000, purchasedTokens: 0,     status: 'Active',    email: 'admin@phuketresort.com',        phone: '076-234-567', regDate: '2026-02-25', lastActive: '2026-03-01', modifiedDate: '2026-02-25', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-007', name: 'Metro Hospital',     plan: 'Free',    planPrice: 0,    members: 1, devices: 0, tokenBalance: 100,   bonusTokens: 100,  purchasedTokens: 0,     status: 'Active',    email: 'it@metrohospital.co.th',        phone: '02-567-8901', regDate: '2026-02-28', lastActive: '2026-03-01', modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+    { id: 'T-008', name: 'Sunrise Education',  plan: 'Starter', planPrice: 990,  members: 3, devices: 1, tokenBalance: 450,   bonusTokens: 0,    purchasedTokens: 450,   status: 'Suspended', email: 'admin@sunrise-edu.ac.th',       phone: '02-678-9012', regDate: '2025-10-15', lastActive: '2026-01-20', modifiedDate: '2026-01-21', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Avatar Presets ───
   presets: [
-    { id: 'P-001', name: 'คุณพิมพ์ใจ — ที่ปรึกษาการเงิน', avatarName: 'Female Thai Professional', voiceName: 'Thai Female Warm', agentPrompt: 'คุณคือผู้เชี่ยวชาญด้านการเงินการลงทุน พูดจาสุภาพ ใช้ภาษาที่เข้าใจง่าย', kbId: 'KB-001', kbName: 'คู่มือผลิตภัณฑ์การเงิน', assignedTenants: ['T-001', 'T-003'], compatibleModels: ['DM-001', 'DM-004'], suggested: true, status: 'Active' },
-    { id: 'P-002', name: 'คุณสมชาย — พนักงานต้อนรับ', avatarName: 'Male Thai Formal', voiceName: 'Thai Male Standard', agentPrompt: 'คุณคือพนักงานต้อนรับมืออาชีพ ให้ข้อมูลสถานที่ บริการ และแนะนำเส้นทาง', kbId: 'KB-002', kbName: 'ข้อมูลอาคารและบริการ', assignedTenants: ['T-002', 'T-005'], compatibleModels: ['DM-001', 'DM-002'], suggested: false, status: 'Active' },
-    { id: 'P-003', name: 'น้องมิว — ผู้ช่วยทั่วไป', avatarName: 'Female Thai Casual', voiceName: 'Thai Female Friendly', agentPrompt: 'คุณคือผู้ช่วยอัจฉริยะ ตอบคำถามทั่วไป พูดเป็นกันเอง สนุกสนาน', kbId: null, kbName: null, assignedTenants: [], compatibleModels: ['DM-001', 'DM-002', 'DM-004'], suggested: false, status: 'Active', isDefault: true },
-    { id: 'P-004', name: 'Dr.มาย — ที่ปรึกษาสุขภาพ', avatarName: 'Female Thai Medical', voiceName: 'Thai Female Calm', agentPrompt: 'คุณคือที่ปรึกษาด้านสุขภาพเบื้องต้น ให้คำแนะนำทั่วไป แนะนำพบแพทย์เมื่อจำเป็น', kbId: 'KB-003', kbName: 'คู่มือสุขภาพเบื้องต้น', assignedTenants: ['T-003'], compatibleModels: ['DM-001', 'DM-004'], suggested: false, status: 'Draft' },
-    { id: 'P-005', name: 'คุณณัฐ — Concierge โรงแรม', avatarName: 'Male Thai Hospitality', voiceName: 'Thai Male Warm', agentPrompt: 'คุณคือ Concierge ระดับ 5 ดาว แนะนำร้านอาหาร สถานที่ท่องเที่ยว บริการโรงแรม', kbId: 'KB-004', kbName: 'ข้อมูลโรงแรมและท่องเที่ยว', assignedTenants: ['T-005', 'T-006'], compatibleModels: ['DM-002', 'DM-004'], suggested: true, status: 'Active' },
+    { id: 'P-001', name: 'คุณพิมพ์ใจ — ที่ปรึกษาการเงิน',  avatarName: 'Female Thai Professional', voiceName: 'Thai Female Warm',     agentPrompt: 'คุณคือผู้เชี่ยวชาญด้านการเงินการลงทุน พูดจาสุภาพ ใช้ภาษาที่เข้าใจง่าย',        kbId: 'KB-001', kbName: 'คู่มือผลิตภัณฑ์การเงิน',   assignedTenants: ['T-001', 'T-003'], compatibleModels: ['DM-001', 'DM-004'],        suggested: true,  status: 'Active', modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+    { id: 'P-002', name: 'คุณสมชาย — พนักงานต้อนรับ',      avatarName: 'Male Thai Formal',         voiceName: 'Thai Male Standard',   agentPrompt: 'คุณคือพนักงานต้อนรับมืออาชีพ ให้ข้อมูลสถานที่ บริการ และแนะนำเส้นทาง',     kbId: 'KB-002', kbName: 'ข้อมูลอาคารและบริการ',   assignedTenants: ['T-002', 'T-005'], compatibleModels: ['DM-001', 'DM-002'],        suggested: false, status: 'Active', modifiedDate: '2026-02-20', modifiedBy: 'admin@realfact.ai' },
+    { id: 'P-003', name: 'น้องมิว — ผู้ช่วยทั่วไป',        avatarName: 'Female Thai Casual',       voiceName: 'Thai Female Friendly', agentPrompt: 'คุณคือผู้ช่วยอัจฉริยะ ตอบคำถามทั่วไป พูดเป็นกันเอง สนุกสนาน',              kbId: null,     kbName: null,                       assignedTenants: [],                 compatibleModels: ['DM-001', 'DM-002', 'DM-004'], suggested: false, status: 'Active', isDefault: true, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'P-004', name: 'Dr.มาย — ที่ปรึกษาสุขภาพ',      avatarName: 'Female Thai Medical',      voiceName: 'Thai Female Calm',     agentPrompt: 'คุณคือที่ปรึกษาด้านสุขภาพเบื้องต้น ให้คำแนะนำทั่วไป แนะนำพบแพทย์เมื่อจำเป็น', kbId: 'KB-003', kbName: 'คู่มือสุขภาพเบื้องต้น', assignedTenants: ['T-003'],           compatibleModels: ['DM-001', 'DM-004'],        suggested: false, status: 'Draft',  modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
+    { id: 'P-005', name: 'คุณณัฐ — Concierge โรงแรม',      avatarName: 'Male Thai Hospitality',    voiceName: 'Thai Male Warm',       agentPrompt: 'คุณคือ Concierge ระดับ 5 ดาว แนะนำร้านอาหาร สถานที่ท่องเที่ยว บริการโรงแรม', kbId: 'KB-004', kbName: 'ข้อมูลโรงแรมและท่องเที่ยว', assignedTenants: ['T-005', 'T-006'], compatibleModels: ['DM-002', 'DM-004'],        suggested: true,  status: 'Active', modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Knowledge Bases ───
   knowledgeBases: [
-    { id: 'KB-001', name: 'คู่มือผลิตภัณฑ์การเงิน', tenantId: 'T-003', tenantName: 'Thai Finance Group', documents: 12, chunks: 1547, embeddings: 1547, totalSize: '24.5 MB', status: 'Ready', lastUpdated: '2026-02-28', presets: ['P-001'] },
-    { id: 'KB-002', name: 'ข้อมูลอาคารและบริการ', tenantId: 'T-002', tenantName: 'XYZ Trading', documents: 5, chunks: 423, embeddings: 423, totalSize: '8.2 MB', status: 'Ready', lastUpdated: '2026-02-20', presets: ['P-002'] },
-    { id: 'KB-003', name: 'คู่มือสุขภาพเบื้องต้น', tenantId: 'T-003', tenantName: 'Thai Finance Group', documents: 8, chunks: 956, embeddings: 956, totalSize: '15.8 MB', status: 'Ready', lastUpdated: '2026-02-25', presets: ['P-004'] },
-    { id: 'KB-004', name: 'ข้อมูลโรงแรมและท่องเที่ยว', tenantId: 'T-005', tenantName: 'Northern Star Hotel', documents: 15, chunks: 2103, embeddings: 2103, totalSize: '32.1 MB', status: 'Ready', lastUpdated: '2026-03-01', presets: ['P-005'] },
-    { id: 'KB-005', name: 'FAQ สินค้า ABC Corp', tenantId: 'T-001', tenantName: 'ABC Corporation', documents: 3, chunks: 0, embeddings: 0, totalSize: '4.7 MB', status: 'Processing', lastUpdated: '2026-03-02', presets: [] },
+    { id: 'KB-001', name: 'คู่มือผลิตภัณฑ์การเงิน',    tenantId: 'T-003', tenantName: 'Thai Finance Group',  documents: 12, chunks: 1547, embeddings: 1547, totalSize: '24.5 MB', status: 'Ready',      lastUpdated: '2026-02-28', presets: ['P-001'], modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+    { id: 'KB-002', name: 'ข้อมูลอาคารและบริการ',       tenantId: 'T-002', tenantName: 'XYZ Trading',         documents: 5,  chunks: 423,  embeddings: 423,  totalSize: '8.2 MB',  status: 'Ready',      lastUpdated: '2026-02-20', presets: ['P-002'], modifiedDate: '2026-02-20', modifiedBy: 'admin@realfact.ai' },
+    { id: 'KB-003', name: 'คู่มือสุขภาพเบื้องต้น',     tenantId: 'T-003', tenantName: 'Thai Finance Group',  documents: 8,  chunks: 956,  embeddings: 956,  totalSize: '15.8 MB', status: 'Ready',      lastUpdated: '2026-02-25', presets: ['P-004'], modifiedDate: '2026-02-25', modifiedBy: 'admin@realfact.ai' },
+    { id: 'KB-004', name: 'ข้อมูลโรงแรมและท่องเที่ยว', tenantId: 'T-005', tenantName: 'Northern Star Hotel', documents: 15, chunks: 2103, embeddings: 2103, totalSize: '32.1 MB', status: 'Ready',      lastUpdated: '2026-03-01', presets: ['P-005'], modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
+    { id: 'KB-005', name: 'FAQ สินค้า ABC Corp',         tenantId: 'T-001', tenantName: 'ABC Corporation',    documents: 3,  chunks: 0,    embeddings: 0,    totalSize: '4.7 MB',  status: 'Processing', lastUpdated: '2026-03-02', presets: [],        modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Sessions (Recent) ───
@@ -120,73 +120,83 @@ window.MockData = {
 
   // ─── Sub-Platforms ───
   subPlatforms: [
-    { id: 'SP-001', name: 'Avatar (Live Interact)', code: 'avatar', domain: 'avatar.realfact.ai', status: 'Active', tenants: 45, revenue: 234500, tokenUsage: 128750, plans: ['Free', 'Starter', 'Pro'], exchangeRate: '1 Token = 1 Minute', logo: null, primaryColor: '#f15b26', created: '2025-10-01' },
-    { id: 'SP-002', name: 'AI Booking', code: 'booking', domain: 'booking.realfact.ai', status: 'Configured', tenants: 0, revenue: 0, tokenUsage: 0, plans: ['Free', 'Basic', 'Premium'], exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15' },
+    { id: 'SP-001', name: 'Avatar (Live Interact)', code: 'avatar',  domain: 'avatar.realfact.ai',  status: 'Active',     tenants: 45, revenue: 234500, tokenUsage: 128750, plans: ['Free', 'Starter', 'Pro'],     exchangeRate: '1 Token = 1 Minute',  logo: null, primaryColor: '#f15b26', created: '2025-10-01', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'SP-002', name: 'AI Booking',            code: 'booking', domain: 'booking.realfact.ai', status: 'Configured', tenants: 0,  revenue: 0,      tokenUsage: 0,      plans: ['Free', 'Basic', 'Premium'], exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Subscription Plans ───
   plans: [
-    { id: 'PL-001', name: 'Free', subPlatform: 'avatar', price: 0, bonusTokens: 100, features: ['Basic Avatar', '1 Preset', 'Community Support'], status: 'Active' },
-    { id: 'PL-002', name: 'Starter', subPlatform: 'avatar', price: 990, bonusTokens: 1000, features: ['3 Avatars', '5 Presets', 'Knowledge Base', 'Email Support'], status: 'Active' },
-    { id: 'PL-003', name: 'Pro', subPlatform: 'avatar', price: 4990, bonusTokens: 5000, features: ['Unlimited Avatars', 'Unlimited Presets', 'Priority KB', 'Custom Agent', 'Phone Support'], status: 'Active' },
+    { id: 'PL-001', name: 'Free',    subPlatform: 'avatar', price: 0,    bonusTokens: 100,  features: ['Basic Avatar', '1 Preset', 'Community Support'],                                         status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'PL-002', name: 'Starter', subPlatform: 'avatar', price: 990,  bonusTokens: 1000, features: ['3 Avatars', '5 Presets', 'Knowledge Base', 'Email Support'],                            status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'PL-003', name: 'Pro',     subPlatform: 'avatar', price: 4990, bonusTokens: 5000, features: ['Unlimited Avatars', 'Unlimited Presets', 'Priority KB', 'Custom Agent', 'Phone Support'], status: 'Active', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Cost Config (Service Codes) ───
   costConfig: [
-    { serviceCode: 'avatar-session', name: 'Avatar Session', billingType: 'Per Minute', costPerUnit: 0.50, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active' },
-    { serviceCode: 'avatar-tts', name: 'Text-to-Speech', billingType: 'Per Request', costPerUnit: 0.02, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active' },
-    { serviceCode: 'avatar-rag', name: 'RAG Query', billingType: 'Per Request', costPerUnit: 0.01, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active' },
-    { serviceCode: 'avatar-embedding', name: 'Document Embedding', billingType: 'Per Token', costPerUnit: 0.0001, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active' },
-    { serviceCode: 'avatar-llm', name: 'LLM Inference', billingType: 'Per Token', costPerUnit: 0.003, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active' },
+    // ── Platform ──
+    { serviceCode: 'avatar-session',              name: 'Avatar Session',     provider: 'RealfactAI', model: '-',                     billingType: 'Per Minute',  costPerUnit: 0.5000,    currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    // ── LLM ──
+    { serviceCode: 'anthropic-claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic',  model: 'claude-sonnet-4-6',     billingType: 'Per Token',   costPerUnit: 0.0003,    outputCostPerUnit: 0.0015,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    { serviceCode: 'openai-gpt-4o',               name: 'GPT-4o',            provider: 'OpenAI',     model: 'gpt-4o',                billingType: 'Per Token',   costPerUnit: 0.00018,   outputCostPerUnit: 0.00054, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    // ── TTS ──
+    { serviceCode: 'elevenlabs-turbo-v2-5',       name: 'ElevenLabs Turbo',  provider: 'ElevenLabs', model: 'eleven_turbo_v2_5',     billingType: 'Per Request', costPerUnit: 0.0380,    currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    // ── Embedding ──
+    { serviceCode: 'openai-embedding-3-small',    name: 'Embedding 3 Small', provider: 'OpenAI',     model: 'text-embedding-3-small', billingType: 'Per Token',  costPerUnit: 0.0000007, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Margin Config ───
   marginConfig: {
     global: 30,
+    modifiedDate: '2026-02-01',
+    modifiedBy: 'super@realfact.ai',
     providers: [
-      { name: 'OpenAI', margin: 35 },
-      { name: 'Anthropic', margin: 30 },
-      { name: 'Google', margin: 25 },
+      { name: 'Anthropic',   margin: 35, modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
+      { name: 'OpenAI',      margin: 30, modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+      { name: 'Google',      margin: 25, modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+      { name: 'ElevenLabs',  margin: 40, modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+      { name: 'RealfactAI',  margin: 45, modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
     ],
     serviceCodes: [
-      { code: 'avatar-session', margin: 40 },
-      { code: 'avatar-embedding', margin: 20 },
+      { code: 'avatar-session',              margin: 50, modifiedDate: '2026-01-15 10:00', modifiedBy: 'j.smith@realfact.ai' },
+      { code: 'anthropic-claude-sonnet-4-6', margin: 38, modifiedDate: '2026-02-10 14:30', modifiedBy: 'j.smith@realfact.ai' },
+      { code: 'openai-embedding-3-small',    margin: 20, modifiedDate: '2026-01-14 16:45', modifiedBy: 'j.doe@realfact.ai'   },
     ],
   },
 
   // ─── Credit Lines (M-BE-07 FR71-77) ───
   creditLines: [
-    { id: 'CL-001', tenantId: 'T-003', tenantName: 'Thai Finance Group', creditLimit: 100000, usedAmount: 42800, availableCredit: 57200, billingCycle: 30, paymentTerms: 'Net 30', status: 'Active', approvedDate: '2026-01-10', approvedBy: 'Finance Admin', lastInvoice: 'INV-202603-00002' },
-    { id: 'CL-002', tenantId: 'T-001', tenantName: 'ABC Corporation', creditLimit: 50000, usedAmount: 15420, availableCredit: 34580, billingCycle: 30, paymentTerms: 'Net 30', status: 'Active', approvedDate: '2025-12-01', approvedBy: 'Finance Admin', lastInvoice: 'INV-202603-00001' },
-    { id: 'CL-003', tenantId: 'T-008', tenantName: 'Sunrise Education', creditLimit: 20000, usedAmount: 1059.30, availableCredit: 0, billingCycle: 30, paymentTerms: 'Net 30', status: 'Suspended', approvedDate: '2025-10-20', approvedBy: 'Finance Admin', lastInvoice: 'INV-202602-00008' },
+    { id: 'CL-001', tenantId: 'T-003', tenantName: 'Thai Finance Group', creditLimit: 100000, usedAmount: 42800,  availableCredit: 57200, billingCycle: 30, paymentTerms: 'Net 30', status: 'Active',    approvedDate: '2026-01-10', approvedBy: 'Finance Admin', lastInvoice: 'INV-202603-00002', modifiedDate: '2026-03-01', modifiedBy: 'finance@realfact.ai' },
+    { id: 'CL-002', tenantId: 'T-001', tenantName: 'ABC Corporation',    creditLimit: 50000,  usedAmount: 15420,  availableCredit: 34580, billingCycle: 30, paymentTerms: 'Net 30', status: 'Active',    approvedDate: '2025-12-01', approvedBy: 'Finance Admin', lastInvoice: 'INV-202603-00001', modifiedDate: '2026-02-01', modifiedBy: 'finance@realfact.ai' },
+    { id: 'CL-003', tenantId: 'T-008', tenantName: 'Sunrise Education',  creditLimit: 20000,  usedAmount: 1059.30,availableCredit: 0,     billingCycle: 30, paymentTerms: 'Net 30', status: 'Suspended', approvedDate: '2025-10-20', approvedBy: 'Finance Admin', lastInvoice: 'INV-202602-00008', modifiedDate: '2026-01-21', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Credit Line Requests ───
   creditLineRequests: [
-    { id: 'CLR-001', tenantId: 'T-005', tenantName: 'Northern Star Hotel', requestedLimit: 80000, companyName: 'Northern Star Hotel Co., Ltd.', taxId: '0105565012345', documents: 2, status: 'Pending', requestDate: '2026-03-01', reviewedBy: null },
+    { id: 'CLR-001', tenantId: 'T-005', tenantName: 'Northern Star Hotel', requestedLimit: 80000, companyName: 'Northern Star Hotel Co., Ltd.', taxId: '0105565012345', documents: 2, status: 'Pending', requestDate: '2026-03-01', reviewedBy: null, modifiedDate: '2026-03-01', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Cost Change Requests (M-BE-05 FR30-32) ───
   costChangeRequests: [
-    { id: 'CCR-001', serviceCode: 'avatar-llm', serviceName: 'LLM Inference', currentCost: 0.003, newCost: 0.0025, reason: 'Anthropic ลดราคา Claude 3.5', effectiveDate: '2026-04-01', status: 'Pending', requestedBy: 'Platform Admin', requestDate: '2026-03-01', approvedBy: null },
-    { id: 'CCR-002', serviceCode: 'avatar-tts', serviceName: 'Text-to-Speech', currentCost: 0.02, newCost: 0.015, reason: 'เปลี่ยน Provider เป็น Google TTS', effectiveDate: '2026-04-01', status: 'Approved', requestedBy: 'Platform Admin', requestDate: '2026-02-20', approvedBy: 'Super Admin' },
+    { id: 'CCR-001', serviceCode: 'anthropic-claude-opus-4-5',  serviceName: 'Claude Opus 4.5',       currentCost: 0.0015,    newCost: 0.00125,   reason: 'Anthropic ประกาศลดราคา Claude Opus 4.5 รอบ Q2/2026', effectiveDate: '2026-04-01', status: 'Pending',  requestedBy: 'Platform Admin', requestDate: '2026-03-01', requestTime: '14:32', approvedBy: null,         modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
+    { id: 'CCR-002', serviceCode: 'google-cloud-tts',           serviceName: 'Google Cloud TTS',      currentCost: 0.0140,    newCost: 0.0120,    reason: 'Google ปรับลดราคา Cloud TTS Standard ทั่วโลก',      effectiveDate: '2026-04-01', status: 'Approved', requestedBy: 'Platform Admin', requestDate: '2026-02-20', requestTime: '09:15', approvedBy: 'Super Admin', modifiedDate: '2026-02-25', modifiedBy: 'super@realfact.ai' },
+    { id: 'CCR-003', serviceCode: 'openai-gpt-4o-mini',         serviceName: 'GPT-4o Mini',           currentCost: 0.0000054, newCost: 0.0000045, reason: 'OpenAI ลดราคา gpt-4o-mini หลัง launch o3-mini',      effectiveDate: '2026-05-01', status: 'Pending',  requestedBy: 'Platform Admin', requestDate: '2026-03-02', requestTime: '11:48', approvedBy: null,         modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Margin Change Requests (M-BE-06 FR37-38) ───
   marginChangeRequests: [
-    { id: 'MCR-001', level: 'Service Code', target: 'avatar-session', currentMargin: 40, newMargin: 45, reason: 'ปรับ margin เพิ่มตามตลาด', status: 'Pending', requestedBy: 'Platform Admin', requestDate: '2026-03-02', approvedBy: null },
+    { id: 'MCR-001', level: 'Service Code', target: 'anthropic-claude-opus-4-5', currentMargin: 35, newMargin: 40, reason: 'ปรับ margin Claude Opus 4.5 เพิ่มตามต้นทุนจริง', status: 'Pending', requestedBy: 'Platform Admin', requestDate: '2026-03-02', requestTime: '10:45', approvedBy: null, modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Snapshots (M-BE-06 FR39-42) ───
   snapshots: [
-    { id: 'SNAP-DEFAULT', name: 'Default Snapshot (Mar 2026)', type: 'Default', createdDate: '2026-03-01', assignedCustomers: 40, isActive: true, data: { globalMargin: 30 } },
-    { id: 'SNAP-001', name: 'Thai Finance Group — Custom', type: 'Custom', createdDate: '2026-01-15', assignedCustomers: 1, isActive: true, tenantId: 'T-003', data: { globalMargin: 25 } },
-    { id: 'SNAP-002', name: 'Hotel Group Bundle', type: 'Custom', createdDate: '2026-02-10', assignedCustomers: 2, isActive: true, tenantId: null, data: { globalMargin: 20 } },
+    { id: 'SNAP-DEFAULT', name: 'Default Snapshot (Mar 2026)',  type: 'Default', createdDate: '2026-03-01', assignedCustomers: 40, isActive: true, data: { globalMargin: 30 }, modifiedDate: '2026-03-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'SNAP-001',     name: 'Thai Finance Group — Custom',  type: 'Custom',  createdDate: '2026-01-15', assignedCustomers: 1,  isActive: true, tenantId: 'T-003', data: { globalMargin: 25 }, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'SNAP-002',     name: 'Hotel Group Bundle',           type: 'Custom',  createdDate: '2026-02-10', assignedCustomers: 2,  isActive: true, tenantId: null,    data: { globalMargin: 20 }, modifiedDate: '2026-02-10', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Price Locks (M-BE-06 FR43) ───
   priceLocks: [
-    { id: 'PL-LOCK-001', tenantId: 'T-003', tenantName: 'Thai Finance Group', snapshotId: 'SNAP-001', startDate: '2026-01-15', endDate: '2026-07-15', daysRemaining: 134, status: 'Active', notified30d: false },
+    { id: 'PL-LOCK-001', tenantId: 'T-003', tenantName: 'Thai Finance Group', snapshotId: 'SNAP-001', startDate: '2026-01-15', endDate: '2026-07-15', daysRemaining: 134, status: 'Active', notified30d: false, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Avatar Defaults (A-FR37-40) ───
@@ -206,24 +216,24 @@ window.MockData = {
 
   // ─── Collection Notices (M-BE-07 FR78) ───
   collectionNotices: [
-    { id: 'CN-001', tenantId: 'T-008', tenantName: 'Sunrise Education', invoiceId: 'INV-202602-00008', amount: 1059.30, sentDate: '2026-02-20', channel: 'Email + Telegram', cooldownUntil: '2026-02-27', status: 'Sent' },
+    { id: 'CN-001', tenantId: 'T-008', tenantName: 'Sunrise Education', invoiceId: 'INV-202602-00008', amount: 1059.30, sentDate: '2026-02-20', channel: 'Email + Telegram', cooldownUntil: '2026-02-27', status: 'Sent', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Refund Requests (M-BE-07 FR80) ───
   refundRequests: [
-    { id: 'REF-001', tenantId: 'T-002', tenantName: 'XYZ Trading', invoiceId: 'INV-202602-00005', amount: 500, reason: 'Service downtime compensation', status: 'Pending Dual Approval', requestDate: '2026-03-01', superAdminApproved: false, financeApproved: true },
+    { id: 'REF-001', tenantId: 'T-002', tenantName: 'XYZ Trading', invoiceId: 'INV-202602-00005', amount: 500, reason: 'Service downtime compensation', status: 'Pending Dual Approval', requestDate: '2026-03-01', superAdminApproved: false, financeApproved: true, modifiedDate: '2026-03-01', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Developer Apps (M-BE-07 FR81-85) ───
   developerApps: [
-    { id: 'APP-001', name: 'FinBot', tenantId: 'T-003', tenantName: 'Thai Finance Group', clientId: 'rf_client_abc123', status: 'Production', rateLimit: '10,000 calls/day', createdDate: '2026-01-20' },
-    { id: 'APP-002', name: 'HotelAssist', tenantId: 'T-005', tenantName: 'Northern Star Hotel', clientId: 'rf_client_xyz789', status: 'Sandbox', rateLimit: '100 calls/day', createdDate: '2026-02-25' },
-    { id: 'APP-003', name: 'EduBot', tenantId: 'T-004', tenantName: 'Bangkok Tech Co.', clientId: 'rf_client_edu456', status: 'Pending Approval', rateLimit: '100 calls/day', createdDate: '2026-03-01' },
+    { id: 'APP-001', name: 'FinBot',      tenantId: 'T-003', tenantName: 'Thai Finance Group',  clientId: 'rf_client_abc123', status: 'Production',     rateLimit: '10,000 calls/day', createdDate: '2026-01-20', modifiedDate: '2026-02-10', modifiedBy: 'admin@realfact.ai' },
+    { id: 'APP-002', name: 'HotelAssist', tenantId: 'T-005', tenantName: 'Northern Star Hotel', clientId: 'rf_client_xyz789', status: 'Sandbox',         rateLimit: '100 calls/day',    createdDate: '2026-02-25', modifiedDate: '2026-02-25', modifiedBy: 'admin@realfact.ai' },
+    { id: 'APP-003', name: 'EduBot',      tenantId: 'T-004', tenantName: 'Bangkok Tech Co.',    clientId: 'rf_client_edu456', status: 'Pending Approval',rateLimit: '100 calls/day',    createdDate: '2026-03-01', modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Aging Report ───
   agingReport: [
-    { tenantId: 'T-008', tenantName: 'Sunrise Education', totalOverdue: 1059.30, daysOverdue: 16, invoiceCount: 1, lastNotice: '2026-02-20', creditStatus: 'Suspended' },
+    { tenantId: 'T-008', tenantName: 'Sunrise Education', totalOverdue: 1059.30, daysOverdue: 16, invoiceCount: 1, lastNotice: '2026-02-20', creditStatus: 'Suspended', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Tenant Meta (contact person) ───
@@ -295,22 +305,22 @@ window.MockData = {
 
   // ─── Token Packages (purchasable top-up bundles) ───
   tokenPackages: [
-    { id: 'TP-001', name: '1,000 Tokens',  tokens: 1000,  price: 500,  pricePerToken: 0.50, bonus: 0,   subPlatform: 'avatar', popular: false, status: 'Active' },
-    { id: 'TP-002', name: '5,000 Tokens',  tokens: 5000,  price: 2000, pricePerToken: 0.40, bonus: 250, subPlatform: 'avatar', popular: true,  status: 'Active' },
-    { id: 'TP-003', name: '10,000 Tokens', tokens: 10000, price: 3500, pricePerToken: 0.35, bonus: 500, subPlatform: 'avatar', popular: false, status: 'Active' },
-    { id: 'TP-004', name: '50,000 Tokens', tokens: 50000, price: 15000, pricePerToken: 0.30, bonus: 2500, subPlatform: 'avatar', popular: false, status: 'Active' },
+    { id: 'TP-001', name: '1,000 Tokens',  tokens: 1000,  price: 500,   pricePerToken: 0.50, bonus: 0,    subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-002', name: '5,000 Tokens',  tokens: 5000,  price: 2000,  pricePerToken: 0.40, bonus: 250,  subPlatform: 'avatar', popular: true,  status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-003', name: '10,000 Tokens', tokens: 10000, price: 3500,  pricePerToken: 0.35, bonus: 500,  subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-004', name: '50,000 Tokens', tokens: 50000, price: 15000, pricePerToken: 0.30, bonus: 2500, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Bank Accounts (Payment Global Settings) ───
   bankAccounts: [
-    { id: 'BA-001', bankCode: 'scb',   bankName: 'ธนาคารไทยพาณิชย์ (SCB)',   accountNumber: '111-2-33456-7', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาสีลม',   assignedSubPlatforms: ['avatar', 'booking'], isDefault: true,  status: 'Active' },
-    { id: 'BA-002', bankCode: 'kbank', bankName: 'ธนาคารกสิกรไทย (KBank)',    accountNumber: '088-1-23456-7', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาอโศก',   assignedSubPlatforms: ['avatar'],            isDefault: false, status: 'Active' },
-    { id: 'BA-003', bankCode: 'bbl',   bankName: 'ธนาคารกรุงเทพ (BBL)',       accountNumber: '155-0-12345-6', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาสาทร',  assignedSubPlatforms: [],                    isDefault: false, status: 'Inactive' },
+    { id: 'BA-001', bankCode: 'scb',   bankName: 'ธนาคารไทยพาณิชย์ (SCB)',  accountNumber: '111-2-33456-7', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาสีลม',  assignedSubPlatforms: ['avatar', 'booking'], isDefault: true,  status: 'Active',   modifiedDate: '2026-01-01', modifiedBy: 'finance@realfact.ai' },
+    { id: 'BA-002', bankCode: 'kbank', bankName: 'ธนาคารกสิกรไทย (KBank)',   accountNumber: '088-1-23456-7', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาอโศก',  assignedSubPlatforms: ['avatar'],            isDefault: false, status: 'Active',   modifiedDate: '2026-01-15', modifiedBy: 'finance@realfact.ai' },
+    { id: 'BA-003', bankCode: 'bbl',   bankName: 'ธนาคารกรุงเทพ (BBL)',      accountNumber: '155-0-12345-6', accountName: 'บริษัท เรียลแฟค จำกัด', branch: 'สาขาสาทร', assignedSubPlatforms: [],                    isDefault: false, status: 'Inactive', modifiedDate: '2025-12-01', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── PromptPay / QR Config ───
   promptPayConfig: [
-    { id: 'PP-001', type: 'taxId', value: '0105560012345', label: 'Tax ID (นิติบุคคล)', qrNote: 'RealFact Co., Ltd.', assignedSubPlatforms: ['avatar', 'booking'], status: 'Active' },
+    { id: 'PP-001', type: 'taxId', value: '0105560012345', label: 'Tax ID (นิติบุคคล)', qrNote: 'RealFact Co., Ltd.', assignedSubPlatforms: ['avatar', 'booking'], status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Payment Channels (per Sub-Platform) ───

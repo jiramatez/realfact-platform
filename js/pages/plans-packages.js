@@ -1,15 +1,27 @@
 /* ================================================================
-   Page Module — Plans & Packages
-   Central source of truth for Subscription Plans + Token Packages
+   Page Modules — Plans & Packages (split into 3 modules)
+
+   1. window.Pages.plansPackages  — Subscription Plans  (data-tab="sub-plans")
+   2. window.Pages.plansTokens    — Token Packages       (data-tab="token-pkgs")
+   3. window.Pages.plansBonus     — Welcome Bonus &
+                                    Token Priority       (data-tab="welcome-bonus")
+
+   Shared helpers (_spMeta, _getSpMeta, _spHeader) live on
+   window.Pages.plansPackages and are referenced by the other two
+   modules via window.Pages.plansPackages.<helper>.
    ================================================================ */
 
 window.Pages = window.Pages || {};
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE 1 — Subscription Plans
+   ════════════════════════════════════════════════════════════════ */
 window.Pages.plansPackages = {
 
-  _rerender(activeTab) {
+  _rerender() {
     const ct = document.getElementById('content');
     ct.innerHTML = window.Pages.plansPackages.render();
-    window.Pages.plansPackages.init(activeTab);
+    window.Pages.plansPackages.init();
   },
 
   // ─── SP meta (colors, icons, labels) ───
@@ -51,32 +63,30 @@ window.Pages.plansPackages = {
   },
 
   render() {
-    const d    = window.MockData;
+    const d     = window.MockData;
     const plans = d.plans || [];
     const pkgs  = d.tokenPackages || [];
     const av    = d.avatarDefaults;
     const self  = window.Pages.plansPackages;
 
     // Stats
-    const activeSubPlans = plans.filter(p => p.status === 'Active').length;
-    const activePkgs     = pkgs.filter(p => p.status === 'Active').length;
+    const activeSubPlans    = plans.filter(p => p.status === 'Active').length;
+    const activePkgs        = pkgs.filter(p => p.status === 'Active').length;
     const totalRevPotential = plans.filter(p => p.price > 0).reduce((s, p) => s + p.price, 0);
 
-    // Group by sub-platform
+    // Group plans by sub-platform
     const plansBySP = {};
     d.subPlatforms.forEach(sp => { plansBySP[sp.code] = []; });
     plans.forEach(p => { (plansBySP[p.subPlatform] = plansBySP[p.subPlatform] || []).push(p); });
 
-    const pkgsBySP = {};
-    d.subPlatforms.forEach(sp => { pkgsBySP[sp.code] = []; });
-    pkgs.forEach(p => { (pkgsBySP[p.subPlatform] = pkgsBySP[p.subPlatform] || []).push(p); });
+    const iconMap = { Pro: 'fa-crown', Starter: 'fa-rocket', Free: 'fa-gift', Basic: 'fa-bolt', Premium: 'fa-gem' };
 
     return `
       <!-- Page Header -->
       <div class="page-header">
         <div>
-          <h1 class="heading">PLANS & PACKAGES</h1>
-          <div class="text-sm text-muted mt-2">จัดการ Subscription Plans, Token Packages และ Welcome Bonus</div>
+          <h1 class="heading">SUBSCRIPTION PLANS</h1>
+          <div class="text-sm text-muted mt-2">จัดการ Subscription Plans ทั้งหมดตาม Sub-Platform</div>
         </div>
       </div>
 
@@ -116,337 +126,83 @@ window.Pages.plansPackages = {
         </div>
       </div>
 
-      <!-- Tab Bar -->
-      <div class="tab-bar mb-24">
-        <div class="tab-item active" data-tab="sub-plans">
-          <i class="fa-solid fa-layer-group"></i> Subscription Plans
-        </div>
-        <div class="tab-item" data-tab="token-pkgs">
-          <i class="fa-solid fa-coins"></i> Token Packages
-        </div>
-        <div class="tab-item" data-tab="welcome-bonus">
-          <i class="fa-solid fa-gift"></i> Welcome Bonus & Priority
-        </div>
-      </div>
-
       <!-- ══════════════════════════════════════════
-           Tab: Subscription Plans (grouped by SP)
+           Subscription Plans (grouped by SP)
       ══════════════════════════════════════════ -->
-      <div id="tab-sub-plans" class="pp-tab-content">
-        ${d.subPlatforms.map(sp => {
-          const spPlans = plansBySP[sp.code] || [];
-          const iconMap = { Pro: 'fa-crown', Starter: 'fa-rocket', Free: 'fa-gift', Basic: 'fa-bolt', Premium: 'fa-gem' };
-          return `
-          <div class="sp-section mb-32" data-sp-section="${sp.code}">
-            ${self._spHeader(sp, spPlans.length, 'btn-add-plan-sp', 'Plans')}
+      ${d.subPlatforms.map(sp => {
+        const spPlans = plansBySP[sp.code] || [];
+        return `
+        <div class="sp-section mb-32" data-sp-section="${sp.code}">
+          ${self._spHeader(sp, spPlans.length, 'btn-add-plan-sp', 'Plans')}
 
-            ${spPlans.length === 0 ? `
-              <div class="p-24 text-center mb-8"
-                style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
-                <i class="fa-solid fa-circle-plus mb-8"
-                  style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
-                <div class="text-sm text-muted">ยังไม่มี Plan สำหรับ ${sp.name}</div>
-                <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Plan แรก</div>
-              </div>
-            ` : `
-              <div class="grid-3 gap-16">
-                ${spPlans.map(plan => {
-                  const isAccent = plan.name === 'Pro' || plan.name === 'Premium';
-                  const borderLeft = (plan.name === 'Starter' || plan.name === 'Basic')
-                    ? 'border-left:3px solid #3b82f6;' : '';
-                  const icon = iconMap[plan.name] || 'fa-circle';
-                  return `
-                  <div class="${isAccent ? 'card-accent' : 'card'} p-20"
-                    style="${borderLeft}" data-sp="${plan.subPlatform}">
-                    <div class="flex justify-between items-start mb-8">
-                      <div class="flex items-center gap-10">
-                        <i class="fa-solid ${icon} text-primary"></i>
-                        <div class="heading" style="font-size:20px;">${plan.name}</div>
-                      </div>
-                      <div class="flex gap-6">
-                        ${d.statusChip(plan.status)}
-                        <button class="btn btn-ghost btn-sm plan-edit-btn"
-                          data-id="${plan.id}" title="แก้ไข">
-                          <i class="fa-solid fa-pen"></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="mb-16">
-                      <span class="mono font-700" style="font-size:36px;color:var(--primary);">
-                        ${plan.price === 0 ? 'ฟรี' : d.formatNumber(plan.price)}
-                      </span>
-                      ${plan.price > 0 ? '<span class="text-sm text-muted"> THB/เดือน</span>' : ''}
-                    </div>
-
-                    <div class="flex items-center gap-8 p-10 mb-12"
-                      style="background:var(--surface2);border-radius:8px;">
-                      <i class="fa-solid fa-coins text-warning"></i>
-                      <span class="text-sm">Subscription Tokens:</span>
-                      <span class="mono font-700">${d.formatNumber(plan.bonusTokens)}</span>
-                    </div>
-
-                    <div class="divider mb-12"></div>
-                    <div class="text-xs text-muted uppercase font-600 mb-8">Features</div>
-                    <div class="flex-col gap-6">
-                      ${plan.features.map(f => `
-                        <div class="flex items-center gap-8">
-                          <i class="fa-solid fa-check text-success text-xs"></i>
-                          <span class="text-sm">${f}</span>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>`;
-                }).join('')}
-              </div>
-            `}
-          </div>`;
-        }).join('')}
-      </div>
-
-      <!-- ══════════════════════════════════════════
-           Tab: Token Packages (grouped by SP)
-      ══════════════════════════════════════════ -->
-      <div id="tab-token-pkgs" class="pp-tab-content hidden">
-
-        ${d.subPlatforms.map(sp => {
-          const spPkgs = pkgsBySP[sp.code] || [];
-          return `
-          <div class="sp-section mb-32" data-sp-pkg-section="${sp.code}">
-            ${self._spHeader(sp, spPkgs.length, 'btn-add-pkg-sp', 'Packages')}
-
-            ${spPkgs.length === 0 ? `
-              <div class="p-24 text-center mb-8"
-                style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
-                <i class="fa-solid fa-coins mb-8"
-                  style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
-                <div class="text-sm text-muted">ยังไม่มี Token Package สำหรับ ${sp.name}</div>
-                <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Package แรก</div>
-              </div>
-            ` : `
-              <div class="table-wrap mb-8">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>PACKAGE</th>
-                      <th>TOKENS</th>
-                      <th>BONUS TOKENS</th>
-                      <th>TOTAL ที่ได้รับ</th>
-                      <th>ราคา (THB)</th>
-                      <th>ราคา/Token</th>
-                      <th>POPULAR</th>
-                      <th>สถานะ</th>
-                      <th>จัดการ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${spPkgs.map(pkg => `
-                      <tr>
-                        <td class="font-600">${pkg.name}</td>
-                        <td class="mono">${d.formatNumber(pkg.tokens)}</td>
-                        <td class="mono ${pkg.bonus > 0 ? 'text-success' : 'text-muted'}">
-                          ${pkg.bonus > 0 ? `+${d.formatNumber(pkg.bonus)}` : '—'}
-                        </td>
-                        <td class="mono font-700">
-                          ${d.formatNumber(pkg.tokens + pkg.bonus)}
-                          ${pkg.bonus > 0
-                            ? `<span class="chip chip-green" style="font-size:9px;margin-left:4px;">+Bonus</span>`
-                            : ''}
-                        </td>
-                        <td class="mono font-700">${d.formatCurrency(pkg.price)}</td>
-                        <td class="mono text-muted text-sm">${pkg.pricePerToken.toFixed(2)} THB</td>
-                        <td>
-                          ${pkg.popular
-                            ? `<span class="chip chip-orange"><i class="fa-solid fa-fire"></i> Popular</span>`
-                            : '<span class="text-muted text-sm">—</span>'}
-                        </td>
-                        <td>${d.statusChip(pkg.status)}</td>
-                        <td>
-                          <div class="flex gap-4">
-                            <button class="btn btn-sm btn-outline pkg-edit-btn"
-                              data-id="${pkg.id}" title="แก้ไข">
-                              <i class="fa-solid fa-pen"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline pkg-toggle-btn"
-                              data-id="${pkg.id}"
-                              title="${pkg.status === 'Active' ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">
-                              <i class="fa-solid ${pkg.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            `}
-          </div>`;
-        }).join('')}
-
-        <!-- Price Calculator -->
-        <div class="card p-20 mt-8">
-          <div class="flex items-center gap-8 mb-16">
-            <i class="fa-solid fa-calculator text-primary"></i>
-            <span class="font-700">Token Price Calculator</span>
-          </div>
-          <div class="flex gap-16 items-end flex-wrap">
-            <div class="form-group" style="margin:0;min-width:140px;">
-              <label class="form-label text-xs">จำนวน Tokens</label>
-              <input type="number" class="form-input" id="calc-tokens" placeholder="เช่น 5000" min="0">
+          ${spPlans.length === 0 ? `
+            <div class="p-24 text-center mb-8"
+              style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
+              <i class="fa-solid fa-circle-plus mb-8"
+                style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
+              <div class="text-sm text-muted">ยังไม่มี Plan สำหรับ ${sp.name}</div>
+              <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Plan แรก</div>
             </div>
-            <div class="form-group" style="margin:0;min-width:140px;">
-              <label class="form-label text-xs">ราคา (THB)</label>
-              <input type="number" class="form-input" id="calc-price" placeholder="เช่น 2000" min="0">
-            </div>
-            <div class="form-group" style="margin:0;min-width:140px;">
-              <label class="form-label text-xs">Bonus Tokens</label>
-              <input type="number" class="form-input" id="calc-bonus" placeholder="เช่น 250" min="0" value="0">
-            </div>
-            <button class="btn btn-primary" id="calc-btn" style="margin-bottom:0;">
-              <i class="fa-solid fa-calculator"></i> คำนวณ
-            </button>
-          </div>
-          <div id="calc-result" class="hidden mt-16 p-16" style="background:var(--surface2);border-radius:10px;">
+          ` : `
             <div class="grid-3 gap-16">
-              <div>
-                <div class="text-xs text-muted uppercase mb-4">ราคาต่อ Token</div>
-                <div class="mono font-700 text-primary" id="res-per-token">—</div>
-              </div>
-              <div>
-                <div class="text-xs text-muted uppercase mb-4">Tokens รวม (+ Bonus)</div>
-                <div class="mono font-700 text-success" id="res-total-tokens">—</div>
-              </div>
-              <div>
-                <div class="text-xs text-muted uppercase mb-4">ส่วนลดเทียบกับ 1,000 pack</div>
-                <div class="mono font-700 text-warning" id="res-discount">—</div>
-              </div>
+              ${spPlans.map(plan => {
+                const isAccent   = plan.name === 'Pro' || plan.name === 'Premium';
+                const borderLeft = (plan.name === 'Starter' || plan.name === 'Basic')
+                  ? 'border-left:3px solid #3b82f6;' : '';
+                const icon = iconMap[plan.name] || 'fa-circle';
+                return `
+                <div class="${isAccent ? 'card-accent' : 'card'} p-20"
+                  style="${borderLeft}" data-sp="${plan.subPlatform}">
+                  <div class="flex justify-between items-start mb-8">
+                    <div class="flex items-center gap-10">
+                      <i class="fa-solid ${icon} text-primary"></i>
+                      <div class="heading" style="font-size:20px;">${plan.name}</div>
+                    </div>
+                    <div class="flex gap-6">
+                      ${d.statusChip(plan.status)}
+                      <button class="btn btn-ghost btn-sm plan-edit-btn"
+                        data-id="${plan.id}" title="แก้ไข">
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mb-16">
+                    <span class="mono font-700" style="font-size:36px;color:var(--primary);">
+                      ${plan.price === 0 ? 'ฟรี' : d.formatNumber(plan.price)}
+                    </span>
+                    ${plan.price > 0 ? '<span class="text-sm text-muted"> THB/เดือน</span>' : ''}
+                  </div>
+
+                  <div class="flex items-center gap-8 p-10 mb-12"
+                    style="background:var(--surface2);border-radius:8px;">
+                    <i class="fa-solid fa-coins text-warning"></i>
+                    <span class="text-sm">Subscription Tokens:</span>
+                    <span class="mono font-700">${d.formatNumber(plan.bonusTokens)}</span>
+                  </div>
+
+                  <div class="divider mb-12"></div>
+                  <div class="text-xs text-muted uppercase font-600 mb-8">Features</div>
+                  <div class="flex-col gap-6">
+                    ${plan.features.map(f => `
+                      <div class="flex items-center gap-8">
+                        <i class="fa-solid fa-check text-success text-xs"></i>
+                        <span class="text-sm">${f}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>`;
+              }).join('')}
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════
-           Tab: Welcome Bonus & Token Priority
-      ══════════════════════════════════════════ -->
-      <div id="tab-welcome-bonus" class="pp-tab-content hidden">
-
-        <!-- Welcome Bonus -->
-        <div class="section-title mb-16">
-          <i class="fa-solid fa-gift text-primary"></i> WELCOME BONUS TOKENS
-        </div>
-
-        <div class="banner-info mb-16">
-          <div class="banner-icon"><i class="fa-solid fa-circle-info text-primary"></i></div>
-          <div class="flex-1">
-            <div class="text-sm">
-              Welcome Bonus เติมเข้า <strong>Universal Token Wallet</strong> อัตโนมัติเมื่อ Tenant subscribe Avatar ครั้งแรก
-              <span class="chip chip-gray" style="margin-left:4px;">ครั้งเดียวต่อ Tenant</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-accent p-24 mb-16">
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="text-xs text-muted uppercase mb-6">ค่าปัจจุบัน</div>
-              <div class="mono font-700" style="font-size:48px;color:var(--primary);">
-                ${d.formatNumber(av.welcomeBonusTokens)}
-              </div>
-              <div class="text-sm text-muted mt-6">Tokens / Tenant</div>
-            </div>
-            <div class="flex-col gap-8" style="text-align:right;">
-              <div class="text-xs text-muted uppercase">อัปเดตล่าสุด</div>
-              <div class="mono text-sm font-600">${av.welcomeBonusLastUpdated}</div>
-              <div class="text-xs text-muted">โดย ${av.welcomeBonusUpdatedBy}</div>
-              <button class="btn btn-primary btn-sm mt-8" id="btn-edit-welcome-bonus">
-                <i class="fa-solid fa-pen"></i> แก้ไข
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="text-sm uppercase text-muted font-600 mb-10">ประวัติการเปลี่ยนแปลง</div>
-        <div class="table-wrap mb-32">
-          <table>
-            <thead>
-              <tr><th>วันที่</th><th>ค่าเดิม</th><th>ค่าใหม่</th><th>เปลี่ยนโดย</th></tr>
-            </thead>
-            <tbody>
-              ${av.welcomeBonusHistory.map(h => `
-                <tr>
-                  <td class="mono text-sm">${h.date}</td>
-                  <td class="mono">${d.formatNumber(h.oldValue)}</td>
-                  <td class="mono font-600 text-primary">${d.formatNumber(h.newValue)}</td>
-                  <td class="text-sm">${h.changedBy}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Token Deduction Priority -->
-        <div class="divider mb-28"></div>
-        <div class="section-title mb-16">
-          <i class="fa-solid fa-layer-group text-primary"></i> TOKEN DEDUCTION PRIORITY
-        </div>
-        <div class="text-sm text-muted mb-20">ลำดับการหักโทเค็นเมื่อมีการใช้งาน (อ่านอย่างเดียว)</div>
-
-        <div class="flex items-stretch mb-32" style="gap:0;">
-          <div class="card p-20 flex-1" style="border-left:4px solid var(--primary);position:relative;">
-            <div style="position:absolute;top:-12px;left:16px;background:var(--primary);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">1</div>
-            <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับแรก</div>
-            <div class="font-700 mb-6"><i class="fa-solid fa-calendar-check text-primary"></i> Subscription Tokens</div>
-            <div class="text-xs text-muted">reset ทุก billing cycle</div>
-            <div class="chip chip-blue mt-10">หมดอายุตาม cycle</div>
-          </div>
-          <div class="flex items-center" style="padding:0 8px;color:var(--text-muted);">
-            <i class="fa-solid fa-arrow-right" style="font-size:20px;"></i>
-          </div>
-          <div class="card p-20 flex-1" style="border-left:4px solid var(--warning);position:relative;">
-            <div style="position:absolute;top:-12px;left:16px;background:var(--warning);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">2</div>
-            <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับสอง</div>
-            <div class="font-700 mb-6"><i class="fa-solid fa-gift" style="color:var(--warning);"></i> Welcome Bonus Tokens</div>
-            <div class="text-xs text-muted">ไม่หมดอายุ, ได้ครั้งเดียว</div>
-            <div class="chip chip-orange mt-10">ครั้งเดียว / ไม่หมดอายุ</div>
-          </div>
-          <div class="flex items-center" style="padding:0 8px;color:var(--text-muted);">
-            <i class="fa-solid fa-arrow-right" style="font-size:20px;"></i>
-          </div>
-          <div class="card p-20 flex-1" style="border-left:4px solid var(--success);position:relative;">
-            <div style="position:absolute;top:-12px;left:16px;background:var(--success);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">3</div>
-            <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับสาม</div>
-            <div class="font-700 mb-6"><i class="fa-solid fa-coins" style="color:var(--success);"></i> Purchased Tokens</div>
-            <div class="text-xs text-muted">สะสมได้ ไม่หมดอายุ</div>
-            <div class="chip chip-green mt-10">สะสมได้ / ไม่หมดอายุ</div>
-          </div>
-        </div>
-      </div>
+          `}
+        </div>`;
+      }).join('')}
     `;
   },
 
-  // ═══════════════════════════════════════════════════════════
-  init(activeTab) {
+  init() {
     const d    = window.MockData;
     const self = window.Pages.plansPackages;
-
-    // ─── Tab Switching ───
-    const tabs   = document.querySelectorAll('.tab-bar .tab-item');
-    const tabIds = {
-      'sub-plans':     'tab-sub-plans',
-      'token-pkgs':    'tab-token-pkgs',
-      'welcome-bonus': 'tab-welcome-bonus',
-    };
-    function activateTab(key) {
-      tabs.forEach(t => t.classList.remove('active'));
-      Object.values(tabIds).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
-      });
-      document.querySelector(`.tab-bar .tab-item[data-tab="${key}"]`)?.classList.add('active');
-      document.getElementById(tabIds[key])?.classList.remove('hidden');
-    }
-    tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
-    if (activeTab && tabIds[activeTab]) activateTab(activeTab);
 
     // ─── Edit Plan Modal ───
     document.querySelectorAll('.plan-edit-btn').forEach(btn => {
@@ -480,9 +236,11 @@ window.Pages.plansPackages = {
           plan.name        = document.getElementById('edit-plan-name').value.trim() || plan.name;
           plan.price       = parseFloat(document.getElementById('edit-plan-price').value) || 0;
           plan.bonusTokens = parseInt(document.getElementById('edit-plan-tokens').value) || 0;
+          plan.modifiedDate = new Date().toISOString().split('T')[0];
+          plan.modifiedBy   = 'admin@realfact.ai';
           App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
           App.closeModal();
-          self._rerender('sub-plans');
+          self._rerender();
         });
       });
     });
@@ -532,13 +290,171 @@ window.Pages.plansPackages = {
             bonusTokens: parseInt(document.getElementById('new-plan-tokens').value) || 0,
             features: [],
             status: 'Active',
+            modifiedDate: new Date().toISOString().split('T')[0],
+            modifiedBy: 'admin@realfact.ai',
           });
           App.toast('เพิ่ม Plan ใหม่แล้ว', 'success');
           App.closeModal();
-          self._rerender('sub-plans');
+          self._rerender();
         });
       });
     });
+  },
+};
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE 2 — Token Packages
+   ════════════════════════════════════════════════════════════════ */
+window.Pages.plansTokens = {
+
+  _rerender() {
+    const ct = document.getElementById('content');
+    ct.innerHTML = window.Pages.plansTokens.render();
+    window.Pages.plansTokens.init();
+  },
+
+  render() {
+    const d    = window.MockData;
+    const pkgs = d.tokenPackages || [];
+    const self = window.Pages.plansPackages; // shared helpers
+
+    // Group packages by sub-platform
+    const pkgsBySP = {};
+    d.subPlatforms.forEach(sp => { pkgsBySP[sp.code] = []; });
+    pkgs.forEach(p => { (pkgsBySP[p.subPlatform] = pkgsBySP[p.subPlatform] || []).push(p); });
+
+    return `
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="heading">TOKEN PACKAGES</h1>
+          <div class="text-sm text-muted mt-2">จัดการ Token Packages ทั้งหมดตาม Sub-Platform</div>
+        </div>
+      </div>
+
+      <!-- Token Packages (grouped by SP) -->
+      ${d.subPlatforms.map(sp => {
+        const spPkgs = pkgsBySP[sp.code] || [];
+        return `
+        <div class="sp-section mb-32" data-sp-pkg-section="${sp.code}">
+          ${self._spHeader(sp, spPkgs.length, 'btn-add-pkg-sp', 'Packages')}
+
+          ${spPkgs.length === 0 ? `
+            <div class="p-24 text-center mb-8"
+              style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
+              <i class="fa-solid fa-coins mb-8"
+                style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
+              <div class="text-sm text-muted">ยังไม่มี Token Package สำหรับ ${sp.name}</div>
+              <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Package แรก</div>
+            </div>
+          ` : `
+            <div class="table-wrap mb-8">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PACKAGE</th>
+                    <th>TOKENS</th>
+                    <th>BONUS TOKENS</th>
+                    <th>TOTAL ที่ได้รับ</th>
+                    <th>ราคา (THB)</th>
+                    <th>ราคา/Token</th>
+                    <th>POPULAR</th>
+                    <th>สถานะ</th>
+                    <th>แก้ไขล่าสุด</th>
+                    <th>จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${spPkgs.map(pkg => `
+                    <tr>
+                      <td class="font-600">${pkg.name}</td>
+                      <td class="mono">${d.formatNumber(pkg.tokens)}</td>
+                      <td class="mono ${pkg.bonus > 0 ? 'text-success' : 'text-muted'}">
+                        ${pkg.bonus > 0 ? `+${d.formatNumber(pkg.bonus)}` : '—'}
+                      </td>
+                      <td class="mono font-700">
+                        ${d.formatNumber(pkg.tokens + pkg.bonus)}
+                        ${pkg.bonus > 0
+                          ? `<span class="chip chip-green" style="font-size:9px;margin-left:4px;">+Bonus</span>`
+                          : ''}
+                      </td>
+                      <td class="mono font-700">${d.formatCurrency(pkg.price)}</td>
+                      <td class="mono text-muted text-sm">${pkg.pricePerToken.toFixed(2)} THB</td>
+                      <td>
+                        ${pkg.popular
+                          ? `<span class="chip chip-orange"><i class="fa-solid fa-fire"></i> Popular</span>`
+                          : '<span class="text-muted text-sm">—</span>'}
+                      </td>
+                      <td>${d.statusChip(pkg.status)}</td>
+                      <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pkg.modifiedDate || '-'}</div>${pkg.modifiedBy ? `<div class="text-xs text-dim">${pkg.modifiedBy.split('@')[0]}</div>` : ''}</td>
+                      <td>
+                        <div class="flex gap-4">
+                          <button class="btn btn-sm btn-outline pkg-edit-btn"
+                            data-id="${pkg.id}" title="แก้ไข">
+                            <i class="fa-solid fa-pen"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline pkg-toggle-btn"
+                            data-id="${pkg.id}"
+                            title="${pkg.status === 'Active' ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">
+                            <i class="fa-solid ${pkg.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
+        </div>`;
+      }).join('')}
+
+      <!-- Price Calculator -->
+      <div class="card p-20 mt-8">
+        <div class="flex items-center gap-8 mb-16">
+          <i class="fa-solid fa-calculator text-primary"></i>
+          <span class="font-700">Token Price Calculator</span>
+        </div>
+        <div class="flex gap-16 items-end flex-wrap">
+          <div class="form-group" style="margin:0;min-width:140px;">
+            <label class="form-label text-xs">จำนวน Tokens</label>
+            <input type="number" class="form-input" id="calc-tokens" placeholder="เช่น 5000" min="0">
+          </div>
+          <div class="form-group" style="margin:0;min-width:140px;">
+            <label class="form-label text-xs">ราคา (THB)</label>
+            <input type="number" class="form-input" id="calc-price" placeholder="เช่น 2000" min="0">
+          </div>
+          <div class="form-group" style="margin:0;min-width:140px;">
+            <label class="form-label text-xs">Bonus Tokens</label>
+            <input type="number" class="form-input" id="calc-bonus" placeholder="เช่น 250" min="0" value="0">
+          </div>
+          <button class="btn btn-primary" id="calc-btn" style="margin-bottom:0;">
+            <i class="fa-solid fa-calculator"></i> คำนวณ
+          </button>
+        </div>
+        <div id="calc-result" class="hidden mt-16 p-16" style="background:var(--surface2);border-radius:10px;">
+          <div class="grid-3 gap-16">
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">ราคาต่อ Token</div>
+              <div class="mono font-700 text-primary" id="res-per-token">—</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">Tokens รวม (+ Bonus)</div>
+              <div class="mono font-700 text-success" id="res-total-tokens">—</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">ส่วนลดเทียบกับ 1,000 pack</div>
+              <div class="mono font-700 text-warning" id="res-discount">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  init() {
+    const d    = window.MockData;
+    const self = window.Pages.plansTokens;
 
     // ─── Token Package Toggle ───
     document.querySelectorAll('.pkg-toggle-btn').forEach(btn => {
@@ -546,8 +462,10 @@ window.Pages.plansPackages = {
         const pkg = d.tokenPackages.find(p => p.id === btn.dataset.id);
         if (!pkg) return;
         pkg.status = pkg.status === 'Active' ? 'Inactive' : 'Active';
+        pkg.modifiedDate = new Date().toISOString().split('T')[0];
+        pkg.modifiedBy = 'admin@realfact.ai';
         App.toast(`${pkg.name} ${pkg.status === 'Active' ? 'เปิด' : 'ปิด'}ใช้งานแล้ว`, 'success');
-        self._rerender('token-pkgs');
+        self._rerender();
       });
     });
 
@@ -598,9 +516,11 @@ window.Pages.plansPackages = {
           pkg.price         = price;
           pkg.pricePerToken = price / tokens;
           pkg.popular       = document.getElementById('edit-pkg-popular').value === 'true';
+          pkg.modifiedDate  = new Date().toISOString().split('T')[0];
+          pkg.modifiedBy    = 'admin@realfact.ai';
           App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
           App.closeModal();
-          self._rerender('token-pkgs');
+          self._rerender();
         });
       });
     });
@@ -658,10 +578,12 @@ window.Pages.plansPackages = {
             subPlatform: document.getElementById('new-pkg-sp').value,
             popular: false,
             status: 'Active',
+            modifiedDate: new Date().toISOString().split('T')[0],
+            modifiedBy: 'admin@realfact.ai',
           });
           App.toast('เพิ่ม Token Package แล้ว', 'success');
           App.closeModal();
-          self._rerender('token-pkgs');
+          self._rerender();
         });
       });
     });
@@ -681,6 +603,129 @@ window.Pages.plansPackages = {
       document.getElementById('res-discount').textContent     = discount > 0 ? `-${discount}% vs Base` : 'เท่ากับ Base Rate';
       document.getElementById('calc-result').classList.remove('hidden');
     });
+  },
+};
+
+/* ════════════════════════════════════════════════════════════════
+   MODULE 3 — Welcome Bonus & Token Deduction Priority
+   ════════════════════════════════════════════════════════════════ */
+window.Pages.plansBonus = {
+
+  _rerender() {
+    const ct = document.getElementById('content');
+    ct.innerHTML = window.Pages.plansBonus.render();
+    window.Pages.plansBonus.init();
+  },
+
+  render() {
+    const d  = window.MockData;
+    const av = d.avatarDefaults;
+
+    return `
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="heading">WELCOME BONUS & PRIORITY</h1>
+          <div class="text-sm text-muted mt-2">จัดการ Welcome Bonus Tokens และลำดับการหัก Token</div>
+        </div>
+      </div>
+
+      <!-- Welcome Bonus -->
+      <div class="section-title mb-16">
+        <i class="fa-solid fa-gift text-primary"></i> WELCOME BONUS TOKENS
+      </div>
+
+      <div class="banner-info mb-16">
+        <div class="banner-icon"><i class="fa-solid fa-circle-info text-primary"></i></div>
+        <div class="flex-1">
+          <div class="text-sm">
+            Welcome Bonus เติมเข้า <strong>Universal Token Wallet</strong> อัตโนมัติเมื่อ Tenant subscribe Avatar ครั้งแรก
+            <span class="chip chip-gray" style="margin-left:4px;">ครั้งเดียวต่อ Tenant</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-accent p-24 mb-16">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-muted uppercase mb-6">ค่าปัจจุบัน</div>
+            <div class="mono font-700" style="font-size:48px;color:var(--primary);">
+              ${d.formatNumber(av.welcomeBonusTokens)}
+            </div>
+            <div class="text-sm text-muted mt-6">Tokens / Tenant</div>
+          </div>
+          <div class="flex-col gap-8" style="text-align:right;">
+            <div class="text-xs text-muted uppercase">อัปเดตล่าสุด</div>
+            <div class="mono text-sm font-600">${av.welcomeBonusLastUpdated}</div>
+            <div class="text-xs text-muted">โดย ${av.welcomeBonusUpdatedBy}</div>
+            <button class="btn btn-primary btn-sm mt-8" id="btn-edit-welcome-bonus">
+              <i class="fa-solid fa-pen"></i> แก้ไข
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-sm uppercase text-muted font-600 mb-10">ประวัติการเปลี่ยนแปลง</div>
+      <div class="table-wrap mb-32">
+        <table>
+          <thead>
+            <tr><th>วันที่</th><th>ค่าเดิม</th><th>ค่าใหม่</th><th>เปลี่ยนโดย</th></tr>
+          </thead>
+          <tbody>
+            ${av.welcomeBonusHistory.map(h => `
+              <tr>
+                <td class="mono text-sm">${h.date}</td>
+                <td class="mono">${d.formatNumber(h.oldValue)}</td>
+                <td class="mono font-600 text-primary">${d.formatNumber(h.newValue)}</td>
+                <td class="text-sm">${h.changedBy}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Token Deduction Priority -->
+      <div class="divider mb-28"></div>
+      <div class="section-title mb-16">
+        <i class="fa-solid fa-layer-group text-primary"></i> TOKEN DEDUCTION PRIORITY
+      </div>
+      <div class="text-sm text-muted mb-20">ลำดับการหักโทเค็นเมื่อมีการใช้งาน (อ่านอย่างเดียว)</div>
+
+      <div class="flex items-stretch mb-32" style="gap:0;">
+        <div class="card p-20 flex-1" style="border-left:4px solid var(--primary);position:relative;">
+          <div style="position:absolute;top:-12px;left:16px;background:var(--primary);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">1</div>
+          <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับแรก</div>
+          <div class="font-700 mb-6"><i class="fa-solid fa-calendar-check text-primary"></i> Subscription Tokens</div>
+          <div class="text-xs text-muted">reset ทุก billing cycle</div>
+          <div class="chip chip-blue mt-10">หมดอายุตาม cycle</div>
+        </div>
+        <div class="flex items-center" style="padding:0 8px;color:var(--text-muted);">
+          <i class="fa-solid fa-arrow-right" style="font-size:20px;"></i>
+        </div>
+        <div class="card p-20 flex-1" style="border-left:4px solid var(--warning);position:relative;">
+          <div style="position:absolute;top:-12px;left:16px;background:var(--warning);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">2</div>
+          <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับสอง</div>
+          <div class="font-700 mb-6"><i class="fa-solid fa-gift" style="color:var(--warning);"></i> Welcome Bonus Tokens</div>
+          <div class="text-xs text-muted">ไม่หมดอายุ, ได้ครั้งเดียว</div>
+          <div class="chip chip-orange mt-10">ครั้งเดียว / ไม่หมดอายุ</div>
+        </div>
+        <div class="flex items-center" style="padding:0 8px;color:var(--text-muted);">
+          <i class="fa-solid fa-arrow-right" style="font-size:20px;"></i>
+        </div>
+        <div class="card p-20 flex-1" style="border-left:4px solid var(--success);position:relative;">
+          <div style="position:absolute;top:-12px;left:16px;background:var(--success);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;">3</div>
+          <div class="text-xs text-muted uppercase mb-8 mt-8">ลำดับสาม</div>
+          <div class="font-700 mb-6"><i class="fa-solid fa-coins" style="color:var(--success);"></i> Purchased Tokens</div>
+          <div class="text-xs text-muted">สะสมได้ ไม่หมดอายุ</div>
+          <div class="chip chip-green mt-10">สะสมได้ / ไม่หมดอายุ</div>
+        </div>
+      </div>
+    `;
+  },
+
+  init() {
+    const d    = window.MockData;
+    const self = window.Pages.plansBonus;
 
     // ─── Welcome Bonus Edit ───
     document.getElementById('btn-edit-welcome-bonus')?.addEventListener('click', () => {
@@ -728,7 +773,7 @@ window.Pages.plansPackages = {
           d.avatarDefaults.welcomeBonusUpdatedBy   = 'Admin';
           App.toast('บันทึก Welcome Bonus แล้ว', 'success');
           App.closeModal();
-          self._rerender('welcome-bonus');
+          self._rerender();
         };
         if (newVal > warnThreshold) {
           App.confirm(
