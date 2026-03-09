@@ -431,9 +431,9 @@ window.Pages.serviceBuilder = {
 
           <div class="modal-actions">
             <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-            <button class="btn btn-primary" id="btn-save-assign">
+            ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary" id="btn-save-assign">
               <i class="fa-solid fa-check"></i> บันทึก
-            </button>
+            </button>` : ''}
           </div>
         </div>
       `);

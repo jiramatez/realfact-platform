@@ -154,34 +154,18 @@ window.Pages.avatarDashboard = {
 
       <!-- Recent Sessions Table -->
       <div class="section-title"><i class="fa-solid fa-clock-rotate-left text-muted"></i> เซสชันล่าสุด</div>
-      <div class="table-wrap mb-24">
-        <table>
-          <thead>
-            <tr>
-              <th>Session ID</th>
-              <th>อุปกรณ์</th>
-              <th>Tenant</th>
-              <th>Preset</th>
-              <th>ระยะเวลา</th>
-              <th>Tokens</th>
-              <th>เวลา</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${completedSessions.map(se => `
-              <tr>
-                <td class="mono">${se.id}</td>
-                <td>${se.deviceName}</td>
-                <td>${se.tenantName}</td>
-                <td>${se.presetName}</td>
-                <td class="mono">${se.duration} นาที</td>
-                <td class="mono">${d.formatNumber(se.tokens)}</td>
-                <td class="text-sm text-muted">${se.start} - ${se.end ? se.end.split(' ')[1] : '-'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="session-search" placeholder="ค้นหา Tenant / อุปกรณ์ / Preset...">
+        </div>
+        <div class="tab-bar" id="session-tabs">
+          <div class="tab-item active" data-tab="all">All</div>
+          <div class="tab-item" data-tab="active">Active</div>
+          <div class="tab-item" data-tab="completed">Completed</div>
+        </div>
       </div>
+      <div class="table-wrap mb-24" id="session-table-wrap"></div>
 
       <!-- Quick Actions -->
       <div class="section-title"><i class="fa-solid fa-bolt text-muted"></i> ลัดไปยัง</div>
@@ -202,7 +186,63 @@ window.Pages.avatarDashboard = {
     `;
   },
 
+  _renderSessions() {
+    const d = window.MockData;
+    const searchEl = document.getElementById('session-search');
+    const activeTab = document.querySelector('#session-tabs .tab-item.active');
+    const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    const tab = activeTab ? activeTab.dataset.tab : 'all';
+
+    let sessions = d.sessions;
+    if (tab === 'active') sessions = sessions.filter(se => se.status === 'active');
+    else if (tab === 'completed') sessions = sessions.filter(se => se.status === 'completed');
+
+    if (search) {
+      sessions = sessions.filter(se =>
+        se.tenantName.toLowerCase().includes(search) ||
+        se.deviceName.toLowerCase().includes(search) ||
+        se.presetName.toLowerCase().includes(search)
+      );
+    }
+
+    const wrap = document.getElementById('session-table-wrap');
+    if (!wrap) return;
+
+    if (!sessions.length) {
+      wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-filter"></i><p>ไม่พบเซสชันที่ตรงกับเงื่อนไข</p></div>';
+      return;
+    }
+
+    wrap.innerHTML = `<table>
+      <thead><tr>
+        <th>Session ID</th><th>อุปกรณ์</th><th>Tenant</th><th>Preset</th>
+        <th>สถานะ</th><th>ระยะเวลา</th><th>Tokens</th><th>เวลา</th>
+      </tr></thead>
+      <tbody>${sessions.map(se => `<tr>
+        <td class="mono">${se.id}</td>
+        <td>${se.deviceName}</td>
+        <td>${se.tenantName}</td>
+        <td>${se.presetName}</td>
+        <td>${d.statusChip ? d.statusChip(se.status === 'active' ? 'Active' : 'Completed') : se.status}</td>
+        <td class="mono">${se.duration ? se.duration + ' นาที' : '-'}</td>
+        <td class="mono">${se.tokens ? d.formatNumber(se.tokens) : '-'}</td>
+        <td class="text-sm text-muted">${se.start}${se.end ? ' - ' + se.end.split(' ')[1] : ''}</td>
+      </tr>`).join('')}</tbody></table>`;
+  },
+
   init() {
-    // Avatar dashboard is read-only; no special bindings required
+    const self = window.Pages.avatarDashboard;
+    self._renderSessions();
+
+    const searchEl = document.getElementById('session-search');
+    if (searchEl) searchEl.addEventListener('input', () => self._renderSessions());
+
+    document.querySelectorAll('#session-tabs .tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('#session-tabs .tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        self._renderSessions();
+      });
+    });
   }
 };

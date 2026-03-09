@@ -81,14 +81,14 @@ window.MockData = {
 
   // ─── Sessions (Recent) ───
   sessions: [
-    { id: 'S-001', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 09:15', end: '2026-03-02 09:28', duration: 13, tokens: 13, status: 'completed' },
-    { id: 'S-002', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-002', presetName: 'คุณสมชาย', start: '2026-03-02 09:30', end: '2026-03-02 09:35', duration: 5, tokens: 5, status: 'completed' },
-    { id: 'S-003', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:00', end: null, duration: null, tokens: null, status: 'active' },
-    { id: 'S-004', deviceSn: 'RF-2025-00008', deviceName: 'ตู้สาขาเชียงใหม่', tenantId: 'T-005', tenantName: 'Northern Star Hotel', presetId: 'P-005', presetName: 'คุณณัฐ', start: '2026-03-02 08:45', end: '2026-03-02 09:12', duration: 27, tokens: 27, status: 'completed' },
-    { id: 'S-005', deviceSn: 'RF-2025-00009', deviceName: 'ตู้ Reception Tower B', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:15', end: null, duration: null, tokens: null, status: 'active' },
-    { id: 'S-006', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:30', end: null, duration: null, tokens: null, status: 'active' },
-    { id: 'S-007', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-004', presetName: 'Dr.มาย', start: '2026-03-01 14:20', end: '2026-03-01 14:35', duration: 15, tokens: 15, status: 'completed' },
-    { id: 'S-008', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-003', presetName: 'น้องมิว', start: '2026-03-01 16:00', end: '2026-03-01 16:22', duration: 22, tokens: 22, status: 'completed' },
+    { id: 'S-001', subPlatform: 'avatar', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 09:15', end: '2026-03-02 09:28', duration: 13, tokens: 13, status: 'Completed' },
+    { id: 'S-002', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-002', presetName: 'คุณสมชาย', start: '2026-03-02 09:30', end: '2026-03-02 09:35', duration: 5, tokens: 5, status: 'Completed' },
+    { id: 'S-003', subPlatform: 'avatar', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:00', end: null, duration: null, tokens: null, status: 'Active' },
+    { id: 'S-004', subPlatform: 'avatar', deviceSn: 'RF-2025-00008', deviceName: 'ตู้สาขาเชียงใหม่', tenantId: 'T-005', tenantName: 'Northern Star Hotel', presetId: 'P-005', presetName: 'คุณณัฐ', start: '2026-03-02 08:45', end: '2026-03-02 09:12', duration: 27, tokens: 27, status: 'Completed' },
+    { id: 'S-005', subPlatform: 'avatar', deviceSn: 'RF-2025-00009', deviceName: 'ตู้ Reception Tower B', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:15', end: null, duration: null, tokens: null, status: 'Active' },
+    { id: 'S-006', subPlatform: 'avatar', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:30', end: null, duration: null, tokens: null, status: 'Active' },
+    { id: 'S-007', subPlatform: 'avatar', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-004', presetName: 'Dr.มาย', start: '2026-03-01 14:20', end: '2026-03-01 14:35', duration: 15, tokens: 15, status: 'Completed' },
+    { id: 'S-008', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-003', presetName: 'น้องมิว', start: '2026-03-01 16:00', end: '2026-03-01 16:22', duration: 22, tokens: 22, status: 'Completed' },
   ],
 
   // ─── Assign Log ───
@@ -135,10 +135,43 @@ window.MockData = {
     { id: 'VL-002', invoiceId: 'INV-202602-00007', tenantId: 'T-005', tenantName: 'Northern Star Hotel', amount: 5339.30, action: 'Rejected', reason: 'สลิปไม่ชัดเจน ไม่สามารถอ่านข้อมูลได้', verifiedBy: 'finance@realfact.ai', verifiedDate: '2026-02-18', verifiedTime: '14:30' },
   ],
 
+  // ─── Session Usage Logs (from AI Framework) ───
+  // Each completed session reports which services it consumed
+  // type: 'primary' → costPerUnit, 'input' → costPerUnit (input), 'output' → outputCostPerUnit
+  sessionUsageLogs: [
+    // S-001: 13 min Avatar session
+    { sessionId: 'S-001', serviceCode: 'avatar-session',              type: 'primary', quantity: 13 },
+    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3250 },
+    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1100 },
+    { sessionId: 'S-001', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 26 },
+    // S-002: 5 min Avatar session
+    { sessionId: 'S-002', serviceCode: 'avatar-session',              type: 'primary', quantity: 5 },
+    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 1200 },
+    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 480 },
+    { sessionId: 'S-002', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 10 },
+    // S-004: 27 min Avatar session (long session)
+    { sessionId: 'S-004', serviceCode: 'avatar-session',              type: 'primary', quantity: 27 },
+    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 6750 },
+    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2700 },
+    { sessionId: 'S-004', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 54 },
+    { sessionId: 'S-004', serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 1500 },
+    // S-007: 15 min Avatar session
+    { sessionId: 'S-007', serviceCode: 'avatar-session',              type: 'primary', quantity: 15 },
+    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3800 },
+    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1500 },
+    { sessionId: 'S-007', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 30 },
+    { sessionId: 'S-007', serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 800 },
+    // S-008: 22 min Avatar session
+    { sessionId: 'S-008', serviceCode: 'avatar-session',              type: 'primary', quantity: 22 },
+    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 5500 },
+    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2200 },
+    { sessionId: 'S-008', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 44 },
+  ],
+
   // ─── Sub-Platforms ───
   subPlatforms: [
-    { id: 'SP-001', name: 'Avatar (Live Interact)', code: 'avatar',  domain: 'avatar.realfact.ai',  status: 'Active',     tenants: 45, revenue: 234500, tokenUsage: 128750, plans: ['Free', 'Starter', 'Pro'],     exchangeRate: '1 Token = 1 Minute',  logo: null, primaryColor: '#f15b26', created: '2025-10-01', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'SP-002', name: 'AI Booking',            code: 'booking', domain: 'booking.realfact.ai', status: 'Configured', tenants: 0,  revenue: 0,      tokenUsage: 0,      plans: ['Free', 'Basic', 'Premium'], exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'SP-001', name: 'Avatar (Live Interact)', code: 'avatar',  domain: 'avatar.realfact.ai',  status: 'Active',     tenants: 45, revenue: 234500, tokenUsage: 128750, plans: ['Free', 'Starter', 'Pro'],     exchangeRateValue: 1, exchangeRateUnit: 'Minute',  exchangeRate: '1 Token = 1 Minute',  logo: null, primaryColor: '#f15b26', created: '2025-10-01', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'SP-002', name: 'AI Booking',            code: 'booking', domain: 'booking.realfact.ai', status: 'Configured', tenants: 0,  revenue: 0,      tokenUsage: 0,      plans: ['Free', 'Basic', 'Premium'], exchangeRateValue: 1, exchangeRateUnit: 'Request', exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Subscription Plans ───
@@ -204,7 +237,7 @@ window.MockData = {
     { id: 'CLOG-003', creditLineId: 'CL-003', tenantId: 'T-008', tenantName: 'Sunrise Education',   action: 'Approved',       detail: 'อนุมัติวงเงิน ฿20,000 · รอบบิล 30 วัน · Net 30',  actionBy: 'finance@realfact.ai', actionDate: '2025-10-20', actionTime: '11:00' },
     { id: 'CLOG-004', creditLineId: 'CL-003', tenantId: 'T-008', tenantName: 'Sunrise Education',   action: 'Suspended',      detail: 'ระงับวงเงินเครดิต — ค้างชำระเกินกำหนด',            actionBy: 'finance@realfact.ai', actionDate: '2026-01-21', actionTime: '16:45' },
     { id: 'CLOG-005', creditLineId: 'CL-DP-001', tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',   action: 'Approved', detail: 'อนุมัติวงเงิน ฿100,000 · รอบบิล 30 วัน · Net 30', actionBy: 'finance@realfact.ai', actionDate: '2025-11-15', actionTime: '10:00' },
-    { id: 'CLOG-006', creditLineId: 'CL-DP-002', tenantId: 'T-DP-002', tenantName: 'HealthTech Solutions', action: 'Approved', detail: 'อนุมัติวงเงิน ฿50,000 · รอบบิล 30 วัน · Net 30',  actionBy: 'finance@realfact.ai', actionDate: '2025-12-01', actionTime: '13:15' },
+    { id: 'CLOG-006', creditLineId: 'CL-DP-002', tenantId: 'T-DP-002', tenantName: 'DataDriven Ltd.', action: 'Approved', detail: 'อนุมัติวงเงิน ฿50,000 · รอบบิล 30 วัน · Net 30',  actionBy: 'finance@realfact.ai', actionDate: '2025-12-01', actionTime: '13:15' },
     { id: 'CLOG-007', creditLineId: 'CL-DP-003', tenantId: 'T-DP-003', tenantName: 'EduSmart Platform',   action: 'Approved', detail: 'อนุมัติวงเงิน ฿30,000 · รอบบิล 30 วัน · Net 30',  actionBy: 'finance@realfact.ai', actionDate: '2026-01-05', actionTime: '09:45' },
     { id: 'CLOG-008', creditLineId: 'CL-DP-004', tenantId: 'T-DP-004', tenantName: 'RetailPOS Corp.',     action: 'Approved', detail: 'อนุมัติวงเงิน ฿200,000 · รอบบิล 30 วัน · Net 30', actionBy: 'finance@realfact.ai', actionDate: '2026-02-01', actionTime: '11:30' },
     { id: 'CLOG-009', creditLineId: 'CL-001', tenantId: 'T-003', tenantName: 'Thai Finance Group',  action: 'Edited',         detail: 'แก้ไขวงเงิน ฿80,000 → ฿100,000',                  actionBy: 'finance@realfact.ai', actionDate: '2026-03-01', actionTime: '15:10' },
@@ -271,16 +304,16 @@ window.MockData = {
     { tenantId: 'T-008', tenantName: 'Sunrise Education', totalOverdue: 1059.30, daysOverdue: 16, invoiceCount: 1, lastNotice: '2026-02-20', creditStatus: 'Suspended', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
   ],
 
-  // ─── Tenant Meta (contact person) ───
+  // ─── Tenant Meta (contact person + billing info) ───
   tenantMeta: {
-    'T-001': { contactPerson: 'นายสมชาย วงศ์ดี' },
-    'T-002': { contactPerson: 'นางสาวสมหญิง รักดี' },
-    'T-003': { contactPerson: 'นายวิชัย การเงิน' },
-    'T-004': { contactPerson: 'นายอนันต์ เทคโน' },
-    'T-005': { contactPerson: 'นางสาวนภา โรงแรม' },
-    'T-006': { contactPerson: 'นายภูเก็ต รีสอร์ท' },
-    'T-007': { contactPerson: 'นายแพทย์มนัส โรงพยาบาล' },
-    'T-008': { contactPerson: 'นางสาวรุ่งอรุณ การศึกษา' },
+    'T-001': { contactPerson: 'นายสมชาย วงศ์ดี',           taxId: '0105558012345', branch: '00000', billingAddress: '123 ถ.สุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพฯ 10110',               companyType: 'corporation' },
+    'T-002': { contactPerson: 'นางสาวสมหญิง รักดี',        taxId: '0105561023456', branch: '00000', billingAddress: '456 ถ.พระราม 4 แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110',            companyType: 'corporation' },
+    'T-003': { contactPerson: 'นายวิชัย การเงิน',           taxId: '0105542034567', branch: '00001', billingAddress: '789 ถ.สาทรใต้ แขวงยานนาวา เขตสาทร กรุงเทพฯ 10120',                companyType: 'corporation' },
+    'T-004': { contactPerson: 'นายอนันต์ เทคโน',           taxId: '0105563045678', branch: '00000', billingAddress: '321 ถ.รัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพฯ 10400',             companyType: 'corporation' },
+    'T-005': { contactPerson: 'นางสาวนภา โรงแรม',          taxId: '0505559056789', branch: '00000', billingAddress: '99 ถ.ช้างคลาน ต.ช้างคลาน อ.เมือง จ.เชียงใหม่ 50100',               companyType: 'corporation' },
+    'T-006': { contactPerson: 'นายภูเก็ต รีสอร์ท',          taxId: '0835560067890', branch: '00000', billingAddress: '55/1 ถ.วิชิตสงคราม ต.วิชิต อ.เมือง จ.ภูเก็ต 83000',                companyType: 'corporation' },
+    'T-007': { contactPerson: 'นายแพทย์มนัส โรงพยาบาล',    taxId: '0993000012345', branch: '00000', billingAddress: '88 ซ.เพชรบุรี 47 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310',         companyType: 'corporation' },
+    'T-008': { contactPerson: 'นางสาวรุ่งอรุณ การศึกษา',    taxId: '1101400567890', branch: '00000', billingAddress: '200 ถ.พหลโยธิน แขวงจตุจักร เขตจตุจักร กรุงเทพฯ 10900',            companyType: 'individual' },
   },
 
   // ─── Tenant Subscriptions (Multi-tenancy: TenantID → Sub-Platforms) ───
@@ -640,6 +673,14 @@ window.MockData = {
   billingCyclesPaid(tenantId) {
     return this.invoices.filter(function(i) { return i.tenantId === tenantId && i.status === 'Paid'; }).length;
   },
+  // ─── Lookup: resolve a field from any entity array by id ───
+  // Usage: MockData.lookup('tenants', 'T-001', 'name') → 'ABC Corporation'
+  lookup(entity, id, field) {
+    var arr = this[entity];
+    if (!arr) return null;
+    var item = arr.find(function(x) { return x.id === id; });
+    return item ? (field ? item[field] : item) : null;
+  },
   formatNumber(n) {
     if (n == null) return '-';
     return n.toLocaleString('th-TH');
@@ -652,15 +693,62 @@ window.MockData = {
     const map = {
       'Active': 'chip-green', 'Activated': 'chip-green', 'Ready': 'chip-green',
       'Paid': 'chip-green', 'Completed': 'chip-green', 'Online': 'chip-green',
+      'Approved': 'chip-green', 'Production': 'chip-green',
       'Sold': 'chip-yellow', 'Pending': 'chip-yellow', 'Pending Verification': 'chip-yellow',
       'Processing': 'chip-yellow', 'Issued': 'chip-yellow', 'Configured': 'chip-yellow',
+      'Pending Approval': 'chip-yellow', 'Pending Dual Approval': 'chip-yellow',
+      'Sent': 'chip-blue', 'Sandbox': 'chip-blue',
       'Draft': 'chip-gray', 'Registered': 'chip-blue', 'Free': 'chip-gray',
       'Starter': 'chip-blue', 'Pro': 'chip-orange',
-      'Deprecated': 'chip-red',
+      'Edited': 'chip-orange',
+      'Deprecated': 'chip-red', 'Rejected': 'chip-red',
       'Decommissioned': 'chip-red', 'Suspended': 'chip-red', 'Overdue': 'chip-red',
       'Offline': 'chip-red', 'Discontinued': 'chip-red', 'Retired': 'chip-red',
+      'Invited': 'chip-blue',
     };
     const cls = map[status] || 'chip-gray';
     return `<span class="chip ${cls}">${status}</span>`;
   },
+
+  // ─── Role Permissions (editable RBAC config) ───
+  rolePermissions: {
+    super_admin: {
+      canEdit: true, canDelete: true, canApprove: true, canManageMembers: true,
+      pages: '*',
+    },
+    platform_admin: {
+      canEdit: true, canDelete: false, canApprove: false, canManageMembers: true,
+      pages: [
+        'dashboard', 'hardware', 'devices', 'service-builder', 'knowledge-base',
+        'tenants', 'sub-platforms', 'plans-packages', 'plans-tokens', 'plans-bonus',
+        'avatar-dashboard', 'avatar-tenants',
+        'dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint',
+        'platform-members',
+      ],
+    },
+    finance: {
+      canEdit: true, canDelete: false, canApprove: true, canManageMembers: false,
+      pages: [
+        'dashboard',
+        'billing', 'billing-verify', 'billing-credit', 'billing-overdue',
+        'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests',
+        'payment-settings',
+        'analytics-revenue', 'analytics-usage', 'analytics-customers',
+      ],
+    },
+    viewer: {
+      canEdit: false, canDelete: false, canApprove: false, canManageMembers: false,
+      pages: '*',
+    },
+  },
+
+  // ─── Platform Members ───
+  platformMembers: [
+    { id: 'MEM-001', email: 'admin@realfact.ai',    password: 'admin123',    name: 'Super Admin',    initials: 'SA', role: 'super_admin',    status: 'Active', lastLogin: '2026-03-05 09:12', createdDate: '2025-12-01', invitedBy: null,                modifiedDate: '2026-03-05', modifiedBy: 'system' },
+    { id: 'MEM-002', email: 'platform@realfact.ai', password: 'platform123', name: 'Platform Admin', initials: 'PA', role: 'platform_admin', status: 'Active', lastLogin: '2026-03-04 14:30', createdDate: '2025-12-15', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-03-04', modifiedBy: 'admin@realfact.ai' },
+    { id: 'MEM-003', email: 'finance@realfact.ai',  password: 'finance123',  name: 'Finance',        initials: 'FN', role: 'finance',        status: 'Active', lastLogin: '2026-03-05 08:45', createdDate: '2026-01-10', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-01-10', modifiedBy: 'admin@realfact.ai' },
+    { id: 'MEM-004', email: 'viewer@realfact.ai',   password: 'viewer123',   name: 'Viewer',         initials: 'VW', role: 'viewer',         status: 'Active', lastLogin: '2026-03-03 16:20', createdDate: '2026-02-01', invitedBy: 'platform@realfact.ai', modifiedDate: '2026-02-01', modifiedBy: 'platform@realfact.ai' },
+    { id: 'MEM-005', email: 'new.member@realfact.ai', password: null,        name: 'New Member',     initials: 'NM', role: 'viewer',         status: 'Invited', lastLogin: null,              createdDate: '2026-03-04', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-03-04', modifiedBy: 'admin@realfact.ai' },
+    { id: 'MEM-006', email: 'suspended@realfact.ai', password: 'suspended1', name: 'Suspended User', initials: 'SU', role: 'platform_admin', status: 'Suspended', lastLogin: '2026-02-15 10:00', createdDate: '2026-01-20', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+  ],
 };

@@ -82,9 +82,7 @@ window.Pages.avatarSettings = {
             <div class="text-xs text-muted uppercase">ตั้งค่าวันที่</div>
             <div class="mono text-sm font-600">${av.systemDefaultSetDate}</div>
             <div class="text-xs text-muted">โดย ${av.systemDefaultSetBy}</div>
-            <button class="btn btn-primary btn-sm mt-8" id="btn-change-preset">
-              <i class="fa-solid fa-rotate"></i> เปลี่ยน
-            </button>
+            ${(!window.Auth || Auth.hasPermission('canEdit')) ? '<button class="btn btn-primary btn-sm mt-8" id="btn-change-preset"><i class="fa-solid fa-rotate"></i> เปลี่ยน</button>' : ''}
           </div>
         </div>
       </div>

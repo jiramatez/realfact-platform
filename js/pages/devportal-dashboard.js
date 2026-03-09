@@ -50,6 +50,14 @@ window.Pages.dpDashboard = {
         </div>
       </div>
 
+      <!-- Search -->
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="dp-dash-search" placeholder="ค้นหา Tenant / Preset...">
+        </div>
+      </div>
+
       <!-- Credit Line Summary + Top Tenants -->
       <div class="grid-2 mb-20">
         <div>
@@ -68,14 +76,24 @@ window.Pages.dpDashboard = {
     `;
   },
 
-  init() {
+  _renderTables() {
     var d = window.MockData;
+    var searchEl = document.getElementById('dp-dash-search');
+    var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+    // Filter tenants
+    var tenants = d.dpTenants;
+    if (search) {
+      tenants = tenants.filter(function(t) {
+        return t.name.toLowerCase().indexOf(search) !== -1 || t.id.toLowerCase().indexOf(search) !== -1;
+      });
+    }
 
     // Credit Line Summary
     var creditHtml = '<table><thead><tr>' +
       '<th>Tenant</th><th>Credit Limit</th><th>Used</th><th>Available</th><th>Health</th>' +
       '</tr></thead><tbody>';
-    d.dpTenants.forEach(function(t) {
+    tenants.forEach(function(t) {
       var cl = t.creditLine;
       var pct = cl.creditLimit ? Math.round(cl.availableCredit / cl.creditLimit * 100) : 0;
       var color = pct > 50 ? 'var(--success)' : pct > 20 ? 'var(--warning)' : 'var(--error)';
@@ -92,11 +110,12 @@ window.Pages.dpDashboard = {
         '</div></td>' +
         '</tr>';
     });
+    if (!tenants.length) creditHtml += '<tr><td colspan="5" style="text-align:center;padding:2rem;" class="text-muted">ไม่พบ Tenant</td></tr>';
     creditHtml += '</tbody></table>';
     document.getElementById('dp-credit-summary').innerHTML = creditHtml;
 
     // Top Tenants by API Usage
-    var sorted = d.dpTenants.slice().sort(function(a, b) { return b.apiCallsMonth - a.apiCallsMonth; });
+    var sorted = tenants.slice().sort(function(a, b) { return b.apiCallsMonth - a.apiCallsMonth; });
     var maxCalls = sorted.length ? sorted[0].apiCallsMonth : 1;
     var topHtml = '';
     sorted.forEach(function(t, i) {
@@ -114,13 +133,22 @@ window.Pages.dpDashboard = {
         '</div>' +
       '</div>';
     });
+    if (!sorted.length) topHtml = '<div class="text-muted text-sm" style="padding:1rem;">ไม่พบ Tenant</div>';
     document.getElementById('dp-top-tenants').innerHTML = topHtml;
+
+    // Filter presets
+    var presets = d.apiPresets;
+    if (search) {
+      presets = presets.filter(function(p) {
+        return p.name.toLowerCase().indexOf(search) !== -1;
+      });
+    }
 
     // API Preset Assignment Overview
     var presetHtml = '<table><thead><tr>' +
       '<th>API Preset</th><th>Version</th><th>Agents</th><th>Assigned Tenants</th><th>Status</th>' +
       '</tr></thead><tbody>';
-    d.apiPresets.forEach(function(p) {
+    presets.forEach(function(p) {
       presetHtml += '<tr>' +
         '<td><strong>' + p.name + '</strong></td>' +
         '<td class="mono">v' + p.version + '</td>' +
@@ -129,7 +157,16 @@ window.Pages.dpDashboard = {
         '<td>' + d.statusChip(p.status) + '</td>' +
         '</tr>';
     });
+    if (!presets.length) presetHtml += '<tr><td colspan="5" style="text-align:center;padding:2rem;" class="text-muted">ไม่พบ API Preset</td></tr>';
     presetHtml += '</tbody></table>';
     document.getElementById('dp-preset-overview').innerHTML = presetHtml;
+  },
+
+  init() {
+    var self = this;
+    self._renderTables();
+    document.getElementById('dp-dash-search').addEventListener('input', function() {
+      self._renderTables();
+    });
   },
 };

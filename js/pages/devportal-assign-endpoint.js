@@ -113,10 +113,9 @@ window.Pages.dpAssignEndpoint = {
             '<div style="font-size:.75rem;font-weight:600;color:var(--text-muted);margin-bottom:4px;">ASSIGNED TENANTS</div>' +
             tenantBadges +
           '</div>' +
-          '<button class="btn btn-sm btn-primary" style="width:100%;margin-top:8px;" ' +
-            'onclick="Pages.dpAssignEndpoint._showAssignModal(\'' + p.id + '\')">' +
-            '<i class="fa-solid fa-link"></i> Assign to Tenants' +
-          '</button>' +
+          ((!window.Auth || Auth.hasPermission('canEdit'))
+            ? '<button class="btn btn-sm btn-primary" style="width:100%;margin-top:8px;" onclick="Pages.dpAssignEndpoint._showAssignModal(\'' + p.id + '\')"><i class="fa-solid fa-link"></i> Assign to Tenants</button>'
+            : '') +
       '</div>';
     });
 

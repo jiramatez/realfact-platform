@@ -127,6 +127,22 @@ window.Pages.plansPackages = {
         </div>
       </div>
 
+      <!-- Filter Bar -->
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="plan-search" placeholder="ค้นหา Plan...">
+        </div>
+        <div class="form-group" style="margin:0;min-width:150px;">
+          <select class="form-input" id="plan-status-filter">
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Draft">Draft</option>
+            <option value="Deprecated">Deprecated</option>
+          </select>
+        </div>
+      </div>
+
       <!-- ══════════════════════════════════════════
            Subscription Plans (grouped by SP)
       ══════════════════════════════════════════ -->
@@ -152,8 +168,9 @@ window.Pages.plansPackages = {
                   ? 'border-left:3px solid #3b82f6;' : '';
                 const icon = iconMap[plan.name] || 'fa-circle';
                 return `
-                <div class="${isAccent ? 'card-accent' : 'card'} p-20"
-                  style="${borderLeft}" data-sp="${plan.subPlatform}">
+                <div class="${isAccent ? 'card-accent' : 'card'} p-20 plan-card"
+                  style="${borderLeft}" data-sp="${plan.subPlatform}"
+                  data-plan-name="${plan.name.toLowerCase()}" data-plan-status="${plan.status}">
                   <div class="flex justify-between items-start mb-8">
                     <div class="flex items-center gap-10">
                       <i class="fa-solid ${icon} text-primary"></i>
@@ -161,10 +178,15 @@ window.Pages.plansPackages = {
                     </div>
                     <div class="flex gap-6">
                       ${d.statusChip(plan.status)}
-                      <button class="btn btn-ghost btn-sm plan-edit-btn"
+                      ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-ghost btn-sm plan-edit-btn"
                         data-id="${plan.id}" title="แก้ไข">
                         <i class="fa-solid fa-pen"></i>
-                      </button>
+                      </button>` : ''}
+                      ${(!window.Auth || Auth.hasPermission('canDelete')) ? `<button class="btn btn-ghost btn-sm plan-delete-btn"
+                        data-id="${plan.id}" data-name="${plan.name}" data-sp="${plan.subPlatform}" title="ลบ"
+                        style="color:var(--error);">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>` : ''}
                     </div>
                   </div>
 
@@ -230,6 +252,30 @@ window.Pages.plansPackages = {
     const d    = window.MockData;
     const self = window.Pages.plansPackages;
 
+    // ─── Plan Filter/Search ───
+    function filterPlanCards() {
+      const search = (document.getElementById('plan-search') || {}).value.trim().toLowerCase();
+      const status = (document.getElementById('plan-status-filter') || {}).value;
+      document.querySelectorAll('.plan-card').forEach(card => {
+        const name = card.dataset.planName || '';
+        const cardStatus = card.dataset.planStatus || '';
+        const matchSearch = !search || name.includes(search);
+        const matchStatus = status === 'all' || cardStatus === status;
+        card.style.display = (matchSearch && matchStatus) ? '' : 'none';
+      });
+      // Hide SP sections where no cards are visible
+      document.querySelectorAll('.sp-section[data-sp-section]').forEach(section => {
+        const visibleCards = section.querySelectorAll('.plan-card:not([style*="display: none"])');
+        const emptyPlaceholder = section.querySelector('.p-24.text-center');
+        if (emptyPlaceholder) return; // section already has empty state
+        section.style.display = visibleCards.length > 0 ? '' : 'none';
+      });
+    }
+    const planSearchEl = document.getElementById('plan-search');
+    const planStatusEl = document.getElementById('plan-status-filter');
+    if (planSearchEl) planSearchEl.addEventListener('input', filterPlanCards);
+    if (planStatusEl) planStatusEl.addEventListener('change', filterPlanCards);
+
     // ─── Edit Plan Modal ───
     document.querySelectorAll('.plan-edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -263,9 +309,37 @@ window.Pages.plansPackages = {
           plan.price       = parseFloat(document.getElementById('edit-plan-price').value) || 0;
           plan.bonusTokens = parseInt(document.getElementById('edit-plan-tokens').value) || 0;
           plan.modifiedDate = new Date().toISOString().split('T')[0];
-          plan.modifiedBy   = 'admin@realfact.ai';
+          plan.modifiedBy   = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
           App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
           App.closeModal();
+          self._rerender();
+        });
+      });
+    });
+
+    // ─── Delete Plan ───
+    document.querySelectorAll('.plan-delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const planId = btn.dataset.id;
+        const planName = btn.dataset.name;
+        const planSP = btn.dataset.sp;
+
+        // Check if any tenant is subscribed to this plan
+        const subs = Object.values(d.tenantSubscriptions || {}).flat();
+        const hasSubscribers = subs.some(s => s.plan === planName && s.subPlatformCode === planSP && s.status === 'Active');
+        if (hasSubscribers) {
+          App.toast('ไม่สามารถลบได้ — มี Tenant subscribe Plan นี้อยู่', 'error');
+          return;
+        }
+
+        App.confirm(
+          `ลบ Plan "<strong>${planName}</strong>" (${planSP}) หรือไม่?`,
+          { title: 'ลบ Plan', confirmText: 'ลบ', cancelText: 'ยกเลิก', type: 'danger' }
+        ).then(ok => {
+          if (!ok) return;
+          const idx = d.plans.findIndex(p => p.id === planId);
+          if (idx !== -1) d.plans.splice(idx, 1);
+          App.toast('ลบ Plan แล้ว', 'success');
           self._rerender();
         });
       });
@@ -317,7 +391,7 @@ window.Pages.plansPackages = {
             features: [],
             status: 'Active',
             modifiedDate: new Date().toISOString().split('T')[0],
-            modifiedBy: 'admin@realfact.ai',
+            modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
           });
           App.toast('เพิ่ม Plan ใหม่แล้ว', 'success');
           App.closeModal();
@@ -415,7 +489,7 @@ window.Pages.plansTokens = {
                       <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pkg.modifiedDate || '-'}</div>${pkg.modifiedBy ? `<div class="text-xs text-dim">${pkg.modifiedBy.split('@')[0]}</div>` : ''}</td>
                       <td>
                         <div class="flex gap-4">
-                          <button class="btn btn-sm btn-outline pkg-edit-btn"
+                          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline pkg-edit-btn"
                             data-id="${pkg.id}" title="แก้ไข">
                             <i class="fa-solid fa-pen"></i>
                           </button>
@@ -423,7 +497,7 @@ window.Pages.plansTokens = {
                             data-id="${pkg.id}"
                             title="${pkg.status === 'Active' ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">
                             <i class="fa-solid ${pkg.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                          </button>
+                          </button>` : ''}
                         </div>
                       </td>
                     </tr>
@@ -489,7 +563,7 @@ window.Pages.plansTokens = {
         if (!pkg) return;
         pkg.status = pkg.status === 'Active' ? 'Inactive' : 'Active';
         pkg.modifiedDate = new Date().toISOString().split('T')[0];
-        pkg.modifiedBy = 'admin@realfact.ai';
+        pkg.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
         App.toast(`${pkg.name} ${pkg.status === 'Active' ? 'เปิด' : 'ปิด'}ใช้งานแล้ว`, 'success');
         self._rerender();
       });
@@ -543,7 +617,7 @@ window.Pages.plansTokens = {
           pkg.pricePerToken = price / tokens;
           pkg.popular       = document.getElementById('edit-pkg-popular').value === 'true';
           pkg.modifiedDate  = new Date().toISOString().split('T')[0];
-          pkg.modifiedBy    = 'admin@realfact.ai';
+          pkg.modifiedBy    = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
           App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
           App.closeModal();
           self._rerender();
@@ -605,7 +679,7 @@ window.Pages.plansTokens = {
             popular: false,
             status: 'Active',
             modifiedDate: new Date().toISOString().split('T')[0],
-            modifiedBy: 'admin@realfact.ai',
+            modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
           });
           App.toast('เพิ่ม Token Package แล้ว', 'success');
           App.closeModal();
@@ -624,7 +698,7 @@ window.Pages.plansTokens = {
       const perToken = price / tokens;
       const total    = tokens + bonus;
       const discount = Math.round((1 - perToken / baseRate) * 100);
-      document.getElementById('res-per-token').textContent    = perToken.toFixed(4) + ' THB';
+      document.getElementById('res-per-token').textContent    = perToken.toFixed(2) + ' THB';
       document.getElementById('res-total-tokens').textContent = total.toLocaleString('th-TH') + ' tokens';
       document.getElementById('res-discount').textContent     = discount > 0 ? `-${discount}% vs Base` : 'เท่ากับ Base Rate';
       document.getElementById('calc-result').classList.remove('hidden');
@@ -684,9 +758,9 @@ window.Pages.plansBonus = {
             <div class="text-xs text-muted uppercase">อัปเดตล่าสุด</div>
             <div class="mono text-sm font-600">${av.welcomeBonusLastUpdated}</div>
             <div class="text-xs text-muted">โดย ${av.welcomeBonusUpdatedBy}</div>
-            <button class="btn btn-primary btn-sm mt-8" id="btn-edit-welcome-bonus">
+            ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary btn-sm mt-8" id="btn-edit-welcome-bonus">
               <i class="fa-solid fa-pen"></i> แก้ไข
-            </button>
+            </button>` : ''}
           </div>
         </div>
       </div>

@@ -394,12 +394,42 @@ window.Pages.tenants = {
           <span class="mono text-xs text-muted">${t.id}</span>
         </div>
 
-        <!-- Contact Strip -->
-        <div class="flex gap-24 p-16 mb-16" style="background:var(--surface2);border-radius:10px;flex-wrap:wrap;">
-          <div><div class="text-xs text-muted uppercase">Company</div><div class="font-600 text-sm mt-2">${t.name}</div></div>
-          <div><div class="text-xs text-muted uppercase">Contact</div><div class="font-600 text-sm mt-2">${meta.contactPerson || '—'}</div></div>
-          <div><div class="text-xs text-muted uppercase">Phone</div><div class="font-600 text-sm mt-2 mono">${t.phone}</div></div>
-          <div><div class="text-xs text-muted uppercase">Joined</div><div class="font-600 text-sm mt-2 mono">${t.regDate}</div></div>
+        <!-- Contact & Billing Info -->
+        <div class="card p-16 mb-16" style="background:var(--surface2);border-radius:10px;">
+          <div class="flex gap-24 flex-wrap">
+            <div><div class="text-xs text-muted uppercase">Company</div><div class="font-600 text-sm mt-2">${t.name}</div></div>
+            <div><div class="text-xs text-muted uppercase">Contact</div><div class="font-600 text-sm mt-2">${meta.contactPerson || '—'}</div></div>
+            <div><div class="text-xs text-muted uppercase">Phone</div><div class="font-600 text-sm mt-2 mono">${t.phone}</div></div>
+            <div><div class="text-xs text-muted uppercase">Joined</div><div class="font-600 text-sm mt-2 mono">${t.regDate}</div></div>
+          </div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+          <div class="flex items-center gap-8 mb-10">
+            <i class="fa-solid fa-file-invoice text-primary" style="font-size:13px;"></i>
+            <span class="font-700 text-xs uppercase" style="letter-spacing:.5px;">ข้อมูลออกใบกำกับภาษี</span>
+          </div>
+          <div class="flex gap-24 flex-wrap">
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">เลขประจำตัวผู้เสียภาษี</div>
+              <div class="mono font-700" style="font-size:14px;letter-spacing:1px;">${meta.taxId || '—'}</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">ประเภท</div>
+              <div>${meta.companyType === 'corporation'
+                ? '<span class="chip chip-blue" style="font-size:11px;">นิติบุคคล</span>'
+                : meta.companyType === 'individual'
+                  ? '<span class="chip chip-yellow" style="font-size:11px;">บุคคลธรรมดา</span>'
+                  : '<span class="text-muted">—</span>'}</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted uppercase mb-4">สาขา</div>
+              <div class="mono font-600 text-sm">${meta.branch ? (meta.branch === '00000' ? meta.branch + ' (สำนักงานใหญ่)' : meta.branch) : '—'}</div>
+            </div>
+          </div>
+          ${meta.billingAddress ? `
+          <div class="mt-10">
+            <div class="text-xs text-muted uppercase mb-4">ที่อยู่ออกใบกำกับภาษี</div>
+            <div class="text-sm font-600">${meta.billingAddress}</div>
+          </div>` : ''}
         </div>
 
         <!-- Token Wallet -->
@@ -495,9 +525,10 @@ window.Pages.tenants = {
           <button class="btn btn-outline btn-sm" onclick="location.hash='billing';App.closeModal()">
             <i class="fa-solid fa-receipt"></i> ดู Invoice
           </button>
+          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-outline btn-sm" onclick="window.Pages.tenants._editTenant('${tenantId}')"><i class="fa-solid fa-pen"></i> แก้ไข</button>` : ''}
           ${t.status === 'Active'
-            ? `<button class="btn btn-danger btn-sm" id="modal-suspend-btn"><i class="fa-solid fa-ban"></i> ระงับ Tenant</button>`
-            : `<button class="btn btn-success btn-sm" id="modal-restore-btn"><i class="fa-solid fa-circle-check"></i> คืนสถานะ</button>`}
+            ? ((!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-danger btn-sm" id="modal-suspend-btn"><i class="fa-solid fa-ban"></i> ระงับ Tenant</button>` : '')
+            : ((!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-success btn-sm" id="modal-restore-btn"><i class="fa-solid fa-circle-check"></i> คืนสถานะ</button>` : '')}
         </div>
       </div>
     `);
@@ -507,7 +538,7 @@ window.Pages.tenants = {
       App.confirm(`ระงับ Tenant <strong>${t.name}</strong>?`, { type: 'danger', confirmText: 'ระงับ' }).then(ok => {
         if (!ok) return;
         const tenant = d.tenants.find(x => x.id === tenantId);
-        if (tenant) { tenant.status = 'Suspended'; d.stats.activeTenants = Math.max(0, d.stats.activeTenants - 1); d.stats.suspendedTenants++; tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = 'admin@realfact.ai'; }
+        if (tenant) { tenant.status = 'Suspended'; d.stats.activeTenants = Math.max(0, d.stats.activeTenants - 1); d.stats.suspendedTenants++; tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'; }
         App.toast('ระงับ Tenant แล้ว', 'error');
         App.closeModal();
         window.Pages.tenants._rerender();
@@ -517,11 +548,118 @@ window.Pages.tenants = {
     // Restore
     document.getElementById('modal-restore-btn')?.addEventListener('click', () => {
       const tenant = d.tenants.find(x => x.id === tenantId);
-      if (tenant) { tenant.status = 'Active'; d.stats.activeTenants++; d.stats.suspendedTenants = Math.max(0, d.stats.suspendedTenants - 1); tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = 'admin@realfact.ai'; }
+      if (tenant) { tenant.status = 'Active'; d.stats.activeTenants++; d.stats.suspendedTenants = Math.max(0, d.stats.suspendedTenants - 1); tenant.modifiedDate = new Date().toISOString().split('T')[0]; tenant.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'; }
       App.toast('คืนสถานะ Tenant แล้ว', 'success');
       App.closeModal();
       window.Pages.tenants._rerender();
     });
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // Edit Tenant Modal
+  // ═══════════════════════════════════════════════════════════
+  _editTenant(tenantId) {
+    const d    = window.MockData;
+    const self = window.Pages.tenants;
+    const t    = d.tenants.find(x => x.id === tenantId);
+    if (!t) return;
+    const meta = (d.tenantMeta || {})[tenantId] || {};
+
+    window.App.showModal(`
+      <div class="modal">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title"><i class="fa-solid fa-pen text-primary"></i> แก้ไข Tenant</div>
+        <div class="modal-subtitle">${t.id}</div>
+        <div class="form-group mb-12">
+          <label class="form-label">ชื่อบริษัท</label>
+          <input class="form-input" id="edit-t-name" value="${t.name}">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">ผู้ติดต่อ</label>
+          <input class="form-input" id="edit-t-contact" value="${meta.contactPerson || ''}">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="edit-t-email" value="${t.email}">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">เบอร์โทร</label>
+          <input class="form-input" id="edit-t-phone" value="${t.phone}">
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;">
+        <div class="font-700 text-sm mb-12" style="color:var(--primary);"><i class="fa-solid fa-file-invoice"></i> ข้อมูลออกใบกำกับภาษี</div>
+
+        <div class="form-group mb-12">
+          <label class="form-label">เลขประจำตัวผู้เสียภาษี (13 หลัก)</label>
+          <input class="form-input mono" id="edit-t-taxid" value="${meta.taxId || ''}" maxlength="13" pattern="\\d{13}" placeholder="เช่น 0105558012345">
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">ประเภทผู้เสียภาษี</label>
+          <select class="form-input" id="edit-t-companytype">
+            <option value="corporation" ${meta.companyType === 'corporation' ? 'selected' : ''}>นิติบุคคล</option>
+            <option value="individual" ${meta.companyType === 'individual' ? 'selected' : ''}>บุคคลธรรมดา</option>
+          </select>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">รหัสสาขา</label>
+          <input class="form-input mono" id="edit-t-branch" value="${meta.branch || ''}" maxlength="5" placeholder="00000">
+          <div class="text-xs text-muted mt-4">00000 = สำนักงานใหญ่</div>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">ที่อยู่ออกใบกำกับภาษี</label>
+          <textarea class="form-input" id="edit-t-billingaddr" rows="3" placeholder="ที่อยู่สำหรับออกใบกำกับภาษี">${meta.billingAddress || ''}</textarea>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+          <button class="btn btn-primary" id="save-edit-tenant-btn"><i class="fa-solid fa-save"></i> บันทึก</button>
+        </div>
+      </div>
+    `);
+
+    setTimeout(() => {
+      document.getElementById('save-edit-tenant-btn')?.addEventListener('click', () => {
+        const newName        = document.getElementById('edit-t-name').value.trim();
+        const newContact     = document.getElementById('edit-t-contact').value.trim();
+        const newEmail       = document.getElementById('edit-t-email').value.trim();
+        const newPhone       = document.getElementById('edit-t-phone').value.trim();
+        const newTaxId       = document.getElementById('edit-t-taxid').value.trim();
+        const newCompanyType = document.getElementById('edit-t-companytype').value;
+        const newBranch      = document.getElementById('edit-t-branch').value.trim();
+        const newBillingAddr = document.getElementById('edit-t-billingaddr').value.trim();
+
+        if (!newName || !newEmail) {
+          App.toast('กรุณากรอกชื่อบริษัทและ Email', 'error');
+          return;
+        }
+
+        if (newTaxId && !/^\d{13}$/.test(newTaxId)) {
+          App.toast('เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก', 'error');
+          return;
+        }
+
+        const currentEmail = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+        t.name  = newName;
+        t.email = newEmail;
+        t.phone = newPhone;
+        t.modifiedDate = new Date().toISOString().split('T')[0];
+        t.modifiedBy   = currentEmail;
+
+        // Update meta
+        if (!d.tenantMeta) d.tenantMeta = {};
+        if (!d.tenantMeta[tenantId]) d.tenantMeta[tenantId] = {};
+        d.tenantMeta[tenantId].contactPerson  = newContact;
+        d.tenantMeta[tenantId].taxId          = newTaxId;
+        d.tenantMeta[tenantId].companyType    = newCompanyType;
+        d.tenantMeta[tenantId].branch         = newBranch;
+        d.tenantMeta[tenantId].billingAddress = newBillingAddr;
+
+        App.toast('บันทึกข้อมูล Tenant แล้ว', 'success');
+        App.closeModal();
+        self._rerender();
+      });
+    }, 50);
   },
 
   // ═══════════════════════════════════════════════════════════

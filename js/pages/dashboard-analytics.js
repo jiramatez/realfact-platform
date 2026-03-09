@@ -131,7 +131,7 @@
           {name:'Token Top-ups', data:tr.map(function(r){return r.tokenTopups;})},
         ],
         xaxis:{categories:tr.map(function(r){return r.month;}), labels:{style:{fontSize:'11px'}}},
-        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(0)+'k';}, style:{fontSize:'11px'}}},
+        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(2)+'k';}, style:{fontSize:'11px'}}},
         stroke:{curve:'smooth', width:2},
         fill:{type:'gradient', gradient:{shadeIntensity:1, opacityFrom:0.25, opacityTo:0.02}},
         colors:['#3b82f6','#f59e0b'],
@@ -175,7 +175,7 @@
           {name:'Developer Portal',data:bySP.map(function(r){return r.devportal||0;})},
         ],
         xaxis:{categories:bySP.map(function(r){return r.month;}), labels:{style:{fontSize:'11px'}}},
-        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(0)+'k';}, style:{fontSize:'11px'}}},
+        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(2)+'k';}, style:{fontSize:'11px'}}},
         plotOptions:{bar:{columnWidth:'60%', borderRadius:2}},
         colors:['#f15b26','#3b82f6','#8b5cf6'],
         legend:{position:'top', horizontalAlign:'right', fontSize:'12px'},
@@ -190,7 +190,7 @@
         theme:{mode:m}, grid:_grid(m), dataLabels:{enabled:false},
         series:[{name:'Revenue', data:daily.map(function(r){return r.revenue;})}],
         xaxis:{categories:daily.map(function(r){return r.date;}), labels:{style:{fontSize:'11px'}}},
-        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(0)+'k';}, style:{fontSize:'11px'}}},
+        yaxis:{labels:{formatter:function(v){return (v/1000).toFixed(2)+'k';}, style:{fontSize:'11px'}}},
         plotOptions:{bar:{columnWidth:'50%', borderRadius:2}},
         colors:['#22c55e'],
         tooltip:{theme:m, y:{formatter:function(v){return _thb(v);}}},
@@ -377,7 +377,7 @@
       var donutCfg = {
         theme:{mode:m}, legend:{position:'bottom', fontSize:'12px'},
         plotOptions:{pie:{donut:{size:'60%'}}},
-        dataLabels:{enabled:true, formatter:function(v){return v.toFixed(0)+'%';}},
+        dataLabels:{enabled:true, formatter:function(v){return v.toFixed(2)+'%';}},
       };
 
       // Customer status donut

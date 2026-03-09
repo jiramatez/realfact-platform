@@ -69,6 +69,10 @@ window.Pages.knowledgeBase = {
       return map[type] || 'fa-file';
     }
 
+    function kbDataAttrs(kb) {
+      return `data-name="${kb.name.toLowerCase()}" data-tenant="${kb.tenantName.toLowerCase()}" data-status="${kb.status}"`;
+    }
+
     function renderKBCard(kb) {
       const presetNames = kb.presets.map(pid => {
         const p = d.presets.find(pr => pr.id === pid);
@@ -77,7 +81,7 @@ window.Pages.knowledgeBase = {
       const isProcessingOrFailed = kb.status === 'Processing' || kb.status === 'Failed';
 
       return `
-        <div class="card card-accent" data-kb-id="${kb.id}">
+        <div class="card card-accent" data-kb-id="${kb.id}" ${kbDataAttrs(kb)}>
           <!-- Header -->
           <div class="flex items-start justify-between mb-12">
             <div class="flex-1">
@@ -125,16 +129,16 @@ window.Pages.knowledgeBase = {
           <!-- Footer -->
           <div class="divider mb-12"></div>
           <div class="flex justify-end gap-8 flex-wrap">
-            <button class="btn btn-sm btn-danger btn-delete-kb" data-kb-id="${kb.id}">
+            ${(!window.Auth || Auth.hasPermission('canDelete')) ? `<button class="btn btn-sm btn-danger btn-delete-kb" data-kb-id="${kb.id}">
               <i class="fa-solid fa-trash"></i> ลบ KB
-            </button>
+            </button>` : ''}
             ${isProcessingOrFailed ? `
             <button class="btn btn-sm btn-outline btn-retry-kb" data-kb-id="${kb.id}" style="color:var(--warning,#f59e0b);border-color:var(--warning,#f59e0b)">
               <i class="fa-solid fa-rotate-right"></i> Retry
             </button>` : ''}
-            <button class="btn btn-sm btn-ghost btn-edit-kb" data-kb-id="${kb.id}">
+            ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-ghost btn-edit-kb" data-kb-id="${kb.id}">
               <i class="fa-solid fa-pen"></i> แก้ไข
-            </button>
+            </button>` : ''}
             <button class="btn btn-sm btn-outline btn-view-docs" data-kb-id="${kb.id}">
               <i class="fa-solid fa-folder-open"></i> ดูเอกสาร
             </button>
@@ -148,9 +152,9 @@ window.Pages.knowledgeBase = {
         <div class="page-header">
           <h2 class="heading">KNOWLEDGE BASE</h2>
           <div class="page-header-actions">
-            <button class="btn btn-primary" id="btn-create-kb">
+            ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary" id="btn-create-kb">
               <i class="fa-solid fa-plus"></i> สร้าง KB
-            </button>
+            </button>` : ''}
           </div>
         </div>
 
@@ -186,6 +190,22 @@ window.Pages.knowledgeBase = {
           </div>
         </div>
 
+        <!-- Filter Bar -->
+        <div class="flex items-center gap-12 mb-16">
+          <div class="search-bar flex-1">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="kb-search" placeholder="ค้นหา KB / Tenant...">
+          </div>
+          <div class="form-group" style="margin:0;min-width:150px;">
+            <select class="form-input" id="kb-status-filter">
+              <option value="all">All Status</option>
+              <option value="Ready">Ready</option>
+              <option value="Processing">Processing</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Processing / Failed Alert -->
         ${processingKBs.length > 0 ? `
         <div class="alert-warning mb-20">
@@ -204,6 +224,24 @@ window.Pages.knowledgeBase = {
     const d = window.MockData;
     const kbs = d.knowledgeBases;
     const self = window.Pages.knowledgeBase;
+
+    // ─── KB Filter/Search ───
+    function filterKBCards() {
+      const search = (document.getElementById('kb-search') || {}).value.trim().toLowerCase();
+      const status = (document.getElementById('kb-status-filter') || {}).value;
+      document.querySelectorAll('#kb-grid .card').forEach(card => {
+        const name = card.dataset.name || '';
+        const tenant = card.dataset.tenant || '';
+        const cardStatus = card.dataset.status || '';
+        const matchSearch = !search || name.includes(search) || tenant.includes(search);
+        const matchStatus = status === 'all' || cardStatus === status;
+        card.style.display = (matchSearch && matchStatus) ? '' : 'none';
+      });
+    }
+    const kbSearchEl = document.getElementById('kb-search');
+    const kbStatusEl = document.getElementById('kb-status-filter');
+    if (kbSearchEl) kbSearchEl.addEventListener('input', filterKBCards);
+    if (kbStatusEl) kbStatusEl.addEventListener('change', filterKBCards);
 
     // ─── Open View-Documents modal ───
     function openViewDocsModal(kbId) {
@@ -229,10 +267,10 @@ window.Pages.knowledgeBase = {
             <td class="mono">${d.formatNumber(doc.chunks)}</td>
             <td>${d.statusChip(doc.status)}</td>
             <td>
-              <button class="btn btn-sm btn-ghost btn-delete-doc" data-doc-id="${doc.id}" data-kb-id="${kbId}"
+              ${(!window.Auth || Auth.hasPermission('canDelete')) ? `<button class="btn btn-sm btn-ghost btn-delete-doc" data-doc-id="${doc.id}" data-kb-id="${kbId}"
                 style="color:var(--danger);padding:4px 8px" title="ลบเอกสาร">
                 <i class="fa-solid fa-trash"></i>
-              </button>
+              </button>` : ''}
             </td>
           </tr>`).join('');
       }
@@ -442,7 +480,7 @@ window.Pages.knowledgeBase = {
             selectedFiles.forEach((f, i) => {
               const ext    = f.name.split('.').pop().toLowerCase();
               const type   = extMap[ext] || 'PDF';
-              const mockSz = (Math.random() * 5 + 0.5).toFixed(1) + ' MB';
+              const mockSz = (Math.random() * 5 + 0.5).toFixed(2) + ' MB';
               const newId  = `doc-${kbId}-upload-${Date.now()}-${i}`;
               const newDoc = { id: newId, name: f.name, type, size: mockSz, chunks: 0, status: 'Processing' };
               docStore.push(newDoc);
@@ -726,7 +764,7 @@ window.Pages.knowledgeBase = {
               const initDocs = selectedFiles.map((f, i) => {
                 const ext  = f.name.split('.').pop().toLowerCase();
                 const type = extMap[ext] || 'PDF';
-                return { id: `doc-${newId}-${i}`, name: f.name, type, size: (Math.random() * 5 + 0.5).toFixed(1) + ' MB', chunks: 0, status: 'Processing' };
+                return { id: `doc-${newId}-${i}`, name: f.name, type, size: (Math.random() * 5 + 0.5).toFixed(2) + ' MB', chunks: 0, status: 'Processing' };
               });
 
               const newKB = {
@@ -737,12 +775,12 @@ window.Pages.knowledgeBase = {
                 documents:   initDocs.length,
                 chunks:      0,
                 embeddings:  0,
-                totalSize:   initDocs.length ? (initDocs.length * 2.5).toFixed(1) + ' MB' : '0 MB',
+                totalSize:   initDocs.length ? (initDocs.length * 2.5).toFixed(2) + ' MB' : '0 MB',
                 status:      initDocs.length ? 'Processing' : 'Ready',
                 lastUpdated: new Date().toISOString().slice(0, 10),
                 presets:     [],
                 modifiedDate: new Date().toISOString().slice(0, 10),
-                modifiedBy:   'admin@realfact.ai',
+                modifiedBy:   ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
               };
 
               d.knowledgeBases.push(newKB);

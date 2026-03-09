@@ -43,9 +43,9 @@ window.Pages.paymentSettings = {
           </div>
         </div>
         <div class="page-header-actions">
-          <button class="btn btn-primary" id="btn-add-bank">
+          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary" id="btn-add-bank">
             <i class="fa-solid fa-plus"></i> เพิ่มบัญชีธนาคาร
-          </button>
+          </button>` : ''}
         </div>
       </div>
 
@@ -150,7 +150,7 @@ window.Pages.paymentSettings = {
 
                 <!-- Actions -->
                 <div class="flex gap-6">
-                  <button class="btn btn-sm btn-outline bank-edit-btn" data-id="${b.id}" title="แก้ไข">
+                  ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline bank-edit-btn" data-id="${b.id}" title="แก้ไข">
                     <i class="fa-solid fa-pen"></i>
                   </button>
                   <button class="btn btn-sm btn-outline bank-toggle-btn" data-id="${b.id}"
@@ -160,7 +160,7 @@ window.Pages.paymentSettings = {
                   ${!b.isDefault && b.status === 'Active'
                     ? `<button class="btn btn-sm btn-outline bank-set-default-btn" data-id="${b.id}" title="ตั้งเป็น Default">
                         <i class="fa-solid fa-star"></i>
-                       </button>` : ''}
+                       </button>` : ''}` : ''}
                 </div>
               </div>
             </div>`;
@@ -174,9 +174,9 @@ window.Pages.paymentSettings = {
       <div id="tab-promptpay" class="ps-tab-content hidden">
         <div class="flex items-center justify-between mb-16">
           <div class="text-sm text-muted">ตั้งค่า PromptPay สำหรับรับชำระเงินผ่าน QR Code</div>
-          <button class="btn btn-outline" id="btn-add-promptpay">
+          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-outline" id="btn-add-promptpay">
             <i class="fa-solid fa-plus"></i> เพิ่ม PromptPay
-          </button>
+          </button>` : ''}
         </div>
 
         <div class="flex-col gap-16">
@@ -219,13 +219,13 @@ window.Pages.paymentSettings = {
 
                 <!-- Actions -->
                 <div class="flex gap-6">
-                  <button class="btn btn-sm btn-outline pp-edit-btn" data-id="${p.id}" title="แก้ไข">
+                  ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline pp-edit-btn" data-id="${p.id}" title="แก้ไข">
                     <i class="fa-solid fa-pen"></i>
                   </button>
                   <button class="btn btn-sm btn-outline pp-toggle-btn" data-id="${p.id}"
                     title="${p.status === 'Active' ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">
                     <i class="fa-solid ${p.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                  </button>
+                  </button>` : ''}
                 </div>
               </div>
             </div>
@@ -706,7 +706,7 @@ window.Pages.paymentSettings = {
       cfg.autoGenerateInvoice = document.getElementById('bt-auto-invoice').checked;
       cfg.hardBlockAtZero = document.getElementById('bt-hard-block').checked;
       cfg.modifiedDate = new Date().toISOString().slice(0, 10);
-      cfg.modifiedBy = 'super@realfact.ai';
+      cfg.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
       App.toast('บันทึก Platform Default สำเร็จ', 'success');
       self._rerender('billing-terms');
     });
@@ -733,7 +733,7 @@ window.Pages.paymentSettings = {
         ctx.billingCycle = parseInt(card.querySelector('.bt-ctx-cycle').value);
         ctx.paymentTerms = card.querySelector('.bt-ctx-terms').value;
         ctx.modifiedDate = new Date().toISOString().slice(0, 10);
-        ctx.modifiedBy = 'super@realfact.ai';
+        ctx.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
         App.toast('บันทึก ' + ctx.label + ' สำเร็จ', 'success');
         self._rerender('billing-terms');
       });

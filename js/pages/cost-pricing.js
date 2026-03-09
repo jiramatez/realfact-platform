@@ -22,7 +22,7 @@ window.Pages.costPricing = {
   // ─── Shared Helper: format cost with precision (non-token) ───
   _fmtCost(n) {
     if (n == null) return '—';
-    return n.toFixed(4) + ' THB';
+    return n.toFixed(2) + ' THB';
   },
 
   // ─── Format a per-token value in the selected display unit ───
@@ -30,10 +30,7 @@ window.Pages.costPricing = {
     if (n == null) return '—';
     const v = (unit === 'per-1m') ? n * 1e6 : n;
     if (v >= 1000) return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    if (v >= 1)    return v.toFixed(2);
-    if (v >= 0.01) return v.toFixed(4);
-    if (v >= 0.001) return v.toFixed(5);
-    return v.toFixed(6);
+    return v.toFixed(2);
   },
 
   // ─── Build cost cell HTML for a row ───
@@ -42,7 +39,7 @@ window.Pages.costPricing = {
     const unit = self._displayUnit;
     if (c.billingType !== 'Per Token') {
       const suffix = c.billingType === 'Per Minute' ? '/min' : '/req';
-      return `<span class="mono font-600">${c.costPerUnit.toFixed(4)}</span><span class="text-xs text-muted"> THB ${suffix}</span>`;
+      return `<span class="mono font-600">${c.costPerUnit.toFixed(2)}</span><span class="text-xs text-muted"> THB ${suffix}</span>`;
     }
     const unitLabel = unit === 'per-1m' ? '/1M token' : '/token';
     const inpStr = self._fmtToken(c.costPerUnit, unit);
@@ -165,43 +162,76 @@ window.Pages.costPricing = {
           <button class="btn btn-primary btn-sm" id="btn-add-cost"><i class="fa-solid fa-plus"></i> เพิ่ม Service Code</button>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Service Code</th>
-              <th>ชื่อบริการ</th>
-              <th>Provider</th>
-              <th>Model</th>
-              <th>Billing Type</th>
-              <th>Cost / Unit</th>
-              <th>วันที่มีผล</th>
-              <th>สถานะ</th>
-              <th>แก้ไขล่าสุด</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${costConfig.map((c, idx) => `
-              <tr>
-                <td class="mono text-primary font-600">${c.serviceCode}</td>
-                <td class="font-600">${c.name}</td>
-                <td>${self._providerChip(c.provider)}</td>
-                <td class="mono text-sm text-muted">${c.model}</td>
-                <td>${self._billingChip(c.billingType)}</td>
-                <td>${self._costCell(c)}</td>
-                <td class="text-sm text-muted">${c.effectiveDate}</td>
-                <td>${d.statusChip(c.status)}</td>
-                <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${c.modifiedDate || '-'}</div>${c.modifiedBy ? `<div class="text-xs text-dim">${c.modifiedBy.split('@')[0]}</div>` : ''}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline cost-edit-btn" data-idx="${idx}"><i class="fa-solid fa-pen"></i> แก้ไข</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      <!-- Cost Table Filter Bar -->
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="cost-search" placeholder="ค้นหา Service Code / ชื่อบริการ...">
+        </div>
+        <div class="form-group" style="margin:0;min-width:150px;">
+          <select class="form-input" id="cost-provider-filter">
+            <option value="all">All Provider</option>
+            <option value="Anthropic">Anthropic</option>
+            <option value="OpenAI">OpenAI</option>
+            <option value="Google">Google</option>
+            <option value="ElevenLabs">ElevenLabs</option>
+            <option value="RealfactAI">RealfactAI</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;min-width:150px;">
+          <select class="form-input" id="cost-status-filter">
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
       </div>
+      <div class="table-wrap" id="cost-table-wrap"></div>
     `;
+  },
+
+  _renderCostTable() {
+    const d = window.MockData;
+    const self = window.Pages.costPricing;
+    const costConfig = d.costConfig;
+    const search = (document.getElementById('cost-search') || {}).value.trim().toLowerCase();
+    const provider = (document.getElementById('cost-provider-filter') || {}).value;
+    const status = (document.getElementById('cost-status-filter') || {}).value;
+
+    let filtered = costConfig;
+    if (search) {
+      filtered = filtered.filter(c =>
+        c.serviceCode.toLowerCase().includes(search) || c.name.toLowerCase().includes(search)
+      );
+    }
+    if (provider !== 'all') filtered = filtered.filter(c => c.provider === provider);
+    if (status !== 'all') filtered = filtered.filter(c => c.status === status);
+
+    const wrap = document.getElementById('cost-table-wrap');
+    if (!wrap) return;
+
+    let html = `<table><thead><tr>
+      <th>Service Code</th><th>ชื่อบริการ</th><th>Provider</th><th>Model</th>
+      <th>Billing Type</th><th>Cost / Unit</th><th>วันที่มีผล</th><th>สถานะ</th><th>แก้ไขล่าสุด</th><th>จัดการ</th>
+    </tr></thead><tbody>`;
+    filtered.forEach((c, idx) => {
+      const origIdx = costConfig.indexOf(c);
+      html += `<tr>
+        <td class="mono text-primary font-600">${c.serviceCode}</td>
+        <td class="font-600">${c.name}</td>
+        <td>${self._providerChip(c.provider)}</td>
+        <td class="mono text-sm text-muted">${c.model}</td>
+        <td>${self._billingChip(c.billingType)}</td>
+        <td>${self._costCell(c)}</td>
+        <td class="text-sm text-muted">${c.effectiveDate}</td>
+        <td>${d.statusChip(c.status)}</td>
+        <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${c.modifiedDate || '-'}</div>${c.modifiedBy ? `<div class="text-xs text-dim">${c.modifiedBy.split('@')[0]}</div>` : ''}</td>
+        <td>${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline cost-edit-btn" data-idx="${origIdx}"><i class="fa-solid fa-pen"></i> แก้ไข</button>` : ''}</td>
+      </tr>`;
+    });
+    if (!filtered.length) html += '<tr><td colspan="10" style="text-align:center;padding:2rem;" class="text-muted">ไม่พบรายการ</td></tr>';
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
   },
 
   // ─── Wire up Per Token modal dynamics (show/hide fields, unit conversion) ───
@@ -255,6 +285,15 @@ window.Pages.costPricing = {
     const btn1M    = document.getElementById('unit-toggle-1m');
     if (btnToken) btnToken.addEventListener('click', function() { self._displayUnit = 'per-token'; self._rerender(); });
     if (btn1M)    btn1M.addEventListener('click',    function() { self._displayUnit = 'per-1m';    self._rerender(); });
+
+    // ─── Cost Table Filter ───
+    self._renderCostTable();
+    const costSearch = document.getElementById('cost-search');
+    const costProvider = document.getElementById('cost-provider-filter');
+    const costStatus = document.getElementById('cost-status-filter');
+    if (costSearch) costSearch.addEventListener('input', () => self._renderCostTable());
+    if (costProvider) costProvider.addEventListener('change', () => self._renderCostTable());
+    if (costStatus) costStatus.addEventListener('change', () => self._renderCostTable());
 
     // ─── Add Cost Modal ───
     const btnAddCost = document.getElementById('btn-add-cost');
@@ -349,7 +388,7 @@ window.Pages.costPricing = {
               serviceCode: code, name, billingType: billing,
               currency: 'THB', effectiveDate: dateVal, status: 'Active',
               modifiedDate: new Date().toISOString().split('T')[0],
-              modifiedBy: 'admin@realfact.ai',
+              modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
             };
 
             if (billing === 'Per Token') {
@@ -473,7 +512,7 @@ window.Pages.costPricing = {
             c.effectiveDate = dateVal;
             c.status      = status;
             c.modifiedDate = new Date().toISOString().split('T')[0];
-            c.modifiedBy   = 'admin@realfact.ai';
+            c.modifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
 
             if (billing === 'Per Token') {
               const inp = parseFloat(document.getElementById('edit-cost-input').value);
@@ -547,7 +586,7 @@ window.Pages.costMargin = {
   },
   _fmt(n, decimals) {
     if (n == null) return '—';
-    return n.toFixed(decimals != null ? decimals : 6);
+    return n.toFixed(decimals != null ? decimals : 2);
   },
 
   // ─── Build enriched row data ───
@@ -607,18 +646,12 @@ window.Pages.costMargin = {
 
     function fmtCost(n) {
       if (n == null) return '—';
-      if (n < 0.0001) return n.toFixed(7);
-      if (n < 0.001)  return n.toFixed(6);
-      if (n < 0.01)   return n.toFixed(5);
-      return n.toFixed(4);
+      return n.toFixed(2);
     }
 
     function fmtSell(cost, margin) {
       const s = self._sell(cost, margin);
-      if (s < 0.0001) return s.toFixed(7);
-      if (s < 0.001)  return s.toFixed(6);
-      if (s < 0.01)   return s.toFixed(5);
-      return s.toFixed(4);
+      return s.toFixed(2);
     }
 
     function overrideBadge(row) {
@@ -768,7 +801,7 @@ window.Pages.costMargin = {
                 <!-- MARGIN % cell -->
                 <td>
                   <div class="sc-margin-view flex items-center gap-6">
-                    <span class="mono font-600" style="font-size:14px;">${row.effectiveMargin.toFixed(1)}%</span>
+                    <span class="mono font-600" style="font-size:14px;">${row.effectiveMargin.toFixed(2)}%</span>
                     <button class="btn btn-ghost btn-sm sc-edit-trigger"
                       style="opacity:0.35;padding:2px 5px;" title="แก้ไข Margin">
                       <i class="fa-solid fa-pen" style="font-size:10px;"></i>
@@ -777,7 +810,7 @@ window.Pages.costMargin = {
                   <div class="sc-margin-edit hidden">
                     <div class="flex items-center gap-4" style="flex-wrap:nowrap;">
                       <input type="number" class="form-input sc-margin-inp"
-                        value="${row.effectiveMargin.toFixed(1)}"
+                        value="${row.effectiveMargin.toFixed(2)}"
                         step="0.1" min="0" max="99.99"
                         style="width:68px;padding:4px 8px;font-size:13px;">
                       <span class="text-muted" style="font-size:12px;">%</span>
@@ -799,14 +832,14 @@ window.Pages.costMargin = {
                     ${hasOutput ? `
                       <span class="text-muted text-xs">Input:</span>
                       <span class="mono font-600 text-success">${fmtSell(row.costPerUnit, row.effectiveMargin)}</span>
-                      <span class="text-dim text-xs">(${row.effectiveMargin.toFixed(1)}%)</span><br>
+                      <span class="text-dim text-xs">(${row.effectiveMargin.toFixed(2)}%)</span><br>
                       <span class="text-muted text-xs">Output:</span>
                       <span class="mono font-600 text-success">${fmtSell(row.outputCostPerUnit, row.effectiveMargin)}</span>
-                      <span class="text-dim text-xs">(${row.effectiveMargin.toFixed(1)}%)</span><br>
+                      <span class="text-dim text-xs">(${row.effectiveMargin.toFixed(2)}%)</span><br>
                       <span class="text-xs text-dim">per 1K tokens</span>
                     ` : `
                       <span class="mono font-600 text-success">${fmtSell(row.costPerUnit, row.effectiveMargin)}</span>
-                      <span class="text-dim text-xs" style="margin-left:4px;">(${row.effectiveMargin.toFixed(1)}%)</span>
+                      <span class="text-dim text-xs" style="margin-left:4px;">(${row.effectiveMargin.toFixed(2)}%)</span>
                       <div class="text-xs text-dim">${billingUnit(row.billingType)}</div>
                     `}
                   </div>
@@ -898,14 +931,14 @@ window.Pages.costMargin = {
           </div>
           <div class="form-group">
             <label class="form-label">Sell Price (ราคาขาย THB)</label>
-            <input type="number" id="calc-sell" class="form-input" value="${(1 / (1 - mc.global / 100)).toFixed(4)}" step="0.0001" min="0">
+            <input type="number" id="calc-sell" class="form-input" value="${(1 / (1 - mc.global / 100)).toFixed(2)}" step="0.0001" min="0">
           </div>
         </div>
         <div class="flex items-center gap-16 mt-16">
           <div class="card p-16 flex-1" style="text-align:center;">
             <div class="text-sm text-muted mb-4">กำไรต่อหน่วย</div>
             <div class="mono font-700 text-success" id="calc-profit" style="font-size:20px;">
-              ${((1 / (1 - mc.global / 100)) - 1).toFixed(4)} THB
+              ${((1 / (1 - mc.global / 100)) - 1).toFixed(2)} THB
             </div>
           </div>
           <div class="card p-16 flex-1" style="text-align:center;">
@@ -917,102 +950,73 @@ window.Pages.costMargin = {
         </div>
       </div>
 
-      <!-- Platform Token Sell Price -->
+      <!-- Platform Token Profit Summary -->
       <div class="divider mb-20 mt-28"></div>
-      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> ราคาขายต่อ 1 Token แต่ละ Platform</div>
-      <div class="banner-info mb-16">
-        <div class="banner-icon"><i class="fa-solid fa-circle-info"></i></div>
-        <div class="text-sm">ราคาขาย = Cost ÷ (1 − Effective Margin% ÷ 100) · Token Rate อ้างอิงจาก Sub-Platform Config</div>
-      </div>
+      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไรต่อ Token แต่ละ Platform</div>
+      <div class="text-xs text-muted mb-16">คำนวณจาก Usage Log × Cost Config × Margin | ดูรายละเอียดเพิ่มเติมได้ที่หน้า Sub-Platform Management → แท็บ "ต้นทุน"</div>
+
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Platform</th>
-              <th>Service Code</th>
-              <th>Token Rate</th>
-              <th>Billing Type</th>
-              <th>Cost / Unit</th>
-              <th>Effective Margin</th>
-              <th>Sell Price / Unit</th>
-              <th>= ราคาขาย / 1 Token</th>
+              <th>Exchange Rate</th>
+              <th>Sessions</th>
+              <th>ต้นทุน/Token</th>
+              <th>ขาย/Token</th>
+              <th>กำไร/Token</th>
+              <th>Margin</th>
             </tr>
           </thead>
           <tbody>
             ${d.subPlatforms.map(sp => {
-              // Map platform to relevant services
-              const svcMap = { avatar: ['avatar-session'], booking: ['elevenlabs-turbo-v2-5'] };
-              const svcCodes = svcMap[sp.code] || [];
-              if (!svcCodes.length) {
-                return `<tr>
-                  <td><span class="font-600">${sp.name}</span><br><span class="text-xs text-muted mono">${sp.code}</span></td>
-                  <td colspan="7" class="text-muted text-sm">ยังไม่ได้กำหนด Service Code</td>
-                </tr>`;
+              const platformSessions = d.sessions.filter(s => s.status === 'Completed' && s.subPlatform === sp.code);
+              const usageLogs = d.sessionUsageLogs || [];
+              const sessionIds = platformSessions.map(s => s.id);
+              const relevantLogs = usageLogs.filter(l => sessionIds.includes(l.sessionId));
+              const totalTokens = platformSessions.reduce((sum, s) => sum + (s.tokens || 0), 0);
+
+              if (!relevantLogs.length) {
+                return '<tr>' +
+                  '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
+                  '<td><span class="chip chip-orange text-xs"><i class="fa-solid fa-coins"></i> ' + sp.exchangeRate + '</span></td>' +
+                  '<td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td>' +
+                  '</tr>';
               }
-              return svcCodes.map((sc, i) => {
-                const svc = d.costConfig.find(c => c.serviceCode === sc);
-                if (!svc) return '';
-                const row = rows.find(r => r.serviceCode === sc);
+
+              const svcAgg = {};
+              relevantLogs.forEach(l => {
+                const key = l.serviceCode + '|' + l.type;
+                if (!svcAgg[key]) svcAgg[key] = { serviceCode: l.serviceCode, type: l.type, totalQty: 0 };
+                svcAgg[key].totalQty += l.quantity;
+              });
+
+              let totalCost = 0, totalSell = 0;
+              Object.values(svcAgg).forEach(agg => {
+                const svc = d.costConfig.find(c => c.serviceCode === agg.serviceCode);
+                if (!svc) return;
+                const row = rows.find(r => r.serviceCode === agg.serviceCode);
                 const margin = row ? row.effectiveMargin : mc.global;
-                const sell = self._sell(svc.costPerUnit, margin);
-                const badge = row ? (row.overrideLabel === 'override'
-                  ? '<span class="chip chip-purple" style="font-size:10px;">Override</span>'
-                  : row.overrideLabel === 'provider'
-                  ? '<span class="chip chip-blue" style="font-size:10px;">Provider</span>'
-                  : '<span class="chip chip-gray" style="font-size:10px;">Global</span>') : '';
-                return `<tr>
-                  ${i === 0 ? `<td rowspan="${svcCodes.length}" style="vertical-align:middle;border-left:3px solid ${sp.primaryColor || 'var(--primary)'};">
-                    <span class="font-600">${sp.name}</span><br><span class="text-xs text-muted mono">${sp.code}</span>
-                  </td>` : ''}
-                  <td class="mono text-sm">${svc.serviceCode}</td>
-                  <td class="text-sm">${sp.exchangeRate}</td>
-                  <td>${window.Pages.costPricing._billingChip(svc.billingType)}</td>
-                  <td class="mono">${fmtCost(svc.costPerUnit)} <span class="text-xs text-muted">THB</span></td>
-                  <td class="mono">${margin.toFixed(1)}% ${badge}</td>
-                  <td class="mono text-success">${fmtCost(sell)} <span class="text-xs text-muted">THB</span></td>
-                  <td style="text-align:center;">
-                    <div class="mono font-700" style="font-size:18px;color:var(--primary);">${fmtCost(sell)} THB</div>
-                    <div class="text-xs text-muted">per 1 Token</div>
-                  </td>
-                </tr>`;
-              }).join('');
+                const unitCost = (agg.type === 'output' && svc.outputCostPerUnit != null) ? svc.outputCostPerUnit : svc.costPerUnit;
+                totalCost += agg.totalQty * unitCost;
+                totalSell += agg.totalQty * self._sell(unitCost, margin);
+              });
+
+              const costPT = totalTokens > 0 ? totalCost / totalTokens : 0;
+              const sellPT = totalTokens > 0 ? totalSell / totalTokens : 0;
+              const profitPT = sellPT - costPT;
+              const blendedM = sellPT > 0 ? ((1 - costPT / sellPT) * 100) : 0;
+
+              return '<tr>' +
+                '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
+                '<td><span class="chip chip-orange text-xs"><i class="fa-solid fa-coins"></i> ' + sp.exchangeRate + '</span></td>' +
+                '<td class="mono">' + platformSessions.length + ' <span class="text-xs text-muted">(' + d.formatNumber(totalTokens) + ' tkn)</span></td>' +
+                '<td class="mono" style="color:var(--error);">' + fmtCost(costPT) + '</td>' +
+                '<td class="mono" style="color:var(--primary);">' + fmtCost(sellPT) + '</td>' +
+                '<td class="mono font-700" style="color:var(--success);">' + fmtCost(profitPT) + '</td>' +
+                '<td><span class="chip ' + (blendedM >= 30 ? 'chip-green' : 'chip-orange') + ' text-xs mono">' + blendedM.toFixed(1) + '%</span></td>' +
+                '</tr>';
             }).join('')}
-            <!-- Developer Portal: API-based (Per Token services) -->
-            ${(() => {
-              const dpServices = d.costConfig.filter(c => c.billingType === 'Per Token');
-              return `<tr>
-                <td rowspan="${dpServices.length + 1}" style="vertical-align:middle;border-left:3px solid #8b5cf6;">
-                  <span class="font-600">Developer Portal</span><br><span class="text-xs text-muted mono">devportal</span>
-                </td>
-                <td colspan="7" class="text-xs text-muted" style="padding:6px 12px;background:rgba(139,92,246,.05);">
-                  API Token — ราคาต่อ 1 Token ขึ้นกับ Service Code ที่เรียกใช้ (Input / Output แยกกัน)
-                </td>
-              </tr>` +
-              dpServices.map(svc => {
-                const row = rows.find(r => r.serviceCode === svc.serviceCode);
-                const margin = row ? row.effectiveMargin : mc.global;
-                const sellIn = self._sell(svc.costPerUnit, margin);
-                const sellOut = svc.outputCostPerUnit ? self._sell(svc.outputCostPerUnit, margin) : null;
-                const badge = row ? (row.overrideLabel === 'override'
-                  ? '<span class="chip chip-purple" style="font-size:10px;">Override</span>'
-                  : row.overrideLabel === 'provider'
-                  ? '<span class="chip chip-blue" style="font-size:10px;">Provider</span>'
-                  : '<span class="chip chip-gray" style="font-size:10px;">Global</span>') : '';
-                return `<tr>
-                  <td class="mono text-sm">${svc.serviceCode}</td>
-                  <td class="text-sm">1 Token = 1 API Token</td>
-                  <td>${window.Pages.costPricing._billingChip(svc.billingType)}</td>
-                  <td class="mono">${fmtCost(svc.costPerUnit)}${sellOut != null ? '<br><span class="text-xs text-muted">out: ' + fmtCost(svc.outputCostPerUnit) + '</span>' : ''}</td>
-                  <td class="mono">${margin.toFixed(1)}% ${badge}</td>
-                  <td class="mono text-success">${fmtCost(sellIn)}${sellOut != null ? '<br><span class="text-xs text-muted">out: ' + fmtCost(sellOut) + '</span>' : ''}</td>
-                  <td style="text-align:center;">
-                    <div class="mono font-700" style="color:var(--primary);">${fmtCost(sellIn)}</div>
-                    ${sellOut != null ? '<div class="mono text-xs text-muted">out: ' + fmtCost(sellOut) + '</div>' : ''}
-                    <div class="text-xs text-muted">per 1 Token</div>
-                  </td>
-                </tr>`;
-              }).join('');
-            })()}
           </tbody>
         </table>
       </div>
@@ -1065,7 +1069,7 @@ window.Pages.costMargin = {
             mc.global = val;
             mc.effectiveDate = effDate;
             mc.modifiedDate = new Date().toISOString().split('T')[0];
-            mc.modifiedBy = 'admin@realfact.ai';
+            mc.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             App.closeModal();
             App.toast('บันทึก Global Margin สำเร็จ — มีผล ' + effDate, 'success');
             self._rerender();
@@ -1113,7 +1117,7 @@ window.Pages.costMargin = {
             p.margin = val;
             p.effectiveDate = effDate;
             p.modifiedDate = new Date().toISOString().split('T')[0];
-            p.modifiedBy = 'admin@realfact.ai';
+            p.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             App.closeModal();
             App.toast('บันทึก Provider Margin สำเร็จ — มีผล ' + effDate, 'success');
             self._rerender();
@@ -1173,7 +1177,7 @@ window.Pages.costMargin = {
           const s = parseFloat(sellSingle.value);
           if (isNaN(s) || s <= 0) return;
           const m = self._margin(cost, s);
-          marginInp.value = m.toFixed(1);
+          marginInp.value = m.toFixed(2);
           if (sellInpOut && outputCost) sellInpOut.value = self._fmt(self._sell(outputCost, m));
         });
       }
@@ -1182,7 +1186,7 @@ window.Pages.costMargin = {
           const s = parseFloat(sellInpIn.value);
           if (isNaN(s) || s <= 0) return;
           const m = self._margin(cost, s);
-          marginInp.value = m.toFixed(1);
+          marginInp.value = m.toFixed(2);
           if (sellInpOut && outputCost) sellInpOut.value = self._fmt(self._sell(outputCost, m));
         });
       }
@@ -1192,7 +1196,7 @@ window.Pages.costMargin = {
           const s = parseFloat(sellInpOut.value);
           if (isNaN(s) || s <= 0) return;
           const m = self._margin(outputCost, s);
-          marginInp.value = m.toFixed(1);
+          marginInp.value = m.toFixed(2);
           if (sellInpIn) sellInpIn.value = self._fmt(self._sell(cost, m));
           if (sellSingle) sellSingle.value = self._fmt(self._sell(cost, m));
         });
@@ -1211,7 +1215,7 @@ window.Pages.costMargin = {
             <div class="modal">
               <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
               <div class="modal-title heading">ยืนยันบันทึก Override</div>
-              <div class="modal-subtitle">Service Code: <span class="mono font-600">${code}</span> → Margin ${m.toFixed(1)}%</div>
+              <div class="modal-subtitle">Service Code: <span class="mono font-600">${code}</span> → Margin ${m.toFixed(2)}%</div>
               <div class="form-group">
                 <label class="form-label">Effective Date <span class="text-xs text-muted">— วันที่เริ่มมีผลบังคับใช้</span></label>
                 <input type="date" class="form-input" id="sc-save-effective" value="${todaySC}" min="${todaySC}">
@@ -1232,12 +1236,12 @@ window.Pages.costMargin = {
                 existing.margin        = m;
                 existing.effectiveDate = effDate;
                 existing.modifiedDate  = todayStr;
-                existing.modifiedBy    = 'admin@realfact.ai';
+                existing.modifiedBy    = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
               } else {
-                mc.serviceCodes.push({ code, margin: m, effectiveDate: effDate, modifiedDate: todayStr, modifiedBy: 'admin@realfact.ai' });
+                mc.serviceCodes.push({ code, margin: m, effectiveDate: effDate, modifiedDate: todayStr, modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system') });
               }
               App.closeModal();
-              App.toast(`บันทึก Override: ${code} = ${m.toFixed(1)}% — มีผล ${effDate}`, 'success');
+              App.toast(`บันทึก Override: ${code} = ${m.toFixed(2)}% — มีผล ${effDate}`, 'success');
               self._rerender();
             });
           }, 50);
@@ -1255,7 +1259,7 @@ window.Pages.costMargin = {
     function updateCalcDisplay(cost, margin, sell) {
       const profit = sell - cost;
       const markup = cost > 0 ? ((sell - cost) / cost * 100) : 0;
-      if (calcProfit) calcProfit.textContent = profit.toFixed(4) + ' THB';
+      if (calcProfit) calcProfit.textContent = profit.toFixed(2) + ' THB';
       if (calcMarkup) calcMarkup.textContent = markup.toFixed(2) + '%';
     }
 
@@ -1265,7 +1269,7 @@ window.Pages.costMargin = {
         const margin = parseFloat(calcMargin.value) || 0;
         if (margin >= 100) return;
         const sell = cost / (1 - margin / 100);
-        calcSell.value = sell.toFixed(4);
+        calcSell.value = sell.toFixed(2);
         updateCalcDisplay(cost, margin, sell);
       });
       calcMargin.addEventListener('input', () => {
@@ -1273,7 +1277,7 @@ window.Pages.costMargin = {
         const margin = parseFloat(calcMargin.value) || 0;
         if (margin >= 100) return;
         const sell = cost / (1 - margin / 100);
-        calcSell.value = sell.toFixed(4);
+        calcSell.value = sell.toFixed(2);
         updateCalcDisplay(cost, margin, sell);
       });
       calcSell.addEventListener('input', () => {
@@ -1371,52 +1375,73 @@ window.Pages.costSnapshots = {
       <!-- Price Locks -->
       <div class="divider mb-20"></div>
       <div class="section-title mb-12"><i class="fa-solid fa-lock"></i> Price Locks</div>
-      ${priceLocks.length === 0
-        ? '<div class="text-sm text-muted mb-16">ไม่มี Price Lock ที่กำลังใช้งาน</div>'
-        : `
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Tenant</th>
-                  <th>Snapshot</th>
-                  <th>เริ่มต้น</th>
-                  <th>สิ้นสุด</th>
-                  <th>เหลืออีก (วัน)</th>
-                  <th>สถานะ</th>
-                  <th>แจ้งเตือน 30 วัน</th>
-                  <th>แก้ไขล่าสุด</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${priceLocks.map(pl => `
-                  <tr>
-                    <td class="mono text-sm">${pl.id}</td>
-                    <td class="font-600">${pl.tenantName}</td>
-                    <td class="mono text-sm">${pl.snapshotId}</td>
-                    <td class="text-sm mono">${pl.startDate}</td>
-                    <td class="text-sm mono">${pl.endDate}</td>
-                    <td>
-                      <span class="mono font-700 ${pl.daysRemaining <= 30 ? 'text-warning' : 'text-success'}">${pl.daysRemaining}</span>
-                      ${pl.daysRemaining <= 30 ? '<span class="chip chip-yellow" style="font-size:10px;padding:1px 4px;margin-left:4px;">ใกล้หมดอายุ</span>' : ''}
-                    </td>
-                    <td>${d.statusChip(pl.status)}</td>
-                    <td>${pl.notified30d ? '<span class="chip chip-green">แจ้งแล้ว</span>' : '<span class="chip chip-gray">ยังไม่แจ้ง</span>'}</td>
-                    <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pl.modifiedDate || '-'}</div>${pl.modifiedBy ? `<div class="text-xs text-dim">${pl.modifiedBy.split('@')[0]}</div>` : ''}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `
-      }
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="pl-search" placeholder="ค้นหา Tenant / Snapshot ID...">
+        </div>
+        <div class="form-group" style="margin:0;min-width:150px;">
+          <select class="form-input" id="pl-status-filter">
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Expired">Expired</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap" id="pl-table-wrap"></div>
     `;
+  },
+
+  _renderPriceLocks() {
+    const d = window.MockData;
+    let priceLocks = d.priceLocks;
+    const search = (document.getElementById('pl-search') || {}).value.trim().toLowerCase();
+    const status = (document.getElementById('pl-status-filter') || {}).value;
+
+    if (search) {
+      priceLocks = priceLocks.filter(pl =>
+        pl.tenantName.toLowerCase().includes(search) || pl.snapshotId.toLowerCase().includes(search)
+      );
+    }
+    if (status !== 'all') priceLocks = priceLocks.filter(pl => pl.status === status);
+
+    const wrap = document.getElementById('pl-table-wrap');
+    if (!wrap) return;
+
+    if (!priceLocks.length) {
+      wrap.innerHTML = '<div class="text-sm text-muted p-16" style="text-align:center;">ไม่พบ Price Lock ที่ตรงกับเงื่อนไข</div>';
+      return;
+    }
+
+    wrap.innerHTML = `<table><thead><tr>
+      <th>ID</th><th>Tenant</th><th>Snapshot</th><th>เริ่มต้น</th><th>สิ้นสุด</th>
+      <th>เหลืออีก (วัน)</th><th>สถานะ</th><th>แจ้งเตือน 30 วัน</th><th>แก้ไขล่าสุด</th>
+    </tr></thead><tbody>${priceLocks.map(pl => `<tr>
+      <td class="mono text-sm">${pl.id}</td>
+      <td class="font-600">${pl.tenantName}</td>
+      <td class="mono text-sm">${pl.snapshotId}</td>
+      <td class="text-sm mono">${pl.startDate}</td>
+      <td class="text-sm mono">${pl.endDate}</td>
+      <td>
+        <span class="mono font-700 ${pl.daysRemaining <= 30 ? 'text-warning' : 'text-success'}">${pl.daysRemaining}</span>
+        ${pl.daysRemaining <= 30 ? '<span class="chip chip-yellow" style="font-size:10px;padding:1px 4px;margin-left:4px;">ใกล้หมดอายุ</span>' : ''}
+      </td>
+      <td>${d.statusChip(pl.status)}</td>
+      <td>${pl.notified30d ? '<span class="chip chip-green">แจ้งแล้ว</span>' : '<span class="chip chip-gray">ยังไม่แจ้ง</span>'}</td>
+      <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pl.modifiedDate || '-'}</div>${pl.modifiedBy ? `<div class="text-xs text-dim">${pl.modifiedBy.split('@')[0]}</div>` : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
   },
 
   init() {
     const d = window.MockData;
     const self = window.Pages.costSnapshots;
+
+    // ─── Price Locks Filter ───
+    self._renderPriceLocks();
+    const plSearch = document.getElementById('pl-search');
+    const plStatus = document.getElementById('pl-status-filter');
+    if (plSearch) plSearch.addEventListener('input', () => self._renderPriceLocks());
+    if (plStatus) plStatus.addEventListener('change', () => self._renderPriceLocks());
 
     // ─── Create Snapshot ───
     const btnCreateSnapshot = document.getElementById('btn-create-snapshot');
@@ -1487,7 +1512,7 @@ window.Pages.costSnapshots = {
               tenantId: tenantId,
               data: { globalMargin: margin },
               modifiedDate: today,
-              modifiedBy: 'admin@realfact.ai',
+              modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
             });
 
             window.App.closeModal();
@@ -1537,125 +1562,162 @@ window.Pages.costChangeRequests = {
 
       <!-- Cost Change Requests -->
       <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> Cost Change Requests</div>
-      ${ccr.length === 0
-        ? '<div class="text-sm text-muted mb-20">ไม่มีคำขอเปลี่ยนแปลงต้นทุน</div>'
-        : `
-          <div class="table-wrap mb-24">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Service Code</th>
-                  <th>ชื่อบริการ</th>
-                  <th>ต้นทุนปัจจุบัน</th>
-                  <th>ต้นทุนใหม่</th>
-                  <th>เหตุผล</th>
-                  <th>วันที่มีผล</th>
-                  <th>สถานะ</th>
-                  <th>ร้องขอโดย</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${ccr.map(r => {
-                  const diff = r.newCost - r.currentCost;
-                  const diffPct = ((diff / r.currentCost) * 100).toFixed(1);
-                  return `
-                    <tr>
-                      <td class="mono text-sm">${r.id}</td>
-                      <td class="mono text-primary font-600">${r.serviceCode}</td>
-                      <td class="font-600">${r.serviceName}</td>
-                      <td class="mono">${self._fmtCost(r.currentCost)}</td>
-                      <td class="mono font-600 ${diff < 0 ? 'text-success' : 'text-error'}">${self._fmtCost(r.newCost)}
-                        <span class="text-xs ${diff < 0 ? 'text-success' : 'text-error'}">(${diff < 0 ? '' : '+'}${diffPct}%)</span>
-                      </td>
-                      <td class="text-sm">${r.reason}</td>
-                      <td class="text-sm mono">${r.effectiveDate}</td>
-                      <td>${d.statusChip(r.status)}</td>
-                      <td style="white-space:nowrap;">
-                        <div class="text-sm font-600">${r.requestedBy}</div>
-                        <div class="mono text-xs text-muted">${r.requestDate}${r.requestTime ? ' · ' + r.requestTime : ''}</div>
-                      </td>
-                      <td>
-                        ${r.status === 'Pending' ? `
-                          <div class="flex gap-6">
-                            <button class="btn btn-sm btn-success ccr-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i></button>
-                            <button class="btn btn-sm btn-danger ccr-reject-btn" data-id="${r.id}"><i class="fa-solid fa-xmark"></i></button>
-                          </div>
-                        ` : `
-                          <span class="text-sm text-muted">${r.approvedBy || '-'}</span>
-                        `}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        `
-      }
+      <div class="table-wrap mb-24" id="ccr-table-wrap"></div>
 
       <!-- Margin Change Requests -->
       <div class="divider mb-20"></div>
       <div class="section-title mb-12"><i class="fa-solid fa-percent"></i> Margin Change Requests</div>
-      ${mcr.length === 0
-        ? '<div class="text-sm text-muted mb-20">ไม่มีคำขอเปลี่ยนแปลง Margin</div>'
-        : `
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>ระดับ</th>
-                  <th>เป้าหมาย</th>
-                  <th>Margin ปัจจุบัน</th>
-                  <th>Margin ใหม่</th>
-                  <th>เหตุผล</th>
-                  <th>สถานะ</th>
-                  <th>ร้องขอโดย</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${mcr.map(r => {
-                  const diff = r.newMargin - r.currentMargin;
-                  return `
-                    <tr>
-                      <td class="mono text-sm">${r.id}</td>
-                      <td><span class="chip chip-blue">${r.level}</span></td>
-                      <td class="mono text-primary font-600">${r.target}</td>
-                      <td class="mono">${r.currentMargin}%</td>
-                      <td class="mono font-600 ${diff > 0 ? 'text-success' : 'text-error'}">${r.newMargin}%
-                        <span class="text-xs ${diff > 0 ? 'text-success' : 'text-error'}">(${diff > 0 ? '+' : ''}${diff}%)</span>
-                      </td>
-                      <td class="text-sm">${r.reason}</td>
-                      <td>${d.statusChip(r.status)}</td>
-                      <td style="white-space:nowrap;">
-                        <div class="text-sm font-600">${r.requestedBy}</div>
-                        <div class="mono text-xs text-muted">${r.requestDate}${r.requestTime ? ' · ' + r.requestTime : ''}</div>
-                      </td>
-                      <td>
-                        ${r.status === 'Pending' ? `
-                          <div class="flex gap-6">
-                            <button class="btn btn-sm btn-success mcr-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i></button>
-                            <button class="btn btn-sm btn-danger mcr-reject-btn" data-id="${r.id}"><i class="fa-solid fa-xmark"></i></button>
-                          </div>
-                        ` : `
-                          <span class="text-sm text-muted">${r.approvedBy || '-'}</span>
-                        `}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        `
-      }
+      <div class="table-wrap mb-24" id="mcr-table-wrap"></div>
+
+      <!-- Approval Log -->
+      <div class="divider mb-20"></div>
+      <div class="section-title mb-12"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการอนุมัติ/ปฏิเสธ</div>
+      <div class="flex items-center gap-12 mb-16">
+        <div class="search-bar flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="cr-log-search" placeholder="ค้นหา ID / ชื่อบริการ / เป้าหมาย...">
+        </div>
+        <div class="tab-bar" id="cr-log-tabs">
+          <div class="tab-item active" data-tab="all">All</div>
+          <div class="tab-item" data-tab="Approved">Approved</div>
+          <div class="tab-item" data-tab="Rejected">Rejected</div>
+        </div>
+      </div>
+      <div class="table-wrap" id="cr-log-table-wrap"></div>
     `;
   },
 
-  init() {
+  _renderTables() {
+    const d = window.MockData;
+    const self2 = window.Pages.costPricing;
+
+    // ── Cost Change Requests (no filter — show all) ──
+    const ccr = d.costChangeRequests;
+
+    const ccrWrap = document.getElementById('ccr-table-wrap');
+    if (ccrWrap) {
+      if (!ccr.length) {
+        ccrWrap.innerHTML = '<div class="text-sm text-muted p-16" style="text-align:center;">ไม่พบคำขอเปลี่ยนแปลงต้นทุน</div>';
+      } else {
+        ccrWrap.innerHTML = `<table><thead><tr>
+          <th>ID</th><th>Service Code</th><th>ชื่อบริการ</th><th>ต้นทุนปัจจุบัน</th><th>ต้นทุนใหม่</th>
+          <th>เหตุผล</th><th>วันที่มีผล</th><th>สถานะ</th><th>ร้องขอโดย</th><th>จัดการ</th>
+        </tr></thead><tbody>${ccr.map(r => {
+          const diff = r.newCost - r.currentCost;
+          const diffPct = ((diff / r.currentCost) * 100).toFixed(2);
+          return `<tr>
+            <td class="mono text-sm">${r.id}</td>
+            <td class="mono text-primary font-600">${r.serviceCode}</td>
+            <td class="font-600">${r.serviceName}</td>
+            <td class="mono">${self2._fmtCost(r.currentCost)}</td>
+            <td class="mono font-600 ${diff < 0 ? 'text-success' : 'text-error'}">${self2._fmtCost(r.newCost)}
+              <span class="text-xs ${diff < 0 ? 'text-success' : 'text-error'}">(${diff < 0 ? '' : '+'}${diffPct}%)</span>
+            </td>
+            <td class="text-sm">${r.reason}</td>
+            <td class="text-sm mono">${r.effectiveDate}</td>
+            <td>${d.statusChip(r.status)}</td>
+            <td style="white-space:nowrap;">
+              <div class="text-sm font-600">${r.requestedBy}</div>
+              <div class="mono text-xs text-muted">${r.requestDate}${r.requestTime ? ' · ' + r.requestTime : ''}</div>
+            </td>
+            <td>${r.status === 'Pending' ? `<div class="flex gap-6">
+              <button class="btn btn-sm btn-success ccr-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-sm btn-danger ccr-reject-btn" data-id="${r.id}"><i class="fa-solid fa-xmark"></i></button>
+            </div>` : `<span class="text-sm text-muted">${r.approvedBy || '-'}</span>`}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`;
+      }
+    }
+
+    // ── Margin Change Requests (no filter — show all) ──
+    const mcr = d.marginChangeRequests;
+
+    const mcrWrap = document.getElementById('mcr-table-wrap');
+    if (mcrWrap) {
+      if (!mcr.length) {
+        mcrWrap.innerHTML = '<div class="text-sm text-muted p-16" style="text-align:center;">ไม่พบคำขอเปลี่ยนแปลง Margin</div>';
+      } else {
+        mcrWrap.innerHTML = `<table><thead><tr>
+          <th>ID</th><th>ระดับ</th><th>เป้าหมาย</th><th>Margin ปัจจุบัน</th><th>Margin ใหม่</th>
+          <th>เหตุผล</th><th>สถานะ</th><th>ร้องขอโดย</th><th>จัดการ</th>
+        </tr></thead><tbody>${mcr.map(r => {
+          const diff = r.newMargin - r.currentMargin;
+          return `<tr>
+            <td class="mono text-sm">${r.id}</td>
+            <td><span class="chip chip-blue">${r.level}</span></td>
+            <td class="mono text-primary font-600">${r.target}</td>
+            <td class="mono">${r.currentMargin}%</td>
+            <td class="mono font-600 ${diff > 0 ? 'text-success' : 'text-error'}">${r.newMargin}%
+              <span class="text-xs ${diff > 0 ? 'text-success' : 'text-error'}">(${diff > 0 ? '+' : ''}${diff}%)</span>
+            </td>
+            <td class="text-sm">${r.reason}</td>
+            <td>${d.statusChip(r.status)}</td>
+            <td style="white-space:nowrap;">
+              <div class="text-sm font-600">${r.requestedBy}</div>
+              <div class="mono text-xs text-muted">${r.requestDate}${r.requestTime ? ' · ' + r.requestTime : ''}</div>
+            </td>
+            <td>${r.status === 'Pending' ? `<div class="flex gap-6">
+              <button class="btn btn-sm btn-success mcr-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-sm btn-danger mcr-reject-btn" data-id="${r.id}"><i class="fa-solid fa-xmark"></i></button>
+            </div>` : `<span class="text-sm text-muted">${r.approvedBy || '-'}</span>`}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`;
+      }
+    }
+
+    // ── Approval Log (filtered) ──
+    this._renderLog();
+  },
+
+  _renderLog() {
+    const d = window.MockData;
+    const logSearch = (document.getElementById('cr-log-search') || {}).value.trim().toLowerCase();
+    const logTab = document.querySelector('#cr-log-tabs .tab-item.active');
+    const logStatus = logTab ? logTab.dataset.tab : 'all';
+
+    let allRequests = [
+      ...d.costChangeRequests.filter(r => r.status !== 'Pending').map(r => ({
+        id: r.id, type: 'Cost', target: r.serviceName, action: r.status,
+        actionBy: r.approvedBy || '-', actionDate: r.modifiedDate, detail: `${r.serviceCode}: ${r.currentCost} → ${r.newCost} THB`
+      })),
+      ...d.marginChangeRequests.filter(r => r.status !== 'Pending').map(r => ({
+        id: r.id, type: 'Margin', target: r.target, action: r.status,
+        actionBy: r.approvedBy || '-', actionDate: r.modifiedDate, detail: `${r.currentMargin}% → ${r.newMargin}%`
+      }))
+    ].sort((a, b) => b.actionDate.localeCompare(a.actionDate));
+
+    if (logSearch) {
+      allRequests = allRequests.filter(r =>
+        r.id.toLowerCase().includes(logSearch) ||
+        r.target.toLowerCase().includes(logSearch) ||
+        r.detail.toLowerCase().includes(logSearch)
+      );
+    }
+    if (logStatus !== 'all') allRequests = allRequests.filter(r => r.action === logStatus);
+
+    const logWrap = document.getElementById('cr-log-table-wrap');
+    if (!logWrap) return;
+
+    if (!allRequests.length) {
+      logWrap.innerHTML = '<div class="text-sm text-muted p-8">ยังไม่มีประวัติการอนุมัติ/ปฏิเสธที่ตรงกับเงื่อนไข</div>';
+    } else {
+      logWrap.innerHTML = `<table><thead><tr>
+        <th>ID</th><th>ประเภท</th><th>เป้าหมาย</th><th>รายละเอียด</th><th>ผล</th><th>ดำเนินการโดย</th><th>วันที่</th>
+      </tr></thead><tbody>${allRequests.map(r => `<tr>
+        <td class="mono text-sm">${r.id}</td>
+        <td><span class="chip ${r.type === 'Cost' ? 'chip-orange' : 'chip-blue'}">${r.type}</span></td>
+        <td class="font-600">${r.target}</td>
+        <td class="text-sm text-muted">${r.detail}</td>
+        <td>${r.action === 'Approved'
+          ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> อนุมัติ</span>'
+          : '<span class="chip chip-red"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</span>'}</td>
+        <td class="text-sm font-600">${r.actionBy}</td>
+        <td class="mono text-sm text-muted">${r.actionDate}</td>
+      </tr>`).join('')}</tbody></table>`;
+    }
+  },
+
+  _bindApprovalButtons() {
     const d = window.MockData;
     const self = window.Pages.costChangeRequests;
 
@@ -1665,25 +1727,17 @@ window.Pages.costChangeRequests = {
         const id = btn.dataset.id;
         const req = d.costChangeRequests.find(r => r.id === id);
         if (!req) return;
-
         App.confirm(`อนุมัติคำขอ ${id}?\n${req.serviceName}: ${req.currentCost} -> ${req.newCost} THB\nเหตุผล: ${req.reason}`, { title: 'ยืนยันการอนุมัติ', confirmText: 'อนุมัติ', cancelText: 'ยกเลิก', type: 'success' }).then(ok => {
           if (!ok) return;
-
           req.status = 'Approved';
           req.approvedBy = 'Super Admin';
           req.modifiedDate = new Date().toISOString().split('T')[0];
-          req.modifiedBy = 'admin@realfact.ai';
-
-          // Apply the cost change to costConfig
+          req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           const cost = d.costConfig.find(c => c.serviceCode === req.serviceCode);
-          if (cost) {
-            cost.costPerUnit = req.newCost;
-            cost.effectiveDate = req.effectiveDate;
-            cost.modifiedDate = req.modifiedDate;
-            cost.modifiedBy = req.modifiedBy;
-          }
-
-          self._rerender();
+          if (cost) { cost.costPerUnit = req.newCost; cost.effectiveDate = req.effectiveDate; cost.modifiedDate = req.modifiedDate; cost.modifiedBy = req.modifiedBy; }
+          self._renderTables();
+          self._bindApprovalButtons();
+          if (typeof App !== 'undefined' && typeof App.updateCostBadges === 'function') App.updateCostBadges();
         });
       });
     });
@@ -1693,16 +1747,15 @@ window.Pages.costChangeRequests = {
         const id = btn.dataset.id;
         const req = d.costChangeRequests.find(r => r.id === id);
         if (!req) return;
-
         App.confirm(`ปฏิเสธคำขอ ${id}?\n${req.serviceName}: ${req.currentCost} -> ${req.newCost} THB`, { title: 'ยืนยันการปฏิเสธ', confirmText: 'ปฏิเสธ', cancelText: 'ยกเลิก', type: 'danger' }).then(ok => {
           if (!ok) return;
-
           req.status = 'Rejected';
           req.approvedBy = 'Super Admin';
           req.modifiedDate = new Date().toISOString().split('T')[0];
-          req.modifiedBy = 'admin@realfact.ai';
-
-          self._rerender();
+          req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
+          self._renderTables();
+          self._bindApprovalButtons();
+          if (typeof App !== 'undefined' && typeof App.updateCostBadges === 'function') App.updateCostBadges();
         });
       });
     });
@@ -1713,37 +1766,24 @@ window.Pages.costChangeRequests = {
         const id = btn.dataset.id;
         const req = d.marginChangeRequests.find(r => r.id === id);
         if (!req) return;
-
         App.confirm(`อนุมัติคำขอ ${id}?\n${req.target}: ${req.currentMargin}% -> ${req.newMargin}%\nเหตุผล: ${req.reason}`, { title: 'ยืนยันการอนุมัติ', confirmText: 'อนุมัติ', cancelText: 'ยกเลิก', type: 'success' }).then(ok => {
           if (!ok) return;
-
           req.status = 'Approved';
           req.approvedBy = 'Super Admin';
           req.modifiedDate = new Date().toISOString().split('T')[0];
-          req.modifiedBy = 'admin@realfact.ai';
-
-          // Apply the margin change
+          req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           if (req.level === 'Service Code') {
             const sc = d.marginConfig.serviceCodes.find(s => s.code === req.target);
-            if (sc) {
-              sc.margin = req.newMargin;
-              sc.modifiedDate = req.modifiedDate;
-              sc.modifiedBy = req.modifiedBy;
-            }
+            if (sc) { sc.margin = req.newMargin; sc.modifiedDate = req.modifiedDate; sc.modifiedBy = req.modifiedBy; }
           } else if (req.level === 'Global') {
-            d.marginConfig.global = req.newMargin;
-            d.marginConfig.modifiedDate = req.modifiedDate;
-            d.marginConfig.modifiedBy = req.modifiedBy;
+            d.marginConfig.global = req.newMargin; d.marginConfig.modifiedDate = req.modifiedDate; d.marginConfig.modifiedBy = req.modifiedBy;
           } else if (req.level === 'Provider') {
             const provider = d.marginConfig.providers.find(p => p.name === req.target);
-            if (provider) {
-              provider.margin = req.newMargin;
-              provider.modifiedDate = req.modifiedDate;
-              provider.modifiedBy = req.modifiedBy;
-            }
+            if (provider) { provider.margin = req.newMargin; provider.modifiedDate = req.modifiedDate; provider.modifiedBy = req.modifiedBy; }
           }
-
-          self._rerender();
+          self._renderTables();
+          self._bindApprovalButtons();
+          if (typeof App !== 'undefined' && typeof App.updateCostBadges === 'function') App.updateCostBadges();
         });
       });
     });
@@ -1753,17 +1793,36 @@ window.Pages.costChangeRequests = {
         const id = btn.dataset.id;
         const req = d.marginChangeRequests.find(r => r.id === id);
         if (!req) return;
-
         App.confirm(`ปฏิเสธคำขอ ${id}?\n${req.target}: ${req.currentMargin}% -> ${req.newMargin}%`, { title: 'ยืนยันการปฏิเสธ', confirmText: 'ปฏิเสธ', cancelText: 'ยกเลิก', type: 'danger' }).then(ok => {
           if (!ok) return;
-
           req.status = 'Rejected';
           req.approvedBy = 'Super Admin';
           req.modifiedDate = new Date().toISOString().split('T')[0];
-          req.modifiedBy = 'admin@realfact.ai';
-
-          self._rerender();
+          req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
+          self._renderTables();
+          self._bindApprovalButtons();
+          if (typeof App !== 'undefined' && typeof App.updateCostBadges === 'function') App.updateCostBadges();
         });
+      });
+    });
+  },
+
+  init() {
+    const d = window.MockData;
+    const self = window.Pages.costChangeRequests;
+
+    // ─── Render tables + bind approval buttons ───
+    self._renderTables();
+    self._bindApprovalButtons();
+
+    // ─── Log filter events ───
+    const logSearch = document.getElementById('cr-log-search');
+    if (logSearch) logSearch.addEventListener('input', () => self._renderLog());
+    document.querySelectorAll('#cr-log-tabs .tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('#cr-log-tabs .tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        self._renderLog();
       });
     });
   },

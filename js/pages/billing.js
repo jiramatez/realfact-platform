@@ -430,12 +430,12 @@ window.Pages.billingVerify = {
                     </td>
                     <td>
                       <div class="flex gap-6">
-                        <button class="btn btn-danger btn-sm verify-reject-btn" data-id="${inv.id}" title="ปฏิเสธ">
+                        ${(!window.Auth || Auth.hasPermission('canApprove')) ? `<button class="btn btn-danger btn-sm verify-reject-btn" data-id="${inv.id}" title="ปฏิเสธ">
                           <i class="fa-solid fa-xmark"></i> ปฏิเสธ
                         </button>
                         <button class="btn btn-success btn-sm verify-approve-btn" data-id="${inv.id}" title="อนุมัติ">
                           <i class="fa-solid fa-check"></i> อนุมัติ
-                        </button>
+                        </button>` : ''}
                       </div>
                     </td>
                   </tr>`).join('')}
@@ -448,41 +448,71 @@ window.Pages.billingVerify = {
         <div class="text-sm uppercase text-muted font-600 mb-12">
           <i class="fa-solid fa-clock-rotate-left"></i>&nbsp; ประวัติการตรวจสอบ
         </div>
-        ${vlog.length === 0
-          ? '<div class="text-sm text-muted p-8">ยังไม่มีประวัติการตรวจสอบ</div>'
-          : `<div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>INV ID</th><th>TENANT</th><th>จำนวนเงิน</th>
-                    <th>ผล</th><th>เหตุผล</th><th>ตรวจสอบโดย</th><th>วันที่ · เวลา</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${vlog.map(vl => `
-                    <tr>
-                      <td class="mono text-sm">${vl.invoiceId}</td>
-                      <td class="font-600">${vl.tenantName}</td>
-                      <td class="mono">${d.formatCurrency(vl.amount)}</td>
-                      <td>${vl.action === 'Approved'
-                        ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> อนุมัติ</span>'
-                        : '<span class="chip chip-red"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</span>'}</td>
-                      <td class="text-sm text-muted">${vl.reason || '—'}</td>
-                      <td style="white-space:nowrap;">
-                        <div class="text-sm font-600">${vl.verifiedBy.split('@')[0]}</div>
-                      </td>
-                      <td class="mono text-sm text-muted" style="white-space:nowrap;">${vl.verifiedDate}${vl.verifiedTime ? ' · ' + vl.verifiedTime : ''}</td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>`}
+        <div class="flex items-center gap-12 mb-16">
+          <div class="search-bar flex-1">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="vlog-search" placeholder="ค้นหา INV ID / Tenant...">
+          </div>
+          <div class="form-group" style="margin:0;min-width:150px;">
+            <select class="form-input" id="vlog-status-filter">
+              <option value="all">All</option>
+              <option value="Approved">อนุมัติ</option>
+              <option value="Rejected">ปฏิเสธ</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap" id="vlog-table-wrap"></div>
       </div>
     `;
+  },
+
+  _renderVerificationLog() {
+    const d = window.MockData;
+    let vlog = d.verificationLog || [];
+    const search = (document.getElementById('vlog-search') || {}).value.trim().toLowerCase();
+    const status = (document.getElementById('vlog-status-filter') || {}).value;
+
+    if (search) {
+      vlog = vlog.filter(vl =>
+        vl.invoiceId.toLowerCase().includes(search) || vl.tenantName.toLowerCase().includes(search)
+      );
+    }
+    if (status !== 'all') vlog = vlog.filter(vl => vl.action === status);
+
+    const wrap = document.getElementById('vlog-table-wrap');
+    if (!wrap) return;
+
+    if (!vlog.length) {
+      wrap.innerHTML = '<div class="text-sm text-muted p-8">ยังไม่มีประวัติการตรวจสอบที่ตรงกับเงื่อนไข</div>';
+      return;
+    }
+
+    wrap.innerHTML = `<table><thead><tr>
+      <th>INV ID</th><th>TENANT</th><th>จำนวนเงิน</th>
+      <th>ผล</th><th>เหตุผล</th><th>ตรวจสอบโดย</th><th>วันที่ · เวลา</th>
+    </tr></thead><tbody>${vlog.map(vl => `<tr>
+      <td class="mono text-sm">${vl.invoiceId}</td>
+      <td class="font-600">${vl.tenantName}</td>
+      <td class="mono">${d.formatCurrency(vl.amount)}</td>
+      <td>${vl.action === 'Approved'
+        ? '<span class="chip chip-green"><i class="fa-solid fa-check"></i> อนุมัติ</span>'
+        : '<span class="chip chip-red"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</span>'}</td>
+      <td class="text-sm text-muted">${vl.reason || '—'}</td>
+      <td style="white-space:nowrap;"><div class="text-sm font-600">${vl.verifiedBy.split('@')[0]}</div></td>
+      <td class="mono text-sm text-muted" style="white-space:nowrap;">${vl.verifiedDate}${vl.verifiedTime ? ' · ' + vl.verifiedTime : ''}</td>
+    </tr>`).join('')}</tbody></table>`;
   },
 
   init() {
     const d    = window.MockData;
     const self = window.Pages.billingVerify;
+
+    // ─── Verification Log Filter ───
+    self._renderVerificationLog();
+    const vlogSearch = document.getElementById('vlog-search');
+    const vlogStatus = document.getElementById('vlog-status-filter');
+    if (vlogSearch) vlogSearch.addEventListener('input', () => self._renderVerificationLog());
+    if (vlogStatus) vlogStatus.addEventListener('change', () => self._renderVerificationLog());
 
     document.querySelectorAll('.verify-approve-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -493,14 +523,14 @@ window.Pages.billingVerify = {
         const time = now.toTimeString().slice(0, 5);
         inv.status       = 'Paid';
         inv.paidDate     = date;
-        inv.verifiedBy   = 'finance@realfact.ai';
+        inv.verifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
         inv.verifiedDate = date;
         d.verificationLog = d.verificationLog || [];
         d.verificationLog.unshift({
           id: 'VL-' + Date.now(),
           invoiceId: inv.id, tenantId: inv.tenantId, tenantName: inv.tenantName,
           amount: inv.total, action: 'Approved', reason: null,
-          verifiedBy: 'finance@realfact.ai', verifiedDate: date, verifiedTime: time,
+          verifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), verifiedDate: date, verifiedTime: time,
         });
         App.toast('อนุมัติการชำระเงินสำเร็จ', 'success');
         self._rerender();
@@ -534,14 +564,14 @@ window.Pages.billingVerify = {
             const time = now.toTimeString().slice(0, 5);
             inv.status       = 'Issued';
             inv.rejectReason = reason;
-            inv.rejectedBy   = 'finance@realfact.ai';
+            inv.rejectedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             inv.rejectedDate = date;
             d.verificationLog = d.verificationLog || [];
             d.verificationLog.unshift({
               id: 'VL-' + Date.now(),
               invoiceId: inv.id, tenantId: inv.tenantId, tenantName: inv.tenantName,
               amount: inv.total, action: 'Rejected', reason,
-              verifiedBy: 'finance@realfact.ai', verifiedDate: date, verifiedTime: time,
+              verifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), verifiedDate: date, verifiedTime: time,
             });
             App.closeModal();
             App.toast('ปฏิเสธการชำระเงินแล้ว','error');
@@ -631,8 +661,8 @@ window.Pages.billingCredit = {
                       <td>${d.statusChip(req.status)}</td>
                       <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${req.modifiedDate || '-'}</div>${req.modifiedBy ? `<div class="text-xs text-dim">${req.modifiedBy.split('@')[0]}</div>` : ''}</td>
                       <td>
-                        <button class="btn btn-success btn-sm cl-approve-req-btn" data-id="${req.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>
-                        <button class="btn btn-danger btn-sm cl-reject-req-btn ml-4" data-id="${req.id}"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
+                        ${(!window.Auth || Auth.hasPermission('canApprove')) ? `<button class="btn btn-success btn-sm cl-approve-req-btn" data-id="${req.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+                        <button class="btn btn-danger btn-sm cl-reject-req-btn ml-4" data-id="${req.id}"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>` : ''}
                       </td>
                     </tr>`).join('')}
                 </tbody>
@@ -750,7 +780,7 @@ window.Pages.billingCredit = {
                       <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${r.modifiedDate || '-'}</div>${r.modifiedBy ? `<div class="text-xs text-dim">${r.modifiedBy.split('@')[0]}</div>` : ''}</td>
                       <td>
                         ${!isApproved
-                          ? `<button class="btn btn-success btn-sm refund-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>`
+                          ? ((!window.Auth || Auth.hasPermission('canApprove')) ? `<button class="btn btn-success btn-sm refund-approve-btn" data-id="${r.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>` : '')
                           : '<span class="chip chip-green">สมบูรณ์</span>'}
                       </td>
                     </tr>`;
@@ -969,7 +999,7 @@ window.Pages.billingCredit = {
             d.creditLineApprovalLog.unshift({
               id: 'CLOG-' + Date.now(), creditLineId: newClId, tenantId: req.tenantId, tenantName: req.tenantName,
               action: 'Approved', detail: 'อนุมัติวงเงิน ' + d.formatCurrency(limit) + ' · รอบบิล ' + cycle + ' วัน · ' + terms,
-              actionBy: 'finance@realfact.ai', actionDate: dateStr, actionTime: timeStr,
+              actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: dateStr, actionTime: timeStr,
             });
             d.creditLineRequests = (d.creditLineRequests || []).filter(r => r.id !== req.id);
             App.closeModal();
@@ -994,7 +1024,7 @@ window.Pages.billingCredit = {
           d.creditLineApprovalLog.unshift({
             id: 'CLOG-' + Date.now(), creditLineId: '-', tenantId: req.tenantId, tenantName: req.tenantName,
             action: 'Rejected', detail: 'ปฏิเสธคำขอวงเงิน ' + d.formatCurrency(req.requestedLimit),
-            actionBy: 'finance@realfact.ai', actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
+            actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
           });
           d.creditLineRequests = (d.creditLineRequests || []).filter(r => r.id !== req.id);
           App.toast('ปฏิเสธคำขอวงเงินแล้ว','error');
@@ -1110,7 +1140,7 @@ window.Pages.billingCredit = {
             cl.paymentTerms   = document.getElementById('cl-edit-terms').value;
             cl.status         = document.getElementById('cl-edit-status').value;
             cl.modifiedDate   = new Date().toISOString().slice(0,10);
-            cl.modifiedBy     = 'finance@realfact.ai';
+            cl.modifiedBy     = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             // Build change detail
             const changes = [];
             if (oldLimit !== cl.creditLimit) changes.push('วงเงิน ' + d.formatCurrency(oldLimit) + ' → ' + d.formatCurrency(cl.creditLimit));
@@ -1123,7 +1153,7 @@ window.Pages.billingCredit = {
             d.creditLineApprovalLog.unshift({
               id: 'CLOG-' + Date.now(), creditLineId: cl.id, tenantId: cl.tenantId, tenantName: cl.tenantName,
               action: logAction, detail: changes.length ? changes.join(' · ') : 'ไม่มีการเปลี่ยนแปลง',
-              actionBy: 'finance@realfact.ai', actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
+              actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
             });
             // Sync to dpTenants if Developer Portal
             if (cl.source === 'Developer Portal') {
@@ -1203,7 +1233,7 @@ window.Pages.billingOverdue = {
                     <td>
                       ${inCooldown
                         ? `<button class="btn btn-outline btn-sm" disabled title="Cooldown อีก ${cooldownDays} วัน"><i class="fa-solid fa-clock"></i> อีก ${cooldownDays} วัน</button>`
-                        : `<button class="btn btn-primary btn-sm send-notice-btn" data-id="${row.tenantId}"><i class="fa-solid fa-envelope"></i> ส่งใบทวงหนี้</button>`}
+                        : ((!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary btn-sm send-notice-btn" data-id="${row.tenantId}"><i class="fa-solid fa-envelope"></i> ส่งใบทวงหนี้</button>` : '')}
                     </td>
                   </tr>`;
                 }).join('')}
@@ -1284,18 +1314,18 @@ window.Pages.billingOverdue = {
               existing.cooldownUntil = cooldownStr;
               existing.status = 'Sent';
               existing.modifiedDate = todayStr;
-              existing.modifiedBy = 'admin@realfact.ai';
+              existing.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             } else {
               d.collectionNotices.push({
                 id: 'CN-' + Date.now(), tenantId, tenantName: row.tenantName,
                 sentDate: todayStr, channel: 'Email + Telegram',
                 cooldownUntil: cooldownStr, status: 'Sent',
-                modifiedDate: todayStr, modifiedBy: 'admin@realfact.ai',
+                modifiedDate: todayStr, modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
               });
             }
             row.lastNotice = todayStr;
             row.modifiedDate = todayStr;
-            row.modifiedBy = 'admin@realfact.ai';
+            row.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
             App.closeModal();
             App.toast(`ส่งใบทวงหนี้ให้ ${row.tenantName} สำเร็จ`, 'success');
             self._rerender();

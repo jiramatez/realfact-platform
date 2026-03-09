@@ -205,7 +205,7 @@ window.Pages.avatarTenants = {
                   <div class="flex gap-4 justify-end">
                     <button class="btn btn-sm btn-outline av-tenant-detail-btn" data-id="${t.id}" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
                     <button class="btn btn-sm btn-outline" onclick="location.hash='service-builder'" title="Assign Avatar"><i class="fa-solid fa-link"></i></button>
-                    ${sub.status === 'Pending' ? `
+                    ${sub.status === 'Pending' && (!window.Auth || Auth.hasPermission('canApprove')) ? `
                       <button class="btn btn-sm btn-success av-approve-btn" data-id="${t.id}" title="อนุมัติ"><i class="fa-solid fa-check"></i></button>
                       <button class="btn btn-sm btn-danger  av-reject-btn"  data-id="${t.id}" title="ปฏิเสธ"><i class="fa-solid fa-xmark"></i></button>` : ''}
                   </div>
@@ -268,7 +268,7 @@ window.Pages.avatarTenants = {
         }
         if (tenant) {
           tenant.modifiedDate = new Date().toISOString().split('T')[0];
-          tenant.modifiedBy   = 'admin@realfact.ai';
+          tenant.modifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
         }
         App.toast('อนุมัติ Avatar subscription แล้ว', 'success');
         self._rerender();
@@ -288,7 +288,7 @@ window.Pages.avatarTenants = {
           const tenant = d.tenants.find(t => t.id === btn.dataset.id);
           if (tenant) {
             tenant.modifiedDate = new Date().toISOString().split('T')[0];
-            tenant.modifiedBy   = 'admin@realfact.ai';
+            tenant.modifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           }
           App.toast('ปฏิเสธ Avatar subscription แล้ว', 'error');
           self._rerender();
@@ -453,7 +453,7 @@ window.Pages.avatarTenants = {
           <button class="btn btn-outline btn-sm" onclick="location.hash='billing';App.closeModal()">
             <i class="fa-solid fa-receipt"></i> ดู Invoice
           </button>
-          ${sub?.status === 'Pending' ? `
+          ${sub?.status === 'Pending' && (!window.Auth || Auth.hasPermission('canApprove')) ? `
             <button class="btn btn-success btn-sm" id="modal-av-approve-btn">
               <i class="fa-solid fa-check"></i> อนุมัติ Subscription
             </button>

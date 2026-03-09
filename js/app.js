@@ -18,6 +18,7 @@
     'plans-tokens':        { title: 'Token Packages',        module: 'plansTokens',        ctx: 'backoffice' },
     'plans-bonus':         { title: 'Welcome Bonus',         module: 'plansBonus',         ctx: 'backoffice' },
     'payment-settings':    { title: 'Payment Settings',      module: 'paymentSettings',    ctx: 'backoffice' },
+    'platform-members':    { title: 'Platform Members',      module: 'platformMembers',    ctx: 'backoffice' },
     'analytics-revenue':   { title: 'Revenue & Billing',      module: 'analyticsRevenue',   ctx: 'backoffice' },
     'analytics-usage':     { title: 'API Usage Analytics',    module: 'analyticsUsage',     ctx: 'backoffice' },
     'analytics-customers': { title: 'Customers & Services',   module: 'analyticsCustomers', ctx: 'backoffice' },
@@ -45,12 +46,27 @@
 
   const content = document.getElementById('content');
   const pageTitle = document.getElementById('page-title');
+  let _currentModule = null;   // track current page module for lifecycle cleanup
 
   // ─── Navigate ───
   function navigate(page) {
+    // Auth guard: redirect to login if not authenticated
+    if (window.Auth && !Auth.isAuthenticated()) {
+      Auth.guard();
+      return;
+    }
+
     const route = routes[page];
     if (!route) { page = 'dashboard'; }
     const r = routes[page];
+
+    // RBAC: check page access
+    if (window.Auth && !Auth.canAccessPage(page)) {
+      App.toast('คุณไม่มีสิทธิ์เข้าถึงหน้านี้', 'error');
+      page = 'dashboard';
+      location.hash = 'dashboard';
+      return;
+    }
 
     // Update sidebar active
     document.querySelectorAll('.nav-item[data-page]').forEach(el => {
@@ -68,9 +84,13 @@
     // Update topbar
     pageTitle.textContent = r.title;
 
-    // Render page
+    // Render page — lifecycle: cleanup previous → render → init
     const mod = window.Pages && window.Pages[r.module];
+    if (_currentModule && _currentModule.cleanup) {
+      try { _currentModule.cleanup(); } catch (e) { /* ignore cleanup errors */ }
+    }
     if (mod && mod.render) {
+      _currentModule = mod;
       content.innerHTML = mod.render();
       content.style.animation = 'none';
       content.offsetHeight; // trigger reflow
@@ -227,14 +247,14 @@
         overlay = document.createElement('div');
         overlay.id = 'global-modal';
         overlay.className = 'modal-overlay';
+        // Bind close-on-overlay-click once at creation
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) App.closeModal();
+        });
         document.body.appendChild(overlay);
       }
       overlay.innerHTML = html;
       overlay.classList.remove('hidden');
-      // Close on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) App.closeModal();
-      });
     },
     closeModal() {
       const overlay = document.getElementById('global-modal');
@@ -242,6 +262,16 @@
     },
     navigate(page) {
       location.hash = page;
+    },
+
+    // ─── Re-render current page in-place (shared utility for all page modules) ───
+    rerenderPage() {
+      if (_currentModule && _currentModule.render) {
+        content.innerHTML = _currentModule.render();
+        if (_currentModule.init) _currentModule.init();
+        App.updateBillingBadges();
+        App.updateCostBadges();
+      }
     },
 
     // ─── Billing Badge Updater ───
@@ -393,9 +423,37 @@
   };
 
   // ─── Init ───
-  applyContext(currentCtx, false);
-  onHashChange();
-  App.updateBillingBadges();
-  App.updateCostBadges();
+  // Auth: check session and show login if needed
+  if (window.Auth) {
+    Auth.init();
+    Auth.initProfileDropdown();
+    if (!Auth.isAuthenticated()) {
+      Auth.guard();
+    } else {
+      Auth.updateProfileUI();
+      Auth.filterSidebar();
+      Auth.filterContextSwitcher();
+      applyContext(currentCtx, false);
+      onHashChange();
+      App.updateBillingBadges();
+      App.updateCostBadges();
+    }
+  } else {
+    applyContext(currentCtx, false);
+    onHashChange();
+    App.updateBillingBadges();
+    App.updateCostBadges();
+  }
+
+  // Bind demo account quick-fill (delegated)
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('.login-demo-row');
+    if (row) {
+      var emailInput = document.getElementById('login-email');
+      var pwInput = document.getElementById('login-password');
+      if (emailInput) emailInput.value = row.dataset.email || '';
+      if (pwInput) pwInput.value = row.dataset.pw || '';
+    }
+  });
 
 })();

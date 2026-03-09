@@ -28,6 +28,21 @@ window.Pages.dpTenants = {
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="dp-tenant-search" placeholder="ค้นหา Tenant...">
         </div>
+        <div class="form-group" style="margin:0;min-width:150px;">
+          <select class="form-input" id="dp-tenant-status-filter">
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;min-width:170px;">
+          <select class="form-input" id="dp-tenant-credit-filter">
+            <option value="all">All Credit Health</option>
+            <option value="healthy">Healthy (&gt;50%)</option>
+            <option value="at-risk">At Risk (20-50%)</option>
+            <option value="critical">Critical (&lt;20%)</option>
+          </select>
+        </div>
       </div>
 
       <div class="table-wrap" id="dp-tenant-list"></div>
@@ -38,18 +53,42 @@ window.Pages.dpTenants = {
     var self = this;
     self._renderTable();
     document.getElementById('dp-tenant-search').addEventListener('input', function() {
-      self._renderTable(this.value.trim().toLowerCase());
+      self._renderTable();
+    });
+    document.getElementById('dp-tenant-status-filter').addEventListener('change', function() {
+      self._renderTable();
+    });
+    document.getElementById('dp-tenant-credit-filter').addEventListener('change', function() {
+      self._renderTable();
     });
   },
 
-  _renderTable(filter) {
+  _renderTable() {
     var self = this;
     var d = window.MockData;
     var tenants = d.dpTenants;
 
+    var searchEl = document.getElementById('dp-tenant-search');
+    var filter = searchEl ? searchEl.value.trim().toLowerCase() : '';
+    var statusFilter = (document.getElementById('dp-tenant-status-filter') || {}).value || 'all';
+    var creditFilter = (document.getElementById('dp-tenant-credit-filter') || {}).value || 'all';
+
     if (filter) {
       tenants = tenants.filter(function(t) {
         return t.name.toLowerCase().indexOf(filter) !== -1 || t.id.toLowerCase().indexOf(filter) !== -1;
+      });
+    }
+    if (statusFilter !== 'all') {
+      tenants = tenants.filter(function(t) { return t.status === statusFilter; });
+    }
+    if (creditFilter !== 'all') {
+      tenants = tenants.filter(function(t) {
+        var cl = t.creditLine;
+        var pct = cl.creditLimit ? Math.round(cl.availableCredit / cl.creditLimit * 100) : 0;
+        if (creditFilter === 'healthy') return pct > 50;
+        if (creditFilter === 'at-risk') return pct > 20 && pct <= 50;
+        if (creditFilter === 'critical') return pct <= 20;
+        return true;
       });
     }
 
@@ -137,7 +176,7 @@ window.Pages.dpTenants = {
 
         '<!-- Credit Line -->' +
         '<div class="section-title flex justify-between items-center"><div><i class="fa-solid fa-credit-card text-primary"></i> Credit Line</div>' +
-          '<button class="btn btn-sm btn-outline" onclick="Pages.dpTenants._editCreditLine(\'' + t.id + '\')"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>' +
+          ((!window.Auth || Auth.hasPermission('canEdit')) ? '<button class="btn btn-sm btn-outline" onclick="Pages.dpTenants._editCreditLine(\'' + t.id + '\')"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>' : '') +
         '</div>' +
         '<div style="background:var(--surface2);border-radius:12px;padding:16px;" class="mb-20">' +
           '<div class="grid-3 gap-12 mb-12">' +
@@ -248,7 +287,7 @@ window.Pages.dpTenants = {
 
     // Update modified tracking
     t.modifiedDate = new Date().toISOString().split('T')[0];
-    t.modifiedBy = 'dp-admin@realfact.ai';
+    t.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
 
     // Update dpTenants credit line
     var cl = t.creditLine;
@@ -280,7 +319,7 @@ window.Pages.dpTenants = {
       creditLineId: centralCL ? centralCL.id : t.id,
       tenantId: tenantId, tenantName: t.name,
       action: logAction, detail: changes.length ? changes.join(' · ') : 'ไม่มีการเปลี่ยนแปลง',
-      actionBy: 'dp-admin@realfact.ai', actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
+      actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
     });
 
     // Sync to central creditLines array

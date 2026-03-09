@@ -158,12 +158,12 @@ window.Pages.hardware = {
                   <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${dv.modifiedDate || '-'}</div>${dv.modifiedBy ? `<div class="text-xs text-dim">${dv.modifiedBy.split('@')[0]}</div>` : ''}</td>
                   <td>
                     <div class="flex gap-6">
-                      ${dv.status === 'Sold' ? `
+                      ${dv.status === 'Sold' && (!window.Auth || Auth.hasPermission('canApprove')) ? `
                         <button class="btn btn-sm btn-success hw-btn-activate" data-sn="${dv.sn}">
                           <i class="fa-solid fa-bolt"></i> Activate
                         </button>
                       ` : ''}
-                      ${dv.status === 'Activated' ? `
+                      ${dv.status === 'Activated' && (!window.Auth || Auth.hasPermission('canDelete')) ? `
                         <button class="btn btn-sm btn-danger hw-btn-decommission" data-sn="${dv.sn}">
                           <i class="fa-solid fa-ban"></i> ปลดประจำการ
                         </button>
@@ -180,9 +180,9 @@ window.Pages.hardware = {
       <!-- Device Models Tab Content -->
       <div id="tab-device-models" class="hidden">
         <div class="flex justify-end mb-16">
-          <button class="btn btn-primary" id="btn-create-model">
+          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary" id="btn-create-model">
             <i class="fa-solid fa-plus"></i> สร้างรุ่นใหม่
-          </button>
+          </button>` : ''}
         </div>
         <div class="grid-3" id="hw-models-grid">
           ${models.map(m => `
@@ -205,10 +205,10 @@ window.Pages.hardware = {
                 ${d.statusChip(m.status)}
                 <span class="text-sm text-muted">${devices.filter(dv => dv.model === m.id).length} อุปกรณ์</span>
                 <div class="flex gap-6">
-                  <button class="btn btn-sm btn-outline hw-btn-edit-model" data-model-id="${m.id}">
+                  ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline hw-btn-edit-model" data-model-id="${m.id}">
                     <i class="fa-solid fa-pen"></i> แก้ไข
-                  </button>
-                  ${m.status !== 'Discontinued' ? `
+                  </button>` : ''}
+                  ${m.status !== 'Discontinued' && (!window.Auth || Auth.hasPermission('canDelete')) ? `
                     <button class="btn btn-sm btn-danger hw-btn-discontinue-model" data-model-id="${m.id}">
                       <i class="fa-solid fa-ban"></i> ยกเลิก
                     </button>
@@ -354,7 +354,7 @@ window.Pages.hardware = {
             activationDate: null,
             online: false,
             modifiedDate: today,
-            modifiedBy: 'admin@realfact.ai',
+            modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
           });
 
           window.App.closeModal();
@@ -427,7 +427,7 @@ window.Pages.hardware = {
             dev.soldToName   = tenantName;
             dev.soldDate     = saleDate;
             dev.modifiedDate = new Date().toISOString().split('T')[0];
-            dev.modifiedBy   = 'admin@realfact.ai';
+            dev.modifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           }
 
           window.App.closeModal();
@@ -511,7 +511,7 @@ window.Pages.hardware = {
               regDate: today, soldDate: null, activationDate: null,
               online: false,
               modifiedDate: today,
-              modifiedBy: 'admin@realfact.ai',
+              modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
             });
             imported++;
           });
@@ -626,7 +626,7 @@ window.Pages.hardware = {
           dev.status       = 'Decommissioned';
           dev.online       = false;
           dev.modifiedDate = new Date().toISOString().split('T')[0];
-          dev.modifiedBy   = 'admin@realfact.ai';
+          dev.modifiedBy   = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           self._refresh();
           App.toast(`ปลดประจำการอุปกรณ์สำเร็จ: ${sn}`, 'success');
         });

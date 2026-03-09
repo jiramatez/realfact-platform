@@ -20,6 +20,9 @@
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+  <!-- Login Overlay (Auth) -->
+  <div id="login-overlay" class="hidden"></div>
+
   <div class="app-layout">
     <!-- ═══ SIDEBAR ═══ -->
     <nav class="sidebar" id="sidebar">
@@ -129,6 +132,10 @@
           <a href="#payment-settings" class="nav-item" data-page="payment-settings">
             <i class="fa-solid fa-building-columns"></i>
             <span class="nav-label">Payment Settings</span>
+          </a>
+          <a href="#platform-members" class="nav-item" data-page="platform-members">
+            <i class="fa-solid fa-users-gear"></i>
+            <span class="nav-label">Platform Members</span>
           </a>
         </div>
 
@@ -274,7 +281,30 @@
             <i class="fa-solid fa-bell"></i>
             <span class="notification-dot"></span>
           </button>
-          <div class="user-avatar" title="Admin">SC</div>
+          <div class="user-profile-wrap" id="user-profile-wrap">
+            <div class="user-avatar" id="user-profile-btn" title="Admin">SA</div>
+            <span class="user-display-name" id="user-display-name">Admin</span>
+            <span class="chip chip-orange" id="user-role-badge" style="font-size:10px;">Super Admin</span>
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown" id="profile-dropdown">
+              <div class="profile-dropdown-header">
+                <div class="user-avatar" id="pd-avatar" style="width:40px;height:40px;font-size:15px;">SA</div>
+                <div>
+                  <div class="font-600" id="pd-name">Admin</div>
+                  <div class="mono text-xs text-muted" id="pd-email">admin@realfact.ai</div>
+                  <div id="pd-role" style="margin-top:3px;"><span class="chip chip-orange" style="font-size:9px;">Super Admin</span></div>
+                </div>
+              </div>
+              <div class="profile-dropdown-divider"></div>
+              <button class="profile-dropdown-item" id="pd-account-settings">
+                <i class="fa-solid fa-gear"></i> ตั้งค่าบัญชี
+              </button>
+              <div class="profile-dropdown-divider"></div>
+              <button class="profile-dropdown-item profile-dropdown-danger" id="pd-logout">
+                <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -288,6 +318,7 @@
   <!-- ═══ SCRIPTS ═══ -->
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
   <script src="js/mock-data.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/pages/dashboard.js"></script>
   <script src="js/pages/avatar-dashboard.js"></script>
   <script src="js/pages/avatar-tenants.js"></script>
@@ -302,6 +333,7 @@
   <script src="js/pages/cost-pricing.js"></script>
   <script src="js/pages/plans-packages.js"></script>
   <script src="js/pages/payment-settings.js"></script>
+  <script src="js/pages/platform-members.js"></script>
   <script src="js/pages/dashboard-analytics.js"></script>
   <script src="js/pages/devportal-dashboard.js"></script>
   <script src="js/pages/devportal-tenants.js"></script>
