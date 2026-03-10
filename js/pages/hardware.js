@@ -26,7 +26,8 @@ window.Pages.hardware = {
 
   render() {
     const d = window.MockData;
-    const devices = d.devices;
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    const devices = scopedTid ? d.devices.filter(dv => dv.soldTo === scopedTid) : d.devices;
     const models = d.deviceModels;
 
     const registered    = devices.filter(dv => dv.status === 'Registered').length;

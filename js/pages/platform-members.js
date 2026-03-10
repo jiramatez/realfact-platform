@@ -1,6 +1,6 @@
 /* ================================================================
    Page Module — Platform Members
-   CRUD for platform member management with RBAC
+   Multi-Tenant RBAC with Custom Roles
    ================================================================ */
 
 window.Pages = window.Pages || {};
@@ -15,10 +15,10 @@ window.Pages.platformMembers = {
 
   // ─── Role meta ───
   _roleMeta: {
-    super_admin:    { label: 'Super Admin',    chip: 'chip-orange', icon: 'fa-shield-halved' },
-    platform_admin: { label: 'Platform Admin', chip: 'chip-blue',   icon: 'fa-user-gear' },
-    finance:        { label: 'Finance',        chip: 'chip-green',  icon: 'fa-coins' },
-    viewer:         { label: 'Viewer',         chip: 'chip-gray',   icon: 'fa-eye' },
+    super_admin:       { label: 'Owner',        chip: 'chip-orange', icon: 'fa-crown' },
+    tenant_admin:      { label: 'Tenant Admin', chip: 'chip-blue',   icon: 'fa-building' },
+    subplatform_admin: { label: 'SP Admin',     chip: 'chip-green',  icon: 'fa-cubes' },
+    subplatform_member:{ label: 'Member',       chip: 'chip-gray',   icon: 'fa-user' },
   },
 
   _roleChip(role) {
@@ -26,11 +26,82 @@ window.Pages.platformMembers = {
     return `<span class="chip ${m.chip}"><i class="fa-solid ${m.icon}"></i> ${m.label}</span>`;
   },
 
+  // ─── Role hierarchy rank (higher = more privileged) ───
+  _roleRank: { super_admin: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 },
+
+  // ─── Roles visible to each role level ───
+  _visibleRoles: {
+    super_admin:       ['super_admin', 'tenant_admin', 'subplatform_admin', 'subplatform_member'],
+    tenant_admin:      ['tenant_admin', 'subplatform_admin', 'subplatform_member'],
+    subplatform_admin: ['subplatform_admin', 'subplatform_member'],
+    subplatform_member: ['subplatform_member'],
+  },
+
+  // ─── Build member list — scoped by current user's role + scope ───
+  _getMembers() {
+    const d = window.MockData;
+    const users = d.users || [];
+    const memberships = d.userMemberships || [];
+    const customRoles = d.customRoles || [];
+    const tenants = d.tenants || [];
+    const subPlatforms = d.subPlatforms || [];
+
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const currentRole = ctx ? ctx.role : null;
+    const allowedRoles = this._visibleRoles[currentRole] || [];
+
+    return memberships.map(mb => {
+      const user = users.find(u => u.id === mb.userId);
+      if (!user) return null;
+
+      // ── RBAC Scope Filter ──
+      // Only show members whose role is within allowed visibility
+      if (currentRole && allowedRoles.indexOf(mb.role) === -1) return null;
+
+      // Scope filter: non-owner roles only see members in their own scope
+      if (currentRole === 'tenant_admin') {
+        // Tenant Admin sees: own tenant's members + self
+        if (mb.role !== 'super_admin' && mb.tenantId && mb.tenantId !== ctx.tenantId) return null;
+      } else if (currentRole === 'subplatform_admin') {
+        // SP Admin sees: own SP's members + self (same tenant + same SP or no SP)
+        if (mb.tenantId && mb.tenantId !== ctx.tenantId) return null;
+        if (mb.subPlatformId && mb.subPlatformId !== ctx.subPlatformId) return null;
+      } else if (currentRole === 'subplatform_member') {
+        // Member sees only self
+        const currentUserId = window.Auth && Auth.currentUser() ? Auth.currentUser().id : null;
+        if (mb.userId !== currentUserId) return null;
+      }
+
+      const tenant = mb.tenantId ? tenants.find(t => t.id === mb.tenantId) : null;
+      const sp = mb.subPlatformId ? subPlatforms.find(s => s.id === mb.subPlatformId) : null;
+      const cr = mb.customRoleId ? customRoles.find(r => r.id === mb.customRoleId) : null;
+      const inviter = mb.invitedBy ? users.find(u => u.id === mb.invitedBy) : null;
+
+      return {
+        membershipId: mb.id,
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        initials: user.initials,
+        role: mb.role,
+        customRoleName: cr ? cr.name : null,
+        tenantId: mb.tenantId,
+        tenantName: tenant ? tenant.name : null,
+        subPlatformId: mb.subPlatformId,
+        subPlatformName: sp ? sp.name : null,
+        status: mb.status === 'Active' && user.status !== 'Active' ? user.status : mb.status,
+        lastLogin: user.lastLogin,
+        createdDate: mb.createdDate,
+        invitedByEmail: inviter ? inviter.email : null,
+      };
+    }).filter(Boolean);
+  },
+
   // ─── Render ───
   render() {
     const d = window.MockData;
-    const members = d.platformMembers || [];
     const self = window.Pages.platformMembers;
+    const members = self._getMembers();
 
     const total     = members.length;
     const active    = members.filter(m => m.status === 'Active').length;
@@ -38,14 +109,26 @@ window.Pages.platformMembers = {
     const invited   = members.filter(m => m.status === 'Invited').length;
 
     const canManage = !window.Auth || Auth.hasPermission('canManageMembers');
-    const isSuperAdmin = window.Auth && Auth.currentUser() && Auth.currentUser().role === 'super_admin';
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const currentRole = ctx ? ctx.role : null;
+    const isSuperAdmin = currentRole === 'super_admin';
+
+    // Build role filter options based on what current user can see
+    const visibleRoles = self._visibleRoles[currentRole] || ['super_admin', 'tenant_admin', 'subplatform_admin', 'subplatform_member'];
+    const roleFilterOptions = [
+      { value: 'super_admin', label: 'Owner' },
+      { value: 'tenant_admin', label: 'Tenant Admin' },
+      { value: 'subplatform_admin', label: 'SP Admin' },
+      { value: 'subplatform_member', label: 'Member' },
+    ].filter(r => visibleRoles.indexOf(r.value) !== -1)
+     .map(r => `<option value="${r.value}">${r.label}</option>`).join('');
 
     return `
       <div class="page-header">
         <h1 class="heading">PLATFORM MEMBERS</h1>
         <div class="page-header-actions">
           <button class="btn btn-outline" id="btn-view-roles">
-            <i class="fa-solid fa-table-cells"></i> สิทธิ์ตาม Role
+            <i class="fa-solid fa-table-cells"></i> Custom Roles
           </button>
           ${canManage ? `<button class="btn btn-primary" id="btn-invite-member">
             <i class="fa-solid fa-user-plus"></i> เชิญสมาชิก
@@ -81,10 +164,7 @@ window.Pages.platformMembers = {
         </div>
         <select id="member-filter-role" class="form-input" style="width:auto;min-width:140px;">
           <option value="">ทุก Role</option>
-          <option value="super_admin">Super Admin</option>
-          <option value="platform_admin">Platform Admin</option>
-          <option value="finance">Finance</option>
-          <option value="viewer">Viewer</option>
+          ${roleFilterOptions}
         </select>
         <select id="member-filter-status" class="form-input" style="width:auto;min-width:120px;">
           <option value="">ทุกสถานะ</option>
@@ -104,20 +184,38 @@ window.Pages.platformMembers = {
                 <th>ชื่อ</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th>Scope</th>
                 <th>สถานะ</th>
                 <th>Login ล่าสุด</th>
-                <th>เพิ่มเมื่อ</th>
                 ${canManage ? '<th>Actions</th>' : ''}
               </tr>
             </thead>
             <tbody id="member-table-body">
               ${members.map(m => {
                 const currentUserEmail = window.Auth && Auth.currentUser() ? Auth.currentUser().email : '';
-                const isTargetSuperAdmin = m.role === 'super_admin';
-                const canEditThis = canManage && (isSuperAdmin || !isTargetSuperAdmin);
-                const canRemoveThis = isSuperAdmin && m.email !== currentUserEmail;
+                const myRank = self._roleRank[currentRole] || 0;
+                const theirRank = self._roleRank[m.role] || 0;
+                const canEditThis = canManage && myRank > theirRank;
+                const canRemoveThis = canManage && myRank > theirRank && m.email !== currentUserEmail;
+
+                // Scope display
+                let scopeHtml = '-';
+                if (m.role === 'super_admin') {
+                  scopeHtml = '<span class="text-xs text-muted">All Tenants</span>';
+                } else if (m.tenantName) {
+                  scopeHtml = '<span class="text-xs">' + m.tenantName + '</span>';
+                  if (m.subPlatformName) {
+                    scopeHtml += '<br><span class="text-xs text-muted">' + m.subPlatformName + '</span>';
+                  }
+                }
+
+                // Custom role badge
+                const crBadge = m.customRoleName
+                  ? ` <span class="chip chip-blue" style="font-size:9px;">${m.customRoleName}</span>`
+                  : '';
+
                 return `
-                  <tr data-id="${m.id}" data-role="${m.role}" data-status="${m.status}" data-search="${(m.name + ' ' + m.email).toLowerCase()}">
+                  <tr data-id="${m.membershipId}" data-role="${m.role}" data-status="${m.status}" data-search="${(m.name + ' ' + m.email).toLowerCase()}">
                     <td>
                       <div class="user-avatar" style="width:34px;height:34px;font-size:12px;" title="${m.name}">${m.initials}</div>
                     </td>
@@ -126,19 +224,16 @@ window.Pages.platformMembers = {
                       ${m.email === currentUserEmail ? '<span class="chip chip-blue" style="font-size:9px;">คุณ</span>' : ''}
                     </td>
                     <td class="mono text-sm">${m.email}</td>
-                    <td>${self._roleChip(m.role)}</td>
+                    <td>${self._roleChip(m.role)}${crBadge}</td>
+                    <td>${scopeHtml}</td>
                     <td>${d.statusChip(m.status)}</td>
                     <td class="text-sm text-muted mono">${m.lastLogin || '-'}</td>
-                    <td>
-                      <div class="text-sm text-muted">${m.createdDate}</div>
-                      ${m.invitedBy ? `<div class="text-xs text-dim">${m.invitedBy.split('@')[0]}</div>` : ''}
-                    </td>
                     ${canManage ? `<td>
                       <div class="flex gap-4">
-                        ${canEditThis ? `<button class="btn btn-sm btn-outline member-edit-btn" data-id="${m.id}" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>` : ''}
-                        ${canEditThis && m.status === 'Active' ? `<button class="btn btn-sm btn-outline member-suspend-btn" data-id="${m.id}" title="ระงับ"><i class="fa-solid fa-ban"></i></button>` : ''}
-                        ${canEditThis && m.status === 'Suspended' ? `<button class="btn btn-sm btn-outline member-reactivate-btn" data-id="${m.id}" title="เปิดใช้งาน" style="color:var(--success);"><i class="fa-solid fa-rotate-right"></i></button>` : ''}
-                        ${canRemoveThis ? `<button class="btn btn-sm btn-outline member-remove-btn" data-id="${m.id}" title="ลบ" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${canEditThis ? `<button class="btn btn-sm btn-outline member-edit-btn" data-id="${m.membershipId}" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>` : ''}
+                        ${canEditThis && m.status === 'Active' ? `<button class="btn btn-sm btn-outline member-suspend-btn" data-id="${m.membershipId}" title="ระงับ"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        ${canEditThis && m.status === 'Suspended' ? `<button class="btn btn-sm btn-outline member-reactivate-btn" data-id="${m.membershipId}" title="เปิดใช้งาน" style="color:var(--success);"><i class="fa-solid fa-rotate-right"></i></button>` : ''}
+                        ${canRemoveThis ? `<button class="btn btn-sm btn-outline member-remove-btn" data-id="${m.membershipId}" title="ลบ" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>` : ''}
                       </div>
                     </td>` : ''}
                   </tr>`;
@@ -176,9 +271,9 @@ window.Pages.platformMembers = {
     if (roleFilter)  roleFilter.addEventListener('change', applyFilters);
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
 
-    // ─── View Roles Permission Matrix ───
+    // ─── View Custom Roles ───
     document.getElementById('btn-view-roles')?.addEventListener('click', () => {
-      self._showRolesMatrix();
+      self._showCustomRolesModal();
     });
 
     // ─── Invite Member ───
@@ -194,14 +289,14 @@ window.Pages.platformMembers = {
     // ─── Suspend Member ───
     document.querySelectorAll('.member-suspend-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const m = d.platformMembers.find(x => x.id === btn.dataset.id);
-        if (!m) return;
-        const ok = await App.confirm(`ต้องการระงับบัญชี "${m.name}" (${m.email}) ?`, { type: 'danger', title: 'ระงับสมาชิก', confirmText: 'ระงับ' });
+        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
+        if (!mb) return;
+        const user = d.users.find(u => u.id === mb.userId);
+        const name = user ? user.name : mb.userId;
+        const ok = await App.confirm(`ต้องการระงับบัญชี "${name}" ในบทบาทนี้?`, { type: 'danger', title: 'ระงับสมาชิก', confirmText: 'ระงับ' });
         if (!ok) return;
-        m.status = 'Suspended';
-        m.modifiedDate = new Date().toISOString().slice(0, 10);
-        m.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
-        App.toast('ระงับบัญชี ' + m.name + ' สำเร็จ', 'success');
+        mb.status = 'Suspended';
+        App.toast('ระงับบัญชี ' + name + ' สำเร็จ', 'success');
         self._rerender();
       });
     });
@@ -209,12 +304,11 @@ window.Pages.platformMembers = {
     // ─── Reactivate Member ───
     document.querySelectorAll('.member-reactivate-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const m = d.platformMembers.find(x => x.id === btn.dataset.id);
-        if (!m) return;
-        m.status = 'Active';
-        m.modifiedDate = new Date().toISOString().slice(0, 10);
-        m.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
-        App.toast('เปิดใช้งาน ' + m.name + ' สำเร็จ', 'success');
+        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
+        if (!mb) return;
+        mb.status = 'Active';
+        const user = d.users.find(u => u.id === mb.userId);
+        App.toast('เปิดใช้งาน ' + (user ? user.name : '') + ' สำเร็จ', 'success');
         self._rerender();
       });
     });
@@ -222,15 +316,42 @@ window.Pages.platformMembers = {
     // ─── Remove Member ───
     document.querySelectorAll('.member-remove-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const m = d.platformMembers.find(x => x.id === btn.dataset.id);
-        if (!m) return;
-        const ok = await App.confirm(`ต้องการลบบัญชี "${m.name}" (${m.email}) ออกจากระบบ?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`, { type: 'danger', title: 'ลบสมาชิก', confirmText: 'ลบ' });
+        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
+        if (!mb) return;
+        const user = d.users.find(u => u.id === mb.userId);
+        const name = user ? user.name : mb.userId;
+        const ok = await App.confirm(`ต้องการลบ "${name}" ออกจากบทบาทนี้?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`, { type: 'danger', title: 'ลบสมาชิก', confirmText: 'ลบ' });
         if (!ok) return;
-        const idx = d.platformMembers.indexOf(m);
-        if (idx !== -1) d.platformMembers.splice(idx, 1);
-        App.toast('ลบ ' + m.name + ' ออกจากระบบแล้ว', 'success');
+        const idx = d.userMemberships.indexOf(mb);
+        if (idx !== -1) d.userMemberships.splice(idx, 1);
+        App.toast('ลบ ' + name + ' ออกจากบทบาทนี้แล้ว', 'success');
         self._rerender();
       });
+    });
+  },
+
+  // ─── Determine what roles current user can assign ───
+  _getAssignableRoles() {
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    if (!ctx) return [];
+    switch (ctx.role) {
+      case 'super_admin':       return ['tenant_admin'];
+      case 'tenant_admin':      return ['subplatform_admin'];
+      case 'subplatform_admin': return ['subplatform_member'];
+      default: return [];
+    }
+  },
+
+  // ─── Get custom roles available for a target level ───
+  _getCustomRolesForLevel(targetLevel) {
+    const d = window.MockData;
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    return (d.customRoles || []).filter(cr => {
+      if (cr.targetLevel !== targetLevel) return false;
+      if (cr.scopeType === 'global') return true;
+      if (cr.scopeType === 'tenant' && ctx && cr.scopeId === ctx.tenantId) return true;
+      if (cr.scopeType === 'subplatform' && ctx && cr.scopeId === ctx.subPlatformId) return true;
+      return false;
     });
   },
 
@@ -238,10 +359,38 @@ window.Pages.platformMembers = {
   _showInviteModal() {
     const self = this;
     const d = window.MockData;
-    const isSuperAdmin = window.Auth && Auth.currentUser() && Auth.currentUser().role === 'super_admin';
-    const roleOptions = isSuperAdmin
-      ? ['super_admin', 'platform_admin', 'finance', 'viewer']
-      : ['platform_admin', 'finance', 'viewer'];
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const assignableRoles = self._getAssignableRoles();
+
+    if (assignableRoles.length === 0) {
+      App.toast('คุณไม่มีสิทธิ์เชิญสมาชิก', 'error');
+      return;
+    }
+
+    const targetRole = assignableRoles[0]; // default to first assignable
+    const customRoles = self._getCustomRolesForLevel(targetRole);
+
+    // Build scope options
+    let scopeHtml = '';
+    if (targetRole === 'tenant_admin') {
+      // Super admin picks tenant
+      const tenants = d.tenants || [];
+      scopeHtml = `<div class="form-group">
+        <label class="form-label">Tenant</label>
+        <select class="form-input" id="invite-tenant">
+          ${tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+        </select>
+      </div>`;
+    } else if (targetRole === 'subplatform_admin' || targetRole === 'subplatform_member') {
+      // Pick sub-platform within current tenant
+      const sps = window.Auth ? Auth.getVisibleSubPlatforms() : [];
+      scopeHtml = `<div class="form-group">
+        <label class="form-label">Sub-Platform</label>
+        <select class="form-input" id="invite-sp">
+          ${sps.map(sp => `<option value="${sp.id}">${sp.name}</option>`).join('')}
+        </select>
+      </div>`;
+    }
 
     App.showModal(
       `<div class="modal" style="max-width:480px;">
@@ -259,10 +408,18 @@ window.Pages.platformMembers = {
           <div class="form-group">
             <label class="form-label">Role</label>
             <select class="form-input" id="invite-role">
-              ${roleOptions.map(r => {
+              ${assignableRoles.map(r => {
                 const m = self._roleMeta[r] || {};
                 return `<option value="${r}">${m.label || r}</option>`;
               }).join('')}
+            </select>
+          </div>
+          ${scopeHtml}
+          <div class="form-group">
+            <label class="form-label">Custom Role (สิทธิ์)</label>
+            <select class="form-input" id="invite-custom-role">
+              <option value="">(ใช้สิทธิ์พื้นฐานของ Role)</option>
+              ${customRoles.map(cr => `<option value="${cr.id}">${cr.name}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -278,34 +435,50 @@ window.Pages.platformMembers = {
         const name  = document.getElementById('invite-name').value.trim();
         const email = document.getElementById('invite-email').value.trim();
         const role  = document.getElementById('invite-role').value;
+        const customRoleId = document.getElementById('invite-custom-role').value || null;
 
-        // Validate
         if (!name)  { document.getElementById('invite-name').classList.add('is-invalid'); return; }
         if (!email) { document.getElementById('invite-email').classList.add('is-invalid'); return; }
-        if (d.platformMembers.find(m => m.email === email)) {
-          App.toast('Email นี้มีอยู่ในระบบแล้ว', 'error'); return;
+
+        // Determine scope
+        let tenantId = ctx ? ctx.tenantId : null;
+        let subPlatformId = ctx ? ctx.subPlatformId : null;
+
+        if (role === 'tenant_admin') {
+          const tenantSelect = document.getElementById('invite-tenant');
+          tenantId = tenantSelect ? tenantSelect.value : null;
+          subPlatformId = null;
+        } else if (role === 'subplatform_admin' || role === 'subplatform_member') {
+          const spSelect = document.getElementById('invite-sp');
+          subPlatformId = spSelect ? spSelect.value : subPlatformId;
         }
 
-        // Generate initials
-        const parts = name.split(' ');
-        const initials = parts.length >= 2
-          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-          : name.slice(0, 2).toUpperCase();
+        // Check if user already exists
+        let user = d.users.find(u => u.email === email);
+        if (!user) {
+          // Create new user
+          const parts = name.split(' ');
+          const initials = parts.length >= 2
+            ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+            : name.slice(0, 2).toUpperCase();
+          const newId = 'USR-' + String(d.users.length + 1).padStart(3, '0');
+          user = {
+            id: newId, email, password: null, name, initials,
+            avatar: null, status: 'Invited', lastLogin: null,
+            createdDate: new Date().toISOString().slice(0, 10),
+          };
+          d.users.push(user);
+        }
 
-        const newId = 'MEM-' + String(d.platformMembers.length + 1).padStart(3, '0');
-        d.platformMembers.push({
-          id: newId,
-          email: email,
-          password: null,
-          name: name,
-          initials: initials,
-          role: role,
+        // Create membership
+        const mbId = 'MB-' + String(d.userMemberships.length + 1).padStart(3, '0');
+        const currentUserId = window.Auth && Auth.currentUser() ? Auth.currentUser().id : null;
+        d.userMemberships.push({
+          id: mbId, userId: user.id, role,
+          tenantId, subPlatformId, customRoleId,
           status: 'Invited',
-          lastLogin: null,
+          invitedBy: currentUserId,
           createdDate: new Date().toISOString().slice(0, 10),
-          invitedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
-          modifiedDate: new Date().toISOString().slice(0, 10),
-          modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
         });
 
         App.closeModal();
@@ -316,40 +489,38 @@ window.Pages.platformMembers = {
   },
 
   // ─── Edit Modal ───
-  _showEditModal(memberId) {
+  _showEditModal(membershipId) {
     const self = this;
     const d = window.MockData;
-    const m = d.platformMembers.find(x => x.id === memberId);
-    if (!m) return;
+    const mb = d.userMemberships.find(x => x.id === membershipId);
+    if (!mb) return;
+    const user = d.users.find(u => u.id === mb.userId);
+    if (!user) return;
 
-    const isSuperAdmin = window.Auth && Auth.currentUser() && Auth.currentUser().role === 'super_admin';
-    const roleOptions = isSuperAdmin
-      ? ['super_admin', 'platform_admin', 'finance', 'viewer']
-      : ['platform_admin', 'finance', 'viewer'];
+    const customRoles = self._getCustomRolesForLevel(mb.role);
 
     App.showModal(
       `<div class="modal" style="max-width:480px;">
         <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
         <div class="modal-title"><i class="fa-solid fa-user-pen text-primary"></i> แก้ไขสมาชิก</div>
         <div class="flex items-center gap-12 mt-12 mb-16" style="background:var(--surface2);padding:12px;border-radius:10px;">
-          <div class="user-avatar" style="width:40px;height:40px;font-size:14px;">${m.initials}</div>
+          <div class="user-avatar" style="width:40px;height:40px;font-size:14px;">${user.initials}</div>
           <div>
-            <div class="font-600">${m.name}</div>
-            <div class="mono text-sm text-muted">${m.email}</div>
+            <div class="font-600">${user.name}</div>
+            <div class="mono text-sm text-muted">${user.email}</div>
+            <div style="margin-top:4px;">${self._roleChip(mb.role)}</div>
           </div>
         </div>
         <div class="flex-col gap-14">
           <div class="form-group">
             <label class="form-label">ชื่อ</label>
-            <input class="form-input" id="edit-member-name" value="${m.name}">
+            <input class="form-input" id="edit-member-name" value="${user.name}">
           </div>
           <div class="form-group">
-            <label class="form-label">Role</label>
-            <select class="form-input" id="edit-member-role">
-              ${roleOptions.map(r => {
-                const meta = self._roleMeta[r] || {};
-                return `<option value="${r}" ${r === m.role ? 'selected' : ''}>${meta.label || r}</option>`;
-              }).join('')}
+            <label class="form-label">Custom Role (สิทธิ์)</label>
+            <select class="form-input" id="edit-member-custom-role">
+              <option value="">(ใช้สิทธิ์พื้นฐานของ Role)</option>
+              ${customRoles.map(cr => `<option value="${cr.id}" ${cr.id === mb.customRoleId ? 'selected' : ''}>${cr.name}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -363,255 +534,309 @@ window.Pages.platformMembers = {
     setTimeout(() => {
       document.getElementById('edit-member-save')?.addEventListener('click', () => {
         const newName = document.getElementById('edit-member-name').value.trim();
-        const newRole = document.getElementById('edit-member-role').value;
+        const newCustomRoleId = document.getElementById('edit-member-custom-role').value || null;
 
         if (!newName) { document.getElementById('edit-member-name').classList.add('is-invalid'); return; }
 
-        m.name = newName;
-        m.role = newRole;
+        user.name = newName;
         const parts = newName.split(' ');
-        m.initials = parts.length >= 2
+        user.initials = parts.length >= 2
           ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
           : newName.slice(0, 2).toUpperCase();
-        m.modifiedDate = new Date().toISOString().slice(0, 10);
-        m.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+        mb.customRoleId = newCustomRoleId;
 
         App.closeModal();
-        App.toast('อัปเดต ' + m.name + ' สำเร็จ', 'success');
+        App.toast('อัปเดต ' + user.name + ' สำเร็จ', 'success');
         self._rerender();
       });
     }, 50);
   },
 
-  // ─── Roles Permission Matrix (Editable) ───
+  // ─── Custom Roles Modal (List + Create + Edit) ───
+  _permDefs: [
+    { key: 'canEdit',          icon: 'fa-pen',          label: 'แก้ไขข้อมูล' },
+    { key: 'canDelete',        icon: 'fa-trash',        label: 'ลบข้อมูล' },
+    { key: 'canApprove',       icon: 'fa-check-double', label: 'อนุมัติ' },
+    { key: 'canManageMembers', icon: 'fa-users-gear',   label: 'จัดการสมาชิก' },
+    { key: 'canViewBilling',   icon: 'fa-file-invoice', label: 'ดู Billing' },
+    { key: 'canViewAnalytics', icon: 'fa-chart-column', label: 'ดู Analytics' },
+  ],
+
   _pageGroups: [
-    { label: 'PLATFORM', icon: 'fa-building', pages: [
-      { id: 'dashboard', name: 'Dashboard' },
-      { id: 'sub-platforms', name: 'Sub-Platforms' },
-      { id: 'tenants', name: 'Tenants' },
-    ]},
-    { label: 'COST & PRICING', icon: 'fa-calculator', pages: [
-      { id: 'cost-pricing', name: 'Cost Configuration' },
-      { id: 'cost-margin', name: 'Margin Config' },
-      { id: 'cost-snapshots', name: 'Snapshots' },
-      { id: 'cost-change-requests', name: 'Change Requests' },
-    ]},
-    { label: 'PLANS & PACKAGES', icon: 'fa-tags', pages: [
-      { id: 'plans-packages', name: 'Subscription Plans' },
-      { id: 'plans-tokens', name: 'Token Packages' },
-      { id: 'plans-bonus', name: 'Welcome Bonus' },
-    ]},
-    { label: 'BILLING', icon: 'fa-file-invoice-dollar', pages: [
-      { id: 'billing', name: 'Overview & Invoices' },
-      { id: 'billing-verify', name: 'ตรวจสอบการชำระ' },
-      { id: 'billing-credit', name: 'Credit & Refunds' },
-      { id: 'billing-overdue', name: 'ค้างชำระ' },
-    ]},
-    { label: 'SETTINGS', icon: 'fa-sliders', pages: [
-      { id: 'payment-settings', name: 'Payment Settings' },
-      { id: 'platform-members', name: 'Platform Members' },
-    ]},
-    { label: 'ANALYTICS', icon: 'fa-chart-column', pages: [
-      { id: 'analytics-revenue', name: 'Revenue & Billing' },
-      { id: 'analytics-usage', name: 'API Usage' },
-      { id: 'analytics-customers', name: 'Customers & Services' },
-    ]},
-    { label: 'AVATAR', icon: 'fa-robot', pages: [
-      { id: 'avatar-dashboard', name: 'Dashboard' },
-      { id: 'avatar-tenants', name: 'Tenants' },
-      { id: 'hardware', name: 'Hardware' },
-      { id: 'devices', name: 'Devices' },
-      { id: 'service-builder', name: 'Assign Avatar' },
-      { id: 'knowledge-base', name: 'Knowledge Base' },
-    ]},
-    { label: 'DEVELOPER PORTAL', icon: 'fa-code', pages: [
-      { id: 'dp-dashboard', name: 'Dashboard' },
-      { id: 'dp-tenants', name: 'Tenants' },
-      { id: 'dp-api-presets', name: 'API Presets' },
-      { id: 'dp-assign-endpoint', name: 'Assign Endpoint' },
-    ]},
+    { label: 'PLATFORM', pages: ['dashboard','tenants','sub-platforms'] },
+    { label: 'COST & PRICING', pages: ['cost-pricing','cost-margin','cost-snapshots','cost-change-requests'] },
+    { label: 'PLANS', pages: ['plans-packages','plans-tokens','plans-bonus'] },
+    { label: 'BILLING', pages: ['billing','billing-verify','billing-credit','billing-overdue'] },
+    { label: 'SETTINGS', pages: ['payment-settings','platform-members'] },
+    { label: 'ANALYTICS', pages: ['analytics-revenue','analytics-usage','analytics-customers'] },
+    { label: 'AVATAR', pages: ['avatar-dashboard','avatar-tenants','hardware','devices','service-builder','knowledge-base'] },
+    { label: 'DEV PORTAL', pages: ['dp-dashboard','dp-tenants','dp-api-presets','dp-assign-endpoint'] },
   ],
 
-  _editableRoles: [
-    { key: 'platform_admin', label: 'Platform Admin', chip: 'chip-blue' },
-    { key: 'finance',        label: 'Finance',        chip: 'chip-green' },
-    { key: 'viewer',         label: 'Viewer',         chip: 'chip-gray' },
-  ],
-
-  _showRolesMatrix() {
+  _showCustomRolesModal() {
     const self = this;
     const d = window.MockData;
-    const rp = d.rolePermissions;
-    const isSuperAdmin = window.Auth && Auth.currentUser() && Auth.currentUser().role === 'super_admin';
-    const canEdit = isSuperAdmin;
-    const perms = ['canEdit', 'canDelete', 'canApprove', 'canManageMembers'];
-    const permLabels = {
-      canEdit: '<i class="fa-solid fa-pen text-muted" style="width:18px;"></i> แก้ไขข้อมูล (Edit)',
-      canDelete: '<i class="fa-solid fa-trash text-muted" style="width:18px;"></i> ลบข้อมูล (Delete)',
-      canApprove: '<i class="fa-solid fa-check-double text-muted" style="width:18px;"></i> อนุมัติ (Approve)',
-      canManageMembers: '<i class="fa-solid fa-users-gear text-muted" style="width:18px;"></i> จัดการสมาชิก',
+    const allCustomRoles = d.customRoles || [];
+    const users = d.users || [];
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const canManage = ctx && (ctx.role === 'super_admin' || ctx.role === 'tenant_admin' || ctx.role === 'subplatform_admin');
+    const currentRole = ctx ? ctx.role : null;
+
+    // Filter custom roles: only show roles for levels visible to current user
+    const visibleRoles = self._visibleRoles[currentRole] || [];
+    const customRoles = allCustomRoles.filter(cr => {
+      if (visibleRoles.indexOf(cr.targetLevel) === -1) return false;
+      // Scope filter
+      if (currentRole === 'tenant_admin' && cr.scopeType === 'tenant' && cr.scopeId !== ctx.tenantId) return false;
+      if (currentRole === 'subplatform_admin' && cr.scopeType === 'subplatform' && cr.scopeId !== ctx.subPlatformId) return false;
+      return true;
+    });
+
+    const _levelLabels = {
+      tenant_admin: 'Tenant Admin', subplatform_admin: 'SP Admin', subplatform_member: 'Member',
     };
+    const _scopeLabels = { global: 'Global', tenant: 'Tenant', subplatform: 'Sub-Platform' };
 
-    const allRoles = [
-      { key: 'super_admin', label: 'Super Admin', chip: 'chip-orange', locked: true },
-      ...self._editableRoles.map(r => ({ ...r, locked: false })),
-    ];
+    const rows = customRoles.map(cr => {
+      const creator = users.find(u => u.id === cr.createdBy);
+      const permIcons = self._permDefs.map(p => {
+        const has = cr.permissions && cr.permissions[p.key];
+        return has
+          ? `<i class="fa-solid ${p.icon} text-success" title="${p.label}" style="font-size:12px;"></i>`
+          : `<i class="fa-solid ${p.icon}" title="${p.label}" style="font-size:12px;opacity:.2;"></i>`;
+      }).join(' ');
+      const pageCount = Array.isArray(cr.permissions.pages) ? cr.permissions.pages.length : 'All';
 
-    function canAccess(roleKey, pageId) {
-      const r = rp[roleKey];
-      if (!r) return false;
-      if (r.pages === '*') return true;
-      return r.pages.indexOf(pageId) !== -1;
-    }
-
-    function cbx(name, checked, disabled) {
-      return `<input type="checkbox" class="rbac-cb" data-name="${name}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} style="width:16px;height:16px;accent-color:var(--primary);cursor:${disabled ? 'not-allowed' : 'pointer'};">`;
-    }
-
-    // Build permission rows
-    let permRows = '';
-    perms.forEach(p => {
-      permRows += `<tr>
-        <td class="text-sm" style="white-space:nowrap;">${permLabels[p]}</td>
-        ${allRoles.map(r => {
-          const val = !!(rp[r.key] && rp[r.key][p]);
-          const dis = r.locked || !canEdit;
-          return `<td class="text-center">${cbx('perm|' + r.key + '|' + p, val, dis)}</td>`;
-        }).join('')}
+      return `<tr>
+        <td class="font-600" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cr.name}</td>
+        <td><span class="chip chip-blue" style="font-size:9px;">${_levelLabels[cr.targetLevel] || cr.targetLevel}</span></td>
+        <td><span class="text-xs text-muted">${_scopeLabels[cr.scopeType] || cr.scopeType}</span></td>
+        <td style="white-space:nowrap;"><div style="display:flex;gap:6px;align-items:center;">${permIcons}</div></td>
+        <td class="text-center"><span class="chip chip-gray" style="font-size:9px;">${pageCount} pages</span></td>
+        <td class="text-xs text-muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${creator ? creator.name : '-'}</td>
+        ${canManage ? `<td class="text-center" style="white-space:nowrap;">
+          <button class="btn btn-sm btn-outline cr-edit-btn" data-id="${cr.id}" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
+          <button class="btn btn-sm btn-outline cr-delete-btn" data-id="${cr.id}" title="ลบ" style="color:var(--error);margin-left:4px;"><i class="fa-solid fa-trash"></i></button>
+        </td>` : ''}
       </tr>`;
-    });
-
-    // Build page access rows
-    let pageRows = '';
-    self._pageGroups.forEach(group => {
-      // Group header with select-all per group per role
-      pageRows += `<tr class="grp-row">
-        <td class="text-xs uppercase font-700" style="letter-spacing:.8px;">
-          <i class="fa-solid ${group.icon}" style="margin-right:5px;opacity:.5;"></i>${group.label}
-        </td>
-        ${allRoles.map(r => {
-          if (r.locked || !canEdit) return '<td></td>';
-          const groupPageIds = group.pages.map(p => p.id);
-          const allChecked = groupPageIds.every(pid => canAccess(r.key, pid));
-          return `<td class="text-center">
-            <label style="cursor:pointer;user-select:none;font-size:10px;color:var(--text-muted);display:inline-flex;align-items:center;gap:3px;">
-              <input type="checkbox" class="rbac-group-toggle" data-role="${r.key}" data-pages="${groupPageIds.join(',')}" ${allChecked ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--primary);cursor:pointer;">ทั้งหมด
-            </label>
-          </td>`;
-        }).join('')}
-      </tr>`;
-      group.pages.forEach(p => {
-        pageRows += `<tr class="pg-row">
-          <td class="text-sm">${p.name}</td>
-          ${allRoles.map(r => {
-            const val = canAccess(r.key, p.id);
-            const dis = r.locked || !canEdit;
-            return `<td class="text-center">${cbx('page|' + r.key + '|' + p.id, val, dis)}</td>`;
-          }).join('')}
-        </tr>`;
-      });
-    });
+    }).join('');
 
     App.showModal(
       `<div class="modal modal-xl">
         <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-title"><i class="fa-solid fa-sliders text-primary"></i> ตั้งค่าสิทธิ์ตาม Role</div>
-        ${!canEdit ? '<div class="text-xs text-muted" style="margin-top:2px;"><i class="fa-solid fa-lock"></i> เฉพาะ Super Admin สามารถแก้ไขสิทธิ์ได้</div>' : ''}
-
-        <!-- Permission Summary -->
-        <div class="text-xs uppercase text-muted font-600" style="margin:14px 0 6px;">
-          <i class="fa-solid fa-shield-halved"></i> สิทธิ์การดำเนินการ
+        <div class="modal-title"><i class="fa-solid fa-sliders text-primary"></i> Custom Roles</div>
+        <div class="text-sm text-muted mb-12">
+          แต่ละ Level สามารถสร้าง Custom Role เพื่อกำหนดสิทธิ์ให้ Level ถัดไปได้
         </div>
-        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;">
-          <table class="rbac-table">
+        <div class="table-wrap" style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+            <colgroup>
+              <col style="width:140px;">
+              <col style="width:120px;">
+              <col style="width:100px;">
+              <col style="width:150px;">
+              <col style="width:80px;">
+              <col style="width:120px;">
+              ${canManage ? '<col style="width:100px;">' : ''}
+            </colgroup>
             <thead>
               <tr>
-                <th style="width:200px;">Permission</th>
-                ${allRoles.map(r => `<th class="text-center" style="width:140px;"><span class="chip ${r.chip}" style="font-size:10px;">${r.label}</span>${r.locked ? ' <i class="fa-solid fa-lock" style="font-size:8px;opacity:.35;"></i>' : ''}</th>`).join('')}
+                <th>ชื่อ Role</th>
+                <th>สำหรับ Level</th>
+                <th>Scope</th>
+                <th>Permissions</th>
+                <th class="text-center">Pages</th>
+                <th>สร้างโดย</th>
+                ${canManage ? '<th class="text-center">Actions</th>' : ''}
               </tr>
             </thead>
-            <tbody>${permRows}</tbody>
+            <tbody>${rows}</tbody>
           </table>
         </div>
-
-        <!-- Page Access -->
-        <div class="text-xs uppercase text-muted font-600" style="margin-bottom:6px;">
-          <i class="fa-solid fa-key"></i> การเข้าถึงหน้าต่างๆ
-        </div>
-        <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;max-height:420px;overflow-y:auto;">
-          <table class="rbac-table" id="rbac-page-table">
-            <thead style="position:sticky;top:0;z-index:1;background:var(--surface);">
-              <tr>
-                <th style="width:200px;">หน้า</th>
-                ${allRoles.map(r => `<th class="text-center" style="width:140px;"><span class="chip ${r.chip}" style="font-size:10px;">${r.label}</span></th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>${pageRows}</tbody>
-          </table>
-        </div>
-
-        <div style="margin-top:8px;font-size:11px;color:var(--text-muted);line-height:1.5;">
-          <i class="fa-solid fa-circle-info" style="opacity:.5;"></i>
-          <strong>Super Admin</strong> สิทธิ์สูงสุด (ล็อก) &nbsp;&bull;&nbsp;
-          <strong>Viewer</strong> เข้าได้ทุกหน้าแบบ read-only
-        </div>
-
         <div class="modal-actions" style="margin-top:12px;">
-          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-          ${canEdit ? '<button class="btn btn-primary" id="rbac-save-btn"><i class="fa-solid fa-save"></i> บันทึก</button>' : ''}
+          <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+          ${canManage ? '<button class="btn btn-primary" id="cr-create-btn"><i class="fa-solid fa-plus"></i> สร้าง Custom Role</button>' : ''}
         </div>
       </div>`
     );
 
-    // ─── Wire up interactions ───
     setTimeout(() => {
-      // Group toggle: check/uncheck all pages in group
-      document.querySelectorAll('.rbac-group-toggle').forEach(toggle => {
+      document.getElementById('cr-create-btn')?.addEventListener('click', () => {
+        self._showCustomRoleForm(null);
+      });
+      document.querySelectorAll('.cr-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => self._showCustomRoleForm(btn.dataset.id));
+      });
+      document.querySelectorAll('.cr-delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const cr = d.customRoles.find(r => r.id === btn.dataset.id);
+          if (!cr) return;
+          const ok = await App.confirm(`ต้องการลบ Custom Role "${cr.name}"?\nสมาชิกที่ใช้ Role นี้จะกลับไปใช้สิทธิ์พื้นฐาน`, { type: 'danger', title: 'ลบ Custom Role', confirmText: 'ลบ' });
+          if (!ok) return;
+          // Remove customRoleId from memberships using this role
+          d.userMemberships.forEach(mb => { if (mb.customRoleId === cr.id) mb.customRoleId = null; });
+          const idx = d.customRoles.indexOf(cr);
+          if (idx !== -1) d.customRoles.splice(idx, 1);
+          App.toast('ลบ Custom Role "' + cr.name + '" แล้ว', 'success');
+          self._showCustomRolesModal(); // re-render list
+        });
+      });
+    }, 50);
+  },
+
+  // ─── Custom Role Create/Edit Form ───
+  _showCustomRoleForm(roleId) {
+    const self = this;
+    const d = window.MockData;
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const isEdit = !!roleId;
+    const cr = isEdit ? d.customRoles.find(r => r.id === roleId) : null;
+
+    // Determine assignable target levels based on current role
+    const assignableTargets = self._getAssignableRoles();
+    if (assignableTargets.length === 0) { App.toast('ไม่มีสิทธิ์สร้าง Role', 'error'); return; }
+
+    const targetLevel = isEdit ? cr.targetLevel : assignableTargets[0];
+    const roleName = isEdit ? cr.name : '';
+    const perms = isEdit ? cr.permissions : {};
+    const selectedPages = isEdit && Array.isArray(cr.permissions.pages) ? cr.permissions.pages : [];
+
+    const _levelLabels = {
+      tenant_admin: 'Tenant Admin', subplatform_admin: 'SP Admin', subplatform_member: 'Member',
+    };
+
+    // Permission checkboxes
+    const permCheckboxes = self._permDefs.map(p => {
+      const checked = perms[p.key] ? 'checked' : '';
+      return `<label class="flex items-center gap-6" style="cursor:pointer;">
+        <input type="checkbox" class="cr-perm-cb" data-key="${p.key}" ${checked} style="width:16px;height:16px;accent-color:var(--primary);">
+        <i class="fa-solid ${p.icon} text-muted" style="width:16px;"></i>
+        <span class="text-sm">${p.label}</span>
+      </label>`;
+    }).join('');
+
+    // Page checkboxes grouped
+    const pageGroupsHtml = self._pageGroups.map(g => {
+      const allChecked = g.pages.every(p => selectedPages.indexOf(p) !== -1);
+      const pagesCbs = g.pages.map(p => {
+        const checked = selectedPages.indexOf(p) !== -1 ? 'checked' : '';
+        return `<label class="flex items-center gap-4" style="cursor:pointer;padding:2px 0;">
+          <input type="checkbox" class="cr-page-cb" data-page="${p}" ${checked} style="width:14px;height:14px;accent-color:var(--primary);">
+          <span class="text-xs">${p}</span>
+        </label>`;
+      }).join('');
+      return `<div style="margin-bottom:10px;">
+        <label class="flex items-center gap-4 mb-4" style="cursor:pointer;">
+          <input type="checkbox" class="cr-page-group" data-pages="${g.pages.join(',')}" ${allChecked ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--primary);">
+          <span class="text-xs uppercase font-700">${g.label}</span>
+        </label>
+        <div style="padding-left:20px;">${pagesCbs}</div>
+      </div>`;
+    }).join('');
+
+    App.showModal(
+      `<div class="modal" style="max-width:600px;">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title"><i class="fa-solid fa-shield-halved text-primary"></i> ${isEdit ? 'แก้ไข' : 'สร้าง'} Custom Role</div>
+
+        <div class="flex-col gap-14 mt-16">
+          <div class="form-group">
+            <label class="form-label">ชื่อ Role</label>
+            <input class="form-input" id="cr-name" value="${roleName}" placeholder="เช่น Editor, Billing Only, Viewer...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">สำหรับ Level</label>
+            <select class="form-input" id="cr-target-level" ${isEdit ? 'disabled' : ''}>
+              ${assignableTargets.map(t => `<option value="${t}" ${t === targetLevel ? 'selected' : ''}>${_levelLabels[t] || t}</option>`).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label">Permissions</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;border:1px solid var(--border);border-radius:8px;">
+              ${permCheckboxes}
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">เข้าถึงหน้า</label>
+            <div style="max-height:280px;overflow-y:auto;padding:10px;border:1px solid var(--border);border-radius:8px;">
+              ${pageGroupsHtml}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-outline" id="cr-form-back"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+          <button class="btn btn-primary" id="cr-form-save"><i class="fa-solid fa-save"></i> ${isEdit ? 'บันทึก' : 'สร้าง'}</button>
+        </div>
+      </div>`
+    );
+
+    setTimeout(() => {
+      // Group toggle
+      document.querySelectorAll('.cr-page-group').forEach(toggle => {
         toggle.addEventListener('change', () => {
-          const role = toggle.dataset.role;
           const pages = toggle.dataset.pages.split(',');
-          pages.forEach(pid => {
-            const cb = document.querySelector(`.rbac-cb[data-name="page|${role}|${pid}"]`);
-            if (cb && !cb.disabled) cb.checked = toggle.checked;
+          pages.forEach(p => {
+            const cb = document.querySelector(`.cr-page-cb[data-page="${p}"]`);
+            if (cb) cb.checked = toggle.checked;
           });
         });
       });
 
-      // Save button
-      document.getElementById('rbac-save-btn')?.addEventListener('click', () => {
-        // Collect permission checkboxes
-        document.querySelectorAll('.rbac-cb[data-name^="perm|"]').forEach(cb => {
-          const parts = cb.dataset.name.split('|'); // perm|role|permName
-          const roleKey = parts[1], permName = parts[2];
-          if (rp[roleKey] && rp[roleKey].pages !== '*') {
-            rp[roleKey][permName] = cb.checked;
-          }
+      // Back to list
+      document.getElementById('cr-form-back')?.addEventListener('click', () => {
+        self._showCustomRolesModal();
+      });
+
+      // Save
+      document.getElementById('cr-form-save')?.addEventListener('click', () => {
+        const name = document.getElementById('cr-name').value.trim();
+        const target = document.getElementById('cr-target-level').value;
+        if (!name) { document.getElementById('cr-name').classList.add('is-invalid'); return; }
+
+        // Collect permissions
+        const newPerms = {};
+        document.querySelectorAll('.cr-perm-cb').forEach(cb => {
+          newPerms[cb.dataset.key] = cb.checked;
         });
 
-        // Collect page access checkboxes
-        self._editableRoles.forEach(r => {
-          const checkedPages = [];
-          document.querySelectorAll(`.rbac-cb[data-name^="page|${r.key}|"]`).forEach(cb => {
-            if (cb.checked) {
-              checkedPages.push(cb.dataset.name.split('|')[2]);
-            }
-          });
-          // Viewer special: if all pages checked → use '*'
-          const allPageIds = self._pageGroups.flatMap(g => g.pages.map(p => p.id));
-          if (r.key === 'viewer' && checkedPages.length === allPageIds.length) {
-            rp[r.key].pages = '*';
-          } else {
-            rp[r.key].pages = checkedPages;
-          }
+        // Collect pages
+        const newPages = [];
+        document.querySelectorAll('.cr-page-cb').forEach(cb => {
+          if (cb.checked) newPages.push(cb.dataset.page);
         });
+        newPerms.pages = newPages;
 
-        App.closeModal();
-        App.toast('บันทึกสิทธิ์สำเร็จ', 'success');
-        // Re-apply sidebar filter if user is logged in
-        if (window.Auth && Auth.isAuthenticated()) {
-          Auth.filterSidebar();
+        // Determine scope
+        let scopeType = 'global';
+        let scopeId = null;
+        if (ctx) {
+          if (ctx.role === 'tenant_admin') { scopeType = 'tenant'; scopeId = ctx.tenantId; }
+          else if (ctx.role === 'subplatform_admin') { scopeType = 'subplatform'; scopeId = ctx.subPlatformId; }
         }
-        self._rerender();
+
+        if (isEdit) {
+          // Update existing
+          cr.name = name;
+          cr.permissions = newPerms;
+          App.toast('อัปเดต Custom Role "' + name + '" สำเร็จ', 'success');
+        } else {
+          // Create new
+          const newId = 'CR-' + String(d.customRoles.length + 1).padStart(3, '0');
+          d.customRoles.push({
+            id: newId, name, targetLevel: target,
+            scopeType, scopeId,
+            createdBy: window.Auth && Auth.currentUser() ? Auth.currentUser().id : null,
+            createdDate: new Date().toISOString().slice(0, 10),
+            permissions: newPerms,
+          });
+          App.toast('สร้าง Custom Role "' + name + '" สำเร็จ', 'success');
+        }
+
+        self._showCustomRolesModal(); // back to list
       });
     }, 50);
   },

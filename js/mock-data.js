@@ -246,7 +246,7 @@ window.MockData = {
   // ─── Cost Change Requests (M-BE-05 FR30-32) ───
   costChangeRequests: [
     { id: 'CCR-001', serviceCode: 'anthropic-claude-opus-4-5',  serviceName: 'Claude Opus 4.5',       currentCost: 0.0015,    newCost: 0.00125,   reason: 'Anthropic ประกาศลดราคา Claude Opus 4.5 รอบ Q2/2026', effectiveDate: '2026-04-01', status: 'Pending',  requestedBy: 'Platform Admin', requestDate: '2026-03-01', requestTime: '14:32', approvedBy: null,         modifiedDate: '2026-03-01', modifiedBy: 'admin@realfact.ai' },
-    { id: 'CCR-002', serviceCode: 'google-cloud-tts',           serviceName: 'Google Cloud TTS',      currentCost: 0.0140,    newCost: 0.0120,    reason: 'Google ปรับลดราคา Cloud TTS Standard ทั่วโลก',      effectiveDate: '2026-04-01', status: 'Approved', requestedBy: 'Platform Admin', requestDate: '2026-02-20', requestTime: '09:15', approvedBy: 'Super Admin', modifiedDate: '2026-02-25', modifiedBy: 'super@realfact.ai' },
+    { id: 'CCR-002', serviceCode: 'google-cloud-tts',           serviceName: 'Google Cloud TTS',      currentCost: 0.0140,    newCost: 0.0120,    reason: 'Google ปรับลดราคา Cloud TTS Standard ทั่วโลก',      effectiveDate: '2026-04-01', status: 'Approved', requestedBy: 'Platform Admin', requestDate: '2026-02-20', requestTime: '09:15', approvedBy: 'Owner', modifiedDate: '2026-02-25', modifiedBy: 'super@realfact.ai' },
     { id: 'CCR-003', serviceCode: 'openai-gpt-4o-mini',         serviceName: 'GPT-4o Mini',           currentCost: 0.0000054, newCost: 0.0000045, reason: 'OpenAI ลดราคา gpt-4o-mini หลัง launch o3-mini',      effectiveDate: '2026-05-01', status: 'Pending',  requestedBy: 'Platform Admin', requestDate: '2026-03-02', requestTime: '11:48', approvedBy: null,         modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
   ],
 
@@ -271,15 +271,15 @@ window.MockData = {
   avatarDefaults: {
     welcomeBonusTokens: 200,
     welcomeBonusLastUpdated: '2026-02-15',
-    welcomeBonusUpdatedBy: 'Super Admin',
+    welcomeBonusUpdatedBy: 'Owner',
     welcomeBonusHistory: [
-      { date: '2026-02-15', oldValue: 100, newValue: 200, changedBy: 'Super Admin' },
+      { date: '2026-02-15', oldValue: 100, newValue: 200, changedBy: 'Owner' },
       { date: '2025-11-01', oldValue: 0, newValue: 100, changedBy: 'Platform Admin' },
     ],
     systemDefaultPresetId: 'P-003',
     systemDefaultPresetName: 'น้องมิว — ผู้ช่วยทั่วไป',
     systemDefaultSetDate: '2025-11-01',
-    systemDefaultSetBy: 'Super Admin',
+    systemDefaultSetBy: 'Owner',
   },
 
   // ─── Collection Notices (M-BE-07 FR78) ───
@@ -710,45 +710,122 @@ window.MockData = {
     return `<span class="chip ${cls}">${status}</span>`;
   },
 
-  // ─── Role Permissions (editable RBAC config) ───
+  // ═══════════════════════════════════════════════════════════════
+  //  RBAC: Hierarchical Multi-Tenant + Custom Roles
+  // ═══════════════════════════════════════════════════════════════
+
+  // ─── Base Role Permissions (max capability per level) ───
   rolePermissions: {
     super_admin: {
-      canEdit: true, canDelete: true, canApprove: true, canManageMembers: true,
+      canEdit: true, canDelete: true, canApprove: true,
+      canManageMembers: true, canManageTenants: true, canManageSubPlatforms: true,
+      canViewBilling: true, canViewAnalytics: true,
       pages: '*',
     },
-    platform_admin: {
-      canEdit: true, canDelete: false, canApprove: false, canManageMembers: true,
+    tenant_admin: {
+      canEdit: true, canDelete: false, canApprove: true,
+      canManageMembers: true, canManageTenants: false, canManageSubPlatforms: true,
+      canViewBilling: true, canViewAnalytics: true,
       pages: [
-        'dashboard', 'hardware', 'devices', 'service-builder', 'knowledge-base',
-        'tenants', 'sub-platforms', 'plans-packages', 'plans-tokens', 'plans-bonus',
-        'avatar-dashboard', 'avatar-tenants',
-        'dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint',
-        'platform-members',
-      ],
-    },
-    finance: {
-      canEdit: true, canDelete: false, canApprove: true, canManageMembers: false,
-      pages: [
-        'dashboard',
+        'dashboard', 'tenants', 'sub-platforms',
+        'plans-packages', 'plans-tokens', 'plans-bonus',
         'billing', 'billing-verify', 'billing-credit', 'billing-overdue',
         'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests',
-        'payment-settings',
+        'payment-settings', 'platform-members',
         'analytics-revenue', 'analytics-usage', 'analytics-customers',
+        'avatar-dashboard', 'avatar-tenants', 'hardware', 'devices',
+        'service-builder', 'knowledge-base',
+        'dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint',
       ],
     },
-    viewer: {
-      canEdit: false, canDelete: false, canApprove: false, canManageMembers: false,
-      pages: '*',
+    subplatform_admin: {
+      canEdit: true, canDelete: false, canApprove: false,
+      canManageMembers: true, canManageTenants: false, canManageSubPlatforms: false,
+      canViewBilling: false, canViewAnalytics: true,
+      pages: [
+        'avatar-dashboard', 'hardware', 'devices',
+        'service-builder', 'knowledge-base',
+        'analytics-usage', 'platform-members',
+      ],
+    },
+    subplatform_member: {
+      canEdit: false, canDelete: false, canApprove: false,
+      canManageMembers: false, canManageTenants: false, canManageSubPlatforms: false,
+      canViewBilling: false, canViewAnalytics: false,
+      pages: ['avatar-dashboard', 'knowledge-base'],
     },
   },
 
-  // ─── Platform Members ───
-  platformMembers: [
-    { id: 'MEM-001', email: 'admin@realfact.ai',    password: 'admin123',    name: 'Super Admin',    initials: 'SA', role: 'super_admin',    status: 'Active', lastLogin: '2026-03-05 09:12', createdDate: '2025-12-01', invitedBy: null,                modifiedDate: '2026-03-05', modifiedBy: 'system' },
-    { id: 'MEM-002', email: 'platform@realfact.ai', password: 'platform123', name: 'Platform Admin', initials: 'PA', role: 'platform_admin', status: 'Active', lastLogin: '2026-03-04 14:30', createdDate: '2025-12-15', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-03-04', modifiedBy: 'admin@realfact.ai' },
-    { id: 'MEM-003', email: 'finance@realfact.ai',  password: 'finance123',  name: 'Finance',        initials: 'FN', role: 'finance',        status: 'Active', lastLogin: '2026-03-05 08:45', createdDate: '2026-01-10', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-01-10', modifiedBy: 'admin@realfact.ai' },
-    { id: 'MEM-004', email: 'viewer@realfact.ai',   password: 'viewer123',   name: 'Viewer',         initials: 'VW', role: 'viewer',         status: 'Active', lastLogin: '2026-03-03 16:20', createdDate: '2026-02-01', invitedBy: 'platform@realfact.ai', modifiedDate: '2026-02-01', modifiedBy: 'platform@realfact.ai' },
-    { id: 'MEM-005', email: 'new.member@realfact.ai', password: null,        name: 'New Member',     initials: 'NM', role: 'viewer',         status: 'Invited', lastLogin: null,              createdDate: '2026-03-04', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-03-04', modifiedBy: 'admin@realfact.ai' },
-    { id: 'MEM-006', email: 'suspended@realfact.ai', password: 'suspended1', name: 'Suspended User', initials: 'SU', role: 'platform_admin', status: 'Suspended', lastLogin: '2026-02-15 10:00', createdDate: '2026-01-20', invitedBy: 'admin@realfact.ai', modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+  // ─── Users (identity only, no role) ───
+  users: [
+    { id: 'USR-001', email: 'admin@realfact.ai',      password: 'admin123',    name: 'สมชาย ใจดี',     initials: 'SA', avatar: null, status: 'Active',    lastLogin: '2026-03-05 09:12', createdDate: '2025-12-01' },
+    { id: 'USR-002', email: 'somphon@realfact.ai',     password: 'tenant123',   name: 'สมพร วงศ์ดี',    initials: 'SP', avatar: null, status: 'Active',    lastLogin: '2026-03-04 14:30', createdDate: '2025-12-15' },
+    { id: 'USR-003', email: 'wichai@realfact.ai',      password: 'spadmin123',   name: 'วิชัย การเงิน',   initials: 'WC', avatar: null, status: 'Active',    lastLogin: '2026-03-05 08:45', createdDate: '2026-01-10' },
+    { id: 'USR-004', email: 'napa@realfact.ai',        password: 'member123',   name: 'นภา โรงแรม',     initials: 'NP', avatar: null, status: 'Active',    lastLogin: '2026-03-03 16:20', createdDate: '2026-02-01' },
+    { id: 'USR-005', email: 'anant@realfact.ai',       password: 'viewer123',   name: 'อนันต์ เทคโน',   initials: 'AN', avatar: null, status: 'Active',    lastLogin: '2026-03-02 11:00', createdDate: '2026-02-10' },
+    { id: 'USR-006', email: 'new.member@realfact.ai',  password: null,          name: 'New Member',      initials: 'NM', avatar: null, status: 'Invited',   lastLogin: null,               createdDate: '2026-03-04' },
+    { id: 'USR-007', email: 'suspended@realfact.ai',   password: 'suspended1',  name: 'Suspended User',  initials: 'SU', avatar: null, status: 'Suspended', lastLogin: '2026-02-15 10:00', createdDate: '2026-01-20' },
   ],
+
+  // ─── User Memberships (Role × Scope — many-to-many) ───
+  userMemberships: [
+    // ── Owner — global, no scope ──
+    { id: 'MB-001', userId: 'USR-001', role: 'super_admin',       tenantId: null,    subPlatformId: null,     customRoleId: null,     status: 'Active', invitedBy: null,      createdDate: '2025-12-01' },
+
+    // ── Tenant Admin — USR-002 manages T-001 and T-002 ──
+    { id: 'MB-002', userId: 'USR-002', role: 'tenant_admin',      tenantId: 'T-001', subPlatformId: null,     customRoleId: 'CR-001', status: 'Active', invitedBy: 'USR-001', createdDate: '2025-12-15' },
+    { id: 'MB-003', userId: 'USR-002', role: 'tenant_admin',      tenantId: 'T-002', subPlatformId: null,     customRoleId: 'CR-001', status: 'Active', invitedBy: 'USR-001', createdDate: '2026-01-10' },
+
+    // ── Sub-Platform Admin — USR-003 manages Avatar (SP-001) under T-001 ──
+    { id: 'MB-004', userId: 'USR-003', role: 'subplatform_admin', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-003', status: 'Active', invitedBy: 'USR-002', createdDate: '2026-01-20' },
+
+    // ── Sub-Platform Members — USR-004 (editor), USR-005 (viewer) under SP-001 / T-001 ──
+    { id: 'MB-005', userId: 'USR-004', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-004', status: 'Active', invitedBy: 'USR-003', createdDate: '2026-02-01' },
+    { id: 'MB-006', userId: 'USR-005', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-005', status: 'Active', invitedBy: 'USR-003', createdDate: '2026-02-10' },
+
+    // ── Invited user — pending SP member ──
+    { id: 'MB-007', userId: 'USR-006', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-005', status: 'Invited', invitedBy: 'USR-003', createdDate: '2026-03-04' },
+
+    // ── Suspended — was tenant_admin of T-003 ──
+    { id: 'MB-008', userId: 'USR-007', role: 'tenant_admin',      tenantId: 'T-003', subPlatformId: null,     customRoleId: 'CR-001', status: 'Suspended', invitedBy: 'USR-001', createdDate: '2026-01-20' },
+  ],
+
+  // ─── Custom Roles (created by higher-level admins for lower levels) ───
+  customRoles: [
+    // Owner → สร้างให้ Tenant Admin
+    { id: 'CR-001', name: 'Full Control',   targetLevel: 'tenant_admin',       scopeType: 'global',      scopeId: null,     createdBy: 'USR-001', createdDate: '2025-12-01',
+      permissions: { canEdit: true, canDelete: true, canApprove: true, canManageMembers: true, canViewBilling: true, canViewAnalytics: true,
+        pages: ['dashboard', 'tenants', 'sub-platforms', 'plans-packages', 'plans-tokens', 'plans-bonus', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-usage', 'analytics-customers', 'avatar-dashboard', 'avatar-tenants', 'hardware', 'devices', 'service-builder', 'knowledge-base', 'dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint'] } },
+    { id: 'CR-002', name: 'Billing Only',   targetLevel: 'tenant_admin',       scopeType: 'global',      scopeId: null,     createdBy: 'USR-001', createdDate: '2025-12-15',
+      permissions: { canEdit: true, canDelete: false, canApprove: true, canManageMembers: false, canViewBilling: true, canViewAnalytics: true,
+        pages: ['dashboard', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue', 'cost-pricing', 'analytics-revenue'] } },
+
+    // Tenant Admin → สร้างให้ Sub-Platform Admin (scoped to T-001)
+    { id: 'CR-003', name: 'SP Manager',     targetLevel: 'subplatform_admin',  scopeType: 'tenant',      scopeId: 'T-001', createdBy: 'USR-002', createdDate: '2026-01-15',
+      permissions: { canEdit: true, canDelete: false, canApprove: false, canManageMembers: true, canViewBilling: false, canViewAnalytics: true,
+        pages: ['avatar-dashboard', 'hardware', 'devices', 'service-builder', 'knowledge-base', 'analytics-usage', 'platform-members'] } },
+
+    // Sub-Platform Admin → สร้างให้ Sub-Platform Member (scoped to SP-001)
+    { id: 'CR-004', name: 'Editor',         targetLevel: 'subplatform_member', scopeType: 'subplatform', scopeId: 'SP-001', createdBy: 'USR-003', createdDate: '2026-02-01',
+      permissions: { canEdit: true, canDelete: false, canApprove: false, canManageMembers: false, canViewBilling: false, canViewAnalytics: false,
+        pages: ['avatar-dashboard', 'hardware', 'devices', 'knowledge-base'] } },
+    { id: 'CR-005', name: 'Viewer',         targetLevel: 'subplatform_member', scopeType: 'subplatform', scopeId: 'SP-001', createdBy: 'USR-003', createdDate: '2026-02-01',
+      permissions: { canEdit: false, canDelete: false, canApprove: false, canManageMembers: false, canViewBilling: false, canViewAnalytics: false,
+        pages: ['avatar-dashboard', 'knowledge-base'] } },
+  ],
+
+  // ─── [COMPAT] platformMembers — computed view for backward compatibility ───
+  get platformMembers() {
+    var self = this;
+    return self.users.map(function (u) {
+      var mb = self.userMemberships.find(function (m) { return m.userId === u.id; }) || {};
+      return {
+        id: u.id, email: u.email, password: u.password, name: u.name, initials: u.initials,
+        role: mb.role || 'subplatform_member', status: u.status,
+        lastLogin: u.lastLogin, createdDate: u.createdDate,
+        invitedBy: mb.invitedBy ? ((self.users.find(function (x) { return x.id === mb.invitedBy; }) || {}).email || mb.invitedBy) : null,
+        modifiedDate: u.createdDate, modifiedBy: 'system',
+      };
+    });
+  },
 };

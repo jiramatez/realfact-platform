@@ -855,12 +855,13 @@ body.light-mode .nav-item:hover { background: rgba(0,0,0,.04); }
 .login-card {
   background: var(--surface); border: 1px solid var(--border-accent);
   border-radius: 20px; padding: 36px; width: 100%; max-width: 400px;
-  position: relative; overflow: hidden;
+  position: relative; overflow: visible;
   box-shadow: 0 20px 60px rgba(0,0,0,.4);
 }
 .login-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
   background: linear-gradient(90deg, var(--primary), #ff8c5a, transparent);
+  border-radius: 20px 20px 0 0;
 }
 .login-brand {
   text-align: center; margin-bottom: 28px;
@@ -901,8 +902,46 @@ body.light-mode .nav-item:hover { background: rgba(0,0,0,.04); }
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 10px; border-radius: 8px;
   cursor: pointer; transition: background 0.15s;
+  position: relative;
 }
 .login-demo-row:hover { background: rgba(255,255,255,.04); }
+
+/* Demo Popover */
+.demo-popover {
+  position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
+  width: 300px; padding: 14px 16px; border-radius: 12px; z-index: 999;
+  background: var(--surface2); border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,.45);
+  pointer-events: none; opacity: 0; transition: opacity .18s ease, transform .18s ease;
+  transform: translateY(-50%) translateX(6px);
+}
+.login-demo-row:hover .demo-popover {
+  opacity: 1; transform: translateY(-50%) translateX(0);
+}
+.demo-popover-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.demo-popover-section { font-size: 10px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin: 8px 0 4px; }
+.demo-popover-perms { display: flex; flex-wrap: wrap; gap: 4px; }
+.demo-popover-perm {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 2px 7px; border-radius: 6px;
+  background: rgba(255,255,255,.06); color: var(--text-muted);
+}
+.demo-popover-perm.active { background: rgba(52,211,153,.12); color: #34d399; }
+.demo-popover-perm.denied { background: rgba(239,68,68,.08); color: rgba(239,68,68,.5); text-decoration: line-through; }
+.demo-popover-pages { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.demo-popover-scope { display: flex; gap: 4px; flex-wrap: wrap; }
+.demo-popover-scope .chip { font-size: 9px; }
+
+@media (max-width: 780px) {
+  .demo-popover {
+    left: 50%; top: auto; bottom: calc(100% + 10px);
+    transform: translateX(-50%) translateY(-4px);
+    width: 260px;
+  }
+  .login-demo-row:hover .demo-popover {
+    transform: translateX(-50%) translateY(0);
+  }
+}
 
 /* ─── USER PROFILE BUTTON ─── */
 .user-profile-wrap {
@@ -948,6 +987,8 @@ body.light-mode .profile-dropdown-item:hover { background: rgba(0,0,0,.04); }
 body.light-mode .profile-dropdown-danger:hover { background: rgba(239,68,68,.06); }
 
 body.light-mode .login-demo-row:hover { background: rgba(0,0,0,.04); }
+body.light-mode .demo-popover { background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,.15); }
+body.light-mode .demo-popover-perm { background: rgba(0,0,0,.05); }
 body.light-mode .user-profile-wrap:hover { background: rgba(0,0,0,.04); }
 
 /* ─── PRINT ─── */

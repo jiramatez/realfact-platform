@@ -1730,7 +1730,7 @@ window.Pages.costChangeRequests = {
         App.confirm(`อนุมัติคำขอ ${id}?\n${req.serviceName}: ${req.currentCost} -> ${req.newCost} THB\nเหตุผล: ${req.reason}`, { title: 'ยืนยันการอนุมัติ', confirmText: 'อนุมัติ', cancelText: 'ยกเลิก', type: 'success' }).then(ok => {
           if (!ok) return;
           req.status = 'Approved';
-          req.approvedBy = 'Super Admin';
+          req.approvedBy = 'Owner';
           req.modifiedDate = new Date().toISOString().split('T')[0];
           req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           const cost = d.costConfig.find(c => c.serviceCode === req.serviceCode);
@@ -1750,7 +1750,7 @@ window.Pages.costChangeRequests = {
         App.confirm(`ปฏิเสธคำขอ ${id}?\n${req.serviceName}: ${req.currentCost} -> ${req.newCost} THB`, { title: 'ยืนยันการปฏิเสธ', confirmText: 'ปฏิเสธ', cancelText: 'ยกเลิก', type: 'danger' }).then(ok => {
           if (!ok) return;
           req.status = 'Rejected';
-          req.approvedBy = 'Super Admin';
+          req.approvedBy = 'Owner';
           req.modifiedDate = new Date().toISOString().split('T')[0];
           req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           self._renderTables();
@@ -1769,7 +1769,7 @@ window.Pages.costChangeRequests = {
         App.confirm(`อนุมัติคำขอ ${id}?\n${req.target}: ${req.currentMargin}% -> ${req.newMargin}%\nเหตุผล: ${req.reason}`, { title: 'ยืนยันการอนุมัติ', confirmText: 'อนุมัติ', cancelText: 'ยกเลิก', type: 'success' }).then(ok => {
           if (!ok) return;
           req.status = 'Approved';
-          req.approvedBy = 'Super Admin';
+          req.approvedBy = 'Owner';
           req.modifiedDate = new Date().toISOString().split('T')[0];
           req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           if (req.level === 'Service Code') {
@@ -1796,7 +1796,7 @@ window.Pages.costChangeRequests = {
         App.confirm(`ปฏิเสธคำขอ ${id}?\n${req.target}: ${req.currentMargin}% -> ${req.newMargin}%`, { title: 'ยืนยันการปฏิเสธ', confirmText: 'ปฏิเสธ', cancelText: 'ยกเลิก', type: 'danger' }).then(ok => {
           if (!ok) return;
           req.status = 'Rejected';
-          req.approvedBy = 'Super Admin';
+          req.approvedBy = 'Owner';
           req.modifiedDate = new Date().toISOString().split('T')[0];
           req.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
           self._renderTables();

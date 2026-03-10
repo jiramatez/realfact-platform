@@ -65,13 +65,21 @@ window.Pages.tenants = {
   // ─── Merge platform tenants + DP tenants into unified array ───
   _mergedTenants() {
     const d = window.MockData;
-    const platform = (d.tenants || []).map(t => ({
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+
+    let platform = (d.tenants || []);
+    if (scopedTid) {
+      platform = platform.filter(t => t.id === scopedTid);
+    }
+    platform = platform.map(t => ({
       id: t.id, name: t.name, email: t.email, phone: t.phone,
       status: t.status, regDate: t.regDate, modifiedDate: t.modifiedDate,
       modifiedBy: t.modifiedBy, tokenBalance: t.tokenBalance,
       source: 'platform',
     }));
-    const dp = (d.dpTenants || []).map(t => ({
+
+    // DP tenants: only show for Owner (no scopedTid)
+    const dp = scopedTid ? [] : (d.dpTenants || []).map(t => ({
       id: t.id, name: t.name, email: t.email || '—', phone: t.phone || '—',
       status: t.status, regDate: t.subscribedDate, modifiedDate: null,
       modifiedBy: null, creditUsed: t.creditLine ? t.creditLine.usedAmount : 0,
@@ -92,7 +100,9 @@ window.Pages.tenants = {
     const d    = window.MockData;
     const s    = d.stats;
     const self = window.Pages.tenants;
-    const dpTenants = d.dpTenants || [];
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    const platformTenants = scopedTid ? (d.tenants || []).filter(t => t.id === scopedTid) : (d.tenants || []);
+    const dpTenants = scopedTid ? [] : (d.dpTenants || []);
     const merged    = self._mergedTenants();
 
     // Aggregate subscription stats
@@ -188,7 +198,7 @@ window.Pages.tenants = {
             </tr>
           </thead>
           <tbody id="tenant-table-body">
-            ${d.tenants.map(t => {
+            ${platformTenants.map(t => {
               const subs = (d.tenantSubscriptions || {})[t.id] || [];
               const rev  = self._monthlyRevenue(t.id);
               return `

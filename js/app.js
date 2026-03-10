@@ -57,14 +57,15 @@
     }
 
     const route = routes[page];
-    if (!route) { page = 'dashboard'; }
+    if (!route) { page = (window.Auth ? Auth.defaultPage() : 'dashboard'); }
     const r = routes[page];
 
     // RBAC: check page access
     if (window.Auth && !Auth.canAccessPage(page)) {
       App.toast('คุณไม่มีสิทธิ์เข้าถึงหน้านี้', 'error');
-      page = 'dashboard';
-      location.hash = 'dashboard';
+      var landing = Auth.defaultPage();
+      page = landing;
+      location.hash = landing;
       return;
     }
 
@@ -143,9 +144,16 @@
     // Close dropdown
     ctxSwitcher.classList.remove('open');
 
-    // Navigate to default page for this context
+    // Navigate to default page for this context (find first accessible page)
     if (navigateToDefault) {
-      location.hash = meta.defaultPage;
+      var targetPage = meta.defaultPage;
+      if (window.Auth && !Auth.canAccessPage(targetPage)) {
+        // Find first accessible page in this context
+        var ctxRoutes = Object.keys(routes).filter(function (k) { return routes[k].ctx === ctx; });
+        var accessible = ctxRoutes.find(function (k) { return Auth.canAccessPage(k); });
+        if (accessible) targetPage = accessible;
+      }
+      location.hash = targetPage;
     }
   }
 
@@ -177,10 +185,12 @@
   // ─── Hash Router ───
   function onHashChange() {
     const hash = location.hash.replace('#', '') || 'dashboard';
-    // Auto-switch context if navigating to a page in another context
     const route = routes[hash];
-    if (route && route.ctx !== currentCtx) {
-      applyContext(route.ctx, false);
+    // Always apply context to ensure nav groups are visible (fixes first-login)
+    if (route) {
+      applyContext(route.ctx || currentCtx, false);
+    } else {
+      applyContext(currentCtx, false);
     }
     navigate(hash);
   }
@@ -428,8 +438,13 @@
     Auth.init();
     Auth.initProfileDropdown();
     if (!Auth.isAuthenticated()) {
+      // Not logged in → show login
+      Auth.guard();
+    } else if (Auth.activeContext && !Auth.activeContext()) {
+      // Logged in but no context selected → show Hub
       Auth.guard();
     } else {
+      // Fully authenticated with context → show app
       Auth.updateProfileUI();
       Auth.filterSidebar();
       Auth.filterContextSwitcher();

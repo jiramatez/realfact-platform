@@ -9,15 +9,24 @@ window.Pages.dashboard = {
     const s = d.stats;
     const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
+    // Tenant scoping — Tenant Admin sees only their tenant data; Owner (super_admin) sees all
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+
+    // Scoped data sources
+    const invoices          = scopedTid ? d.invoices.filter(i => i.tenantId === scopedTid) : d.invoices;
+    const creditLineReqs    = scopedTid ? (d.creditLineRequests || []).filter(r => r.tenantId === scopedTid) : (d.creditLineRequests || []);
+    const refundReqs        = scopedTid ? (d.refundRequests || []).filter(r => r.tenantId === scopedTid) : (d.refundRequests || []);
+    const scopedTenants     = scopedTid ? d.tenants.filter(t => t.id === scopedTid) : d.tenants;
+
     // Plan distribution from tenants sample
     const planCounts = { Pro: 0, Starter: 0, Free: 0 };
-    d.tenants.forEach(t => { if (planCounts[t.plan] !== undefined) planCounts[t.plan]++; });
+    scopedTenants.forEach(t => { if (planCounts[t.plan] !== undefined) planCounts[t.plan]++; });
 
     // Action items
-    const overdueInvoices  = d.invoices.filter(inv => inv.status === 'Overdue');
-    const pendingVerif     = d.invoices.filter(inv => inv.status === 'Pending Verification');
-    const pendingCL        = (d.creditLineRequests || []).filter(r => r.status === 'Pending');
-    const pendingRefunds   = (d.refundRequests    || []).filter(r => r.status.includes('Pending'));
+    const overdueInvoices  = invoices.filter(inv => inv.status === 'Overdue');
+    const pendingVerif     = invoices.filter(inv => inv.status === 'Pending Verification');
+    const pendingCL        = creditLineReqs.filter(r => r.status === 'Pending');
+    const pendingRefunds   = refundReqs.filter(r => r.status.includes('Pending'));
     const totalActions     = overdueInvoices.length + pendingVerif.length + pendingCL.length + pendingRefunds.length;
 
     const activeSPs = d.subPlatforms.filter(sp => sp.status === 'Active').length;
@@ -27,11 +36,11 @@ window.Pages.dashboard = {
     const dpCreditPct = dpS.totalCreditLimit ? Math.round(dpS.totalCreditUsed / dpS.totalCreditLimit * 100) : 0;
 
     // Combined revenue (paid invoices from all sources)
-    const totalPaidRevenue = d.invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.total, 0);
+    const totalPaidRevenue = invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + i.total, 0);
 
-    // Combined tenant count
-    const totalTenantsAll = s.totalTenants + dpS.activeTenants;
-    const activeTenantsAll = s.activeTenants + dpS.activeTenants;
+    // Combined tenant count — scoped shows only the 1 tenant
+    const totalTenantsAll  = scopedTid ? 1 : s.totalTenants + dpS.activeTenants;
+    const activeTenantsAll = scopedTid ? 1 : s.activeTenants + dpS.activeTenants;
 
     return `
       <!-- Page Header -->

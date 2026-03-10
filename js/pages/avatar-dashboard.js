@@ -9,8 +9,12 @@ window.Pages.avatarDashboard = {
     const s = d.stats;
     const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
-    const activeSessions = d.sessions.filter(se => se.status === 'active');
-    const completedSessions = d.sessions.filter(se => se.status === 'completed');
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    const allSessions = scopedTid ? d.sessions.filter(se => se.tenantId === scopedTid) : d.sessions;
+    const scopedDevices = scopedTid ? d.devices.filter(dv => dv.soldTo === scopedTid) : null;
+
+    const activeSessions = allSessions.filter(se => se.status === 'active');
+    const completedSessions = allSessions.filter(se => se.status === 'completed');
 
     return `
       <!-- Page Header -->
@@ -29,7 +33,7 @@ window.Pages.avatarDashboard = {
             <span class="stat-label">อุปกรณ์ทั้งหมด</span>
             <div class="stat-icon orange"><i class="fa-solid fa-microchip"></i></div>
           </div>
-          <div class="stat-value mono">${d.formatNumber(s.totalDevices)}</div>
+          <div class="stat-value mono">${d.formatNumber(scopedDevices ? scopedDevices.length : s.totalDevices)}</div>
           <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +5 เดือนนี้</div>
         </div>
         <div class="stat-card">
@@ -37,15 +41,15 @@ window.Pages.avatarDashboard = {
             <span class="stat-label">อุปกรณ์ออนไลน์</span>
             <div class="stat-icon green"><i class="fa-solid fa-wifi"></i></div>
           </div>
-          <div class="stat-value mono">${d.formatNumber(s.activeDevices)}</div>
-          <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> ${Math.round(s.activeDevices / s.totalDevices * 100)}%</div>
+          <div class="stat-value mono">${d.formatNumber(scopedDevices ? scopedDevices.filter(dv => dv.online).length : s.activeDevices)}</div>
+          <div class="stat-change up"><i class="fa-solid fa-arrow-up"></i> ${scopedDevices ? (scopedDevices.length ? Math.round(scopedDevices.filter(dv => dv.online).length / scopedDevices.length * 100) : 0) : Math.round(s.activeDevices / s.totalDevices * 100)}%</div>
         </div>
         <div class="stat-card">
           <div class="stat-header">
             <span class="stat-label">รอเปิดใช้งาน</span>
             <div class="stat-icon red"><i class="fa-solid fa-clock"></i></div>
           </div>
-          <div class="stat-value mono">${d.formatNumber(s.pendingActivations)}</div>
+          <div class="stat-value mono">${d.formatNumber(scopedDevices ? scopedDevices.filter(dv => dv.status === 'Sold').length : s.pendingActivations)}</div>
           <div class="stat-change down">Activation Rate <span class="mono">${s.activationRate}%</span></div>
         </div>
         <div class="stat-card">
@@ -53,7 +57,7 @@ window.Pages.avatarDashboard = {
             <span class="stat-label">เซสชันวันนี้</span>
             <div class="stat-icon purple"><i class="fa-solid fa-comments"></i></div>
           </div>
-          <div class="stat-value mono">${d.formatNumber(s.sessionsToday)}</div>
+          <div class="stat-value mono">${d.formatNumber(scopedTid ? allSessions.length : s.sessionsToday)}</div>
           <div class="stat-change up">เฉลี่ย <span class="mono">${s.avgSessionMinutes}</span> นาที</div>
         </div>
       </div>
@@ -110,7 +114,7 @@ window.Pages.avatarDashboard = {
             </div>
             <div>
               <span class="text-sm text-muted">อุปกรณ์ออกไลน์</span>
-              <div class="banner-value">${d.formatNumber(s.offlineDevices)}</div>
+              <div class="banner-value">${d.formatNumber(scopedDevices ? scopedDevices.filter(dv => !dv.online).length : s.offlineDevices)}</div>
             </div>
             <div>
               <span class="text-sm text-muted">Knowledge Bases</span>
@@ -193,7 +197,8 @@ window.Pages.avatarDashboard = {
     const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
     const tab = activeTab ? activeTab.dataset.tab : 'all';
 
-    let sessions = d.sessions;
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    let sessions = scopedTid ? d.sessions.filter(se => se.tenantId === scopedTid) : d.sessions;
     if (tab === 'active') sessions = sessions.filter(se => se.status === 'active');
     else if (tab === 'completed') sessions = sessions.filter(se => se.status === 'completed');
 

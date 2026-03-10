@@ -24,8 +24,12 @@ window.Pages.billing = {
 
   render() {
     const d           = window.MockData;
-    const invoices    = d.invoices;
-    const purchaseLog = d.purchaseLog;
+    const scopedTid   = window.Auth ? Auth.scopedTenantId() : null;
+    const invoices    = scopedTid ? d.invoices.filter(i => i.tenantId === scopedTid) : d.invoices;
+    const purchaseLog = scopedTid ? d.purchaseLog.filter(p => {
+      const tenant = (d.tenants || []).find(t => t.id === scopedTid);
+      return tenant && p.tenantName === tenant.name;
+    }) : d.purchaseLog;
 
     const pendingCount      = invoices.filter(i => i.status === 'Issued' || i.status === 'Pending').length;
     const overdueCount      = invoices.filter(i => i.status === 'Overdue').length;
@@ -230,6 +234,11 @@ window.Pages.billing = {
 
   init() {
     const d = window.MockData;
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    const _scopedPL = scopedTid ? d.purchaseLog.filter(p => {
+      const tenant = (d.tenants || []).find(t => t.id === scopedTid);
+      return tenant && p.tenantName === tenant.name;
+    }) : d.purchaseLog;
 
     // Tab switching
     const tabs = document.querySelectorAll('#billing-inv-tabs .tab-item');
@@ -339,7 +348,7 @@ window.Pages.billing = {
     // Export CSV
     document.getElementById('pl-export-csv')?.addEventListener('click', () => {
       const headers = ['วันที่','Tenant','Sub-Platform','ประเภท','รายละเอียด','ช่องทาง','จำนวนเงิน','สถานะ','อ้างอิง'];
-      const csv = [headers, ...d.purchaseLog.map(p => [
+      const csv = [headers, ..._scopedPL.map(p => [
         p.date, p.tenantName, p.subPlatform, p.type, p.description, p.method, p.amount, p.status, p.ref,
       ])].map(r => r.map(v => _billingCsvCell(v)).join(',')).join('\n');
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -351,7 +360,7 @@ window.Pages.billing = {
 
     // Export PDF
     document.getElementById('pl-export-pdf')?.addEventListener('click', () => {
-      const rows = d.purchaseLog.map(p =>
+      const rows = _scopedPL.map(p =>
         `<tr><td>${p.date}</td><td>${p.tenantName}</td><td>${p.subPlatform}</td><td>${p.type}</td>
          <td>${p.description}</td><td>${p.method}</td>
          <td>${p.amount.toLocaleString('th-TH',{minimumFractionDigits:2})} THB</td>
@@ -384,9 +393,11 @@ window.Pages.billingVerify = {
   },
 
   render() {
-    const d       = window.MockData;
-    const pending = d.invoices.filter(i => i.status === 'Pending Verification');
-    const vlog    = d.verificationLog || [];
+    const d         = window.MockData;
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    const allInv    = scopedTid ? d.invoices.filter(i => i.tenantId === scopedTid) : d.invoices;
+    const pending   = allInv.filter(i => i.status === 'Pending Verification');
+    const vlog      = scopedTid ? (d.verificationLog || []).filter(v => v.tenantId === scopedTid) : (d.verificationLog || []);
 
     return `
       <div class="page-header">
@@ -468,7 +479,8 @@ window.Pages.billingVerify = {
 
   _renderVerificationLog() {
     const d = window.MockData;
-    let vlog = d.verificationLog || [];
+    const scopedTid = window.Auth ? Auth.scopedTenantId() : null;
+    let vlog = scopedTid ? (d.verificationLog || []).filter(v => v.tenantId === scopedTid) : (d.verificationLog || []);
     const search = (document.getElementById('vlog-search') || {}).value.trim().toLowerCase();
     const status = (document.getElementById('vlog-status-filter') || {}).value;
 
@@ -597,10 +609,11 @@ window.Pages.billingCredit = {
 
   render() {
     const d                  = window.MockData;
-    const creditLines        = d.creditLines        || [];
-    const creditLineRequests = d.creditLineRequests || [];
-    const refundRequests     = d.refundRequests     || [];
-    const clLog              = d.creditLineApprovalLog || [];
+    const scopedTid          = window.Auth ? Auth.scopedTenantId() : null;
+    const creditLines        = scopedTid ? (d.creditLines || []).filter(c => c.tenantId === scopedTid) : (d.creditLines || []);
+    const creditLineRequests = scopedTid ? (d.creditLineRequests || []).filter(c => c.tenantId === scopedTid) : (d.creditLineRequests || []);
+    const refundRequests     = scopedTid ? (d.refundRequests || []).filter(r => r.tenantId === scopedTid) : (d.refundRequests || []);
+    const clLog              = scopedTid ? (d.creditLineApprovalLog || []).filter(l => l.tenantId === scopedTid) : (d.creditLineApprovalLog || []);
     const pendingRefunds     = refundRequests.filter(r => r.status !== 'Approved').length;
 
     // Unique tenant lists for filters
@@ -768,8 +781,8 @@ window.Pages.billingCredit = {
                       <td>${d.statusChip(r.status)}</td>
                       <td>
                         <div class="flex gap-6 items-center">
-                          <span class="chip ${r.superAdminApproved ? 'chip-green' : 'chip-gray'}" title="Super Admin">
-                            <i class="fa-solid fa-shield-halved"></i> ${r.superAdminApproved ? '✓' : '✗'}
+                          <span class="chip ${r.superAdminApproved ? 'chip-green' : 'chip-gray'}" title="Owner">
+                            <i class="fa-solid fa-crown"></i> ${r.superAdminApproved ? '✓' : '✗'}
                           </span>
                           <span class="chip ${r.financeApproved ? 'chip-green' : 'chip-gray'}" title="Finance">
                             <i class="fa-solid fa-coins"></i> ${r.financeApproved ? '✓' : '✗'}
@@ -1047,14 +1060,14 @@ window.Pages.billingCredit = {
             <div class="card p-16 mb-16">
               <div class="text-sm font-600 mb-10">สถานะ Dual Approval</div>
               <div class="flex gap-12">
-                <span class="chip ${ref.superAdminApproved ? 'chip-green' : 'chip-gray'}"><i class="fa-solid fa-shield-halved"></i> Super Admin ${ref.superAdminApproved ? '✓' : '✗'}</span>
+                <span class="chip ${ref.superAdminApproved ? 'chip-green' : 'chip-gray'}"><i class="fa-solid fa-crown"></i> Owner ${ref.superAdminApproved ? '✓' : '✗'}</span>
                 <span class="chip ${ref.financeApproved ? 'chip-green' : 'chip-gray'}"><i class="fa-solid fa-coins"></i> Finance ${ref.financeApproved ? '✓' : '✗'}</span>
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">อนุมัติในฐานะ</label>
               <select id="refund-role" class="form-input">
-                ${!ref.superAdminApproved ? '<option value="superAdmin">Super Admin</option>' : ''}
+                ${!ref.superAdminApproved ? '<option value="superAdmin">Owner</option>' : ''}
                 ${!ref.financeApproved    ? '<option value="finance">Finance</option>'         : ''}
               </select>
             </div>
@@ -1190,8 +1203,9 @@ window.Pages.billingOverdue = {
 
   render() {
     const d                 = window.MockData;
-    const agingReport       = d.agingReport       || [];
-    const collectionNotices = d.collectionNotices || [];
+    const scopedTid         = window.Auth ? Auth.scopedTenantId() : null;
+    const agingReport       = scopedTid ? (d.agingReport || []).filter(r => r.tenantId === scopedTid) : (d.agingReport || []);
+    const collectionNotices = scopedTid ? (d.collectionNotices || []).filter(n => n.tenantId === scopedTid) : (d.collectionNotices || []);
 
     return `
       <div class="page-header">
