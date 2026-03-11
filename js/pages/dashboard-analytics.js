@@ -52,6 +52,88 @@
     App.toast('Downloaded: ' + fn, 'success');
   }
 
+  /* ── Safeguard Alerts helper ─────────────────────────────────── */
+  function _renderAlerts() {
+    var d = window.MockData;
+    if (!d || !d.safeguardAlerts || !d.safeguardAlerts.length) return '';
+    var active = d.safeguardAlerts.filter(function(a) { return a.status === 'active'; });
+    if (!active.length) return '';
+
+    var severityStyles = {
+      critical: 'border-left:4px solid var(--error);background:rgba(239,68,68,0.08);',
+      warning:  'border-left:4px solid var(--warning,#f59e0b);background:rgba(245,158,11,0.08);',
+      info:     'border-left:4px solid var(--primary);background:rgba(59,130,246,0.08);',
+    };
+    var severityBtnStyles = {
+      critical: 'color:var(--error);border-color:var(--error);',
+      warning:  'color:var(--warning,#f59e0b);border-color:var(--warning,#f59e0b);',
+      info:     'color:var(--primary);border-color:var(--primary);',
+    };
+
+    var cards = active.map(function(a) {
+      var style = severityStyles[a.severity] || severityStyles.info;
+      var btnStyle = severityBtnStyles[a.severity] || severityBtnStyles.info;
+      return '<div class="alert-card" data-alert-id="' + a.id + '" style="' + style +
+        'display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;margin-bottom:8px;">' +
+        '<i class="fa-solid ' + (a.icon || 'fa-circle-info') + '" style="font-size:18px;flex-shrink:0;opacity:0.85;"></i>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="font-600" style="font-size:14px;">' + a.title + '</div>' +
+          '<div class="text-sm text-muted" style="margin-top:2px;">' + a.message + '</div>' +
+        '</div>' +
+        (a.action ? '<button class="btn btn-sm btn-outline alert-action-btn" data-route="' + a.action.route + '" style="flex-shrink:0;' + btnStyle + '">' + a.action.label + '</button>' : '') +
+        '<button class="alert-dismiss-btn" data-alert-id="' + a.id + '" style="background:none;border:none;cursor:pointer;padding:4px 6px;opacity:0.5;font-size:14px;" title="ปิด">' +
+          '<i class="fa-solid fa-xmark"></i>' +
+        '</button>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="safeguard-alerts mb-16" id="safeguard-alerts-container">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<i class="fa-solid fa-shield-halved" style="color:var(--error);"></i>' +
+        '<span class="font-700" style="font-size:14px;">Safeguard Alerts</span>' +
+        '<span class="text-muted text-xs">(' + active.length + ')</span>' +
+      '</div>' +
+      cards +
+    '</div>';
+  }
+
+  function _bindAlerts() {
+    var container = document.getElementById('safeguard-alerts-container');
+    if (!container) return;
+
+    // Dismiss buttons
+    container.querySelectorAll('.alert-dismiss-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var card = btn.closest('.alert-card');
+        if (card) {
+          card.style.transition = 'opacity 0.3s, max-height 0.3s';
+          card.style.opacity = '0';
+          card.style.maxHeight = card.offsetHeight + 'px';
+          setTimeout(function() {
+            card.style.maxHeight = '0';
+            card.style.padding = '0';
+            card.style.margin = '0';
+            card.style.overflow = 'hidden';
+          }, 50);
+          setTimeout(function() {
+            card.remove();
+            // Hide entire section if no more cards
+            var remaining = container.querySelectorAll('.alert-card');
+            if (!remaining.length) container.remove();
+          }, 350);
+        }
+      });
+    });
+
+    // Action buttons — navigate
+    container.querySelectorAll('.alert-action-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var route = btn.dataset.route;
+        if (route) App.navigate(route);
+      });
+    });
+  }
+
   /* ═══════════════════════════════════════════════════════════════
      F-A10.1  Revenue & Billing  (MT-BE10 cross-sub-platform view)
      ═══════════════════════════════════════════════════════════════ */
@@ -59,7 +141,8 @@
     _ch: [],
 
     render() {
-      return _hdr('REVENUE &amp; BILLING', 'Cross-sub-platform revenue overview · MT-BE10', 'rev') +
+      return _renderAlerts() +
+      _hdr('REVENUE &amp; BILLING', 'Cross-sub-platform revenue overview · MT-BE10', 'rev') +
 
       // KPI row
       '<div class="grid-4 mb-20">' +
@@ -107,6 +190,7 @@
     init() {
       var d = window.MockData, self = this;
       _kill(this._ch);
+      _bindAlerts();
       _set('rev-ts', 'Updated: ' + _now());
 
       // KPI values

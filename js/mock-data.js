@@ -80,15 +80,16 @@ window.MockData = {
   ],
 
   // ─── Sessions (Recent) ───
+  // tokens = totalSell (THB) จาก settlement — ไม่ใช่ duration อีกต่อไป
   sessions: [
-    { id: 'S-001', subPlatform: 'avatar', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 09:15', end: '2026-03-02 09:28', duration: 13, tokens: 13, status: 'Completed' },
-    { id: 'S-002', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-002', presetName: 'คุณสมชาย', start: '2026-03-02 09:30', end: '2026-03-02 09:35', duration: 5, tokens: 5, status: 'Completed' },
+    { id: 'S-001', subPlatform: 'avatar', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 09:15', end: '2026-03-02 09:28', duration: 13, tokens: 18.881, status: 'Completed' },
+    { id: 'S-002', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-002', presetName: 'คุณสมชาย', start: '2026-03-02 09:30', end: '2026-03-02 09:35', duration: 5, tokens: 7.375, status: 'Completed' },
     { id: 'S-003', subPlatform: 'avatar', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:00', end: null, duration: null, tokens: null, status: 'Active' },
-    { id: 'S-004', subPlatform: 'avatar', deviceSn: 'RF-2025-00008', deviceName: 'ตู้สาขาเชียงใหม่', tenantId: 'T-005', tenantName: 'Northern Star Hotel', presetId: 'P-005', presetName: 'คุณณัฐ', start: '2026-03-02 08:45', end: '2026-03-02 09:12', duration: 27, tokens: 27, status: 'Completed' },
+    { id: 'S-004', subPlatform: 'avatar', deviceSn: 'RF-2025-00008', deviceName: 'ตู้สาขาเชียงใหม่', tenantId: 'T-005', tenantName: 'Northern Star Hotel', presetId: 'P-005', presetName: 'คุณณัฐ', start: '2026-03-02 08:45', end: '2026-03-02 09:12', duration: 27, tokens: 40.219, status: 'Completed' },
     { id: 'S-005', subPlatform: 'avatar', deviceSn: 'RF-2025-00009', deviceName: 'ตู้ Reception Tower B', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:15', end: null, duration: null, tokens: null, status: 'Active' },
     { id: 'S-006', subPlatform: 'avatar', deviceSn: 'RF-2024-00001', deviceName: 'ตู้ล็อบบี้ ชั้น 1', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-001', presetName: 'คุณพิมพ์ใจ', start: '2026-03-02 10:30', end: null, duration: null, tokens: null, status: 'Active' },
-    { id: 'S-007', subPlatform: 'avatar', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-004', presetName: 'Dr.มาย', start: '2026-03-01 14:20', end: '2026-03-01 14:35', duration: 15, tokens: 15, status: 'Completed' },
-    { id: 'S-008', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-003', presetName: 'น้องมิว', start: '2026-03-01 16:00', end: '2026-03-01 16:22', duration: 22, tokens: 22, status: 'Completed' },
+    { id: 'S-007', subPlatform: 'avatar', deviceSn: 'RF-2024-00004', deviceName: 'ตู้หน้าสำนักงาน', tenantId: 'T-003', tenantName: 'Thai Finance Group', presetId: 'P-004', presetName: 'Dr.มาย', start: '2026-03-01 14:20', end: '2026-03-01 14:35', duration: 15, tokens: 22.369, status: 'Completed' },
+    { id: 'S-008', subPlatform: 'avatar', deviceSn: 'RF-2024-00002', deviceName: 'ตู้ต้อนรับ สาขาสยาม', tenantId: 'T-001', tenantName: 'ABC Corporation', presetId: 'P-003', presetName: 'น้องมิว', start: '2026-03-01 16:00', end: '2026-03-01 16:22', duration: 22, tokens: 32.771, status: 'Completed' },
   ],
 
   // ─── Assign Log ───
@@ -106,6 +107,11 @@ window.MockData = {
     { id: 'INV-202603-00004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Pending Verification', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: 'Bank Transfer' },
     { id: 'INV-202602-00012', tenantId: 'T-001', tenantName: 'ABC Corporation',    subPlatform: 'Avatar', type: 'Token Top-up', description: 'Token Top-up (5,000 tokens)', amount: 2500, vat: 175.00, total: 2675.00, status: 'Paid',                 issuedDate: '2026-02-14', dueDate: '2026-02-28', paidDate: '2026-02-14', method: 'Card (2C2P)' },
     { id: 'INV-202602-00008', tenantId: 'T-008', tenantName: 'Sunrise Education',  subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Overdue',              issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: null,         method: null },
+    // ── AI Booking — Subscription Invoices ──
+    { id: 'INV-BK-202603-001', tenantId: 'T-001', tenantName: 'ABC Corporation',     subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - March 2026', amount: 990,  vat: 69.30,  total: 1059.30, status: 'Paid',    issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-02', method: 'Card (2C2P)' },
+    { id: 'INV-BK-202602-001', tenantId: 'T-001', tenantName: 'ABC Corporation',     subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Paid',    issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: '2026-02-03', method: 'Card (2C2P)' },
+    { id: 'INV-BK-202603-002', tenantId: 'T-006', tenantName: 'Phuket Resort & Spa', subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - March 2026', amount: 990,  vat: 69.30,  total: 1059.30, status: 'Issued',  issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: null },
+    { id: 'INV-BK-202602-002', tenantId: 'T-006', tenantName: 'Phuket Resort & Spa', subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Paid',    issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: '2026-02-05', method: 'Bank Transfer' },
     // ── Developer Portal — Credit Line Invoices ──
     { id: 'INV-DEV-202602-001', tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Feb 2026',  amount: 38500, vat: 2695.00, total: 41195.00, status: 'Paid',    issuedDate: '2026-02-28', dueDate: '2026-03-30', paidDate: '2026-03-05', method: 'Bank Transfer' },
     { id: 'INV-DEV-202601-001', tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Jan 2026',  amount: 31200, vat: 2184.00, total: 33384.00, status: 'Paid',    issuedDate: '2026-01-31', dueDate: '2026-03-02', paidDate: '2026-02-20', method: 'Bank Transfer' },
@@ -123,6 +129,10 @@ window.MockData = {
     { date: '2026-03-01', tenantName: 'XYZ Trading', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - Monthly', method: '-', amount: 1059.30, status: 'Pending', ref: 'RF-2603-0003' },
     { date: '2026-02-14', tenantName: 'ABC Corporation', subPlatform: 'Avatar', type: 'Token Top-up', description: 'Token Top-up (5,000 tokens)', method: 'Card (2C2P)', amount: 2675.00, status: 'Completed', ref: 'RF-2602-0012' },
     { date: '2026-02-01', tenantName: 'Sunrise Education', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - Monthly', method: '-', amount: 1059.30, status: 'Overdue', ref: 'RF-2602-0008' },
+    // ── AI Booking — Subscription Purchase Log ──
+    { date: '2026-03-02', tenantName: 'ABC Corporation',     subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Monthly', method: 'Card (2C2P)',   amount: 1059.30, status: 'Completed', ref: 'RF-BK-2603-0001' },
+    { date: '2026-02-03', tenantName: 'ABC Corporation',     subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Monthly', method: 'Card (2C2P)',   amount: 1059.30, status: 'Completed', ref: 'RF-BK-2602-0001' },
+    { date: '2026-02-05', tenantName: 'Phuket Resort & Spa', subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Monthly', method: 'Bank Transfer', amount: 1059.30, status: 'Completed', ref: 'RF-BK-2602-0002' },
     // ── Developer Portal — Credit Line Purchase Log ──
     { date: '2026-03-05', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Feb 2026',  method: 'Bank Transfer', amount: 41195.00, status: 'Completed', ref: 'RF-DEV-2603-0001' },
     { date: '2026-02-20', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Jan 2026',  method: 'Bank Transfer', amount: 33384.00, status: 'Completed', ref: 'RF-DEV-2602-0001' },
@@ -166,6 +176,81 @@ window.MockData = {
     { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 5500 },
     { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2200 },
     { sessionId: 'S-008', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 44 },
+  ],
+
+  // ─── Settlements (auto-generated per completed session) ───
+  // breakdown: cost + margin → sell price per service line
+  settlements: [
+    // ── S-001: 13 min, T-001 ABC Corporation ──
+    {
+      settlementId: 'STL-20260302-001', sessionId: 'S-001', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
+      breakdown: [
+        { serviceCode: 'avatar-session',              type: 'primary', quantity: 13,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 6.500,  totalSell: 13.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3250, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.975,  totalSell: 1.573 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1100, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 1.650,  totalSell: 2.661 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 26,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.988, totalSell: 1.647 },
+      ],
+      summary: { totalCost: 10.113, totalSell: 18.881, profit: 8.768, blendedMargin: 46.4, tokensToDeduct: 18.881 },
+      createdAt: '2026-03-02T09:28:00Z',
+    },
+    // ── S-002: 5 min, T-001 ABC Corporation ──
+    {
+      settlementId: 'STL-20260302-002', sessionId: 'S-002', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
+      breakdown: [
+        { serviceCode: 'avatar-session',              type: 'primary', quantity: 5,    costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 2.500,  totalSell: 5.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 1200, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.360,  totalSell: 0.581 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 480,  costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 0.720,  totalSell: 1.161 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 10,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.380, totalSell: 0.633 },
+      ],
+      summary: { totalCost: 3.960, totalSell: 7.375, profit: 3.415, blendedMargin: 46.3, tokensToDeduct: 7.375 },
+      createdAt: '2026-03-02T09:35:00Z',
+    },
+    // ── S-004: 27 min, T-005 Northern Star Hotel ──
+    {
+      settlementId: 'STL-20260302-003', sessionId: 'S-004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'avatar', date: '2026-03-02',
+      breakdown: [
+        { serviceCode: 'avatar-session',              type: 'primary', quantity: 27,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 13.500, totalSell: 27.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 6750, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 2.025,  totalSell: 3.267 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2700, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 4.050,  totalSell: 6.531 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 54,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 2.052,  totalSell: 3.420 },
+        { serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 1500, costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+      ],
+      summary: { totalCost: 21.628, totalSell: 40.219, profit: 18.591, blendedMargin: 46.2, tokensToDeduct: 40.219 },
+      createdAt: '2026-03-02T09:12:00Z',
+    },
+    // ── S-007: 15 min, T-003 Thai Finance Group ──
+    {
+      settlementId: 'STL-20260301-001', sessionId: 'S-007', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'avatar', date: '2026-03-01',
+      breakdown: [
+        { serviceCode: 'avatar-session',              type: 'primary', quantity: 15,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 7.500,  totalSell: 15.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3800, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 1.140,  totalSell: 1.839 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1500, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 2.250,  totalSell: 3.629 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 30,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 1.140,  totalSell: 1.900 },
+        { serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 800,  costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+      ],
+      summary: { totalCost: 12.031, totalSell: 22.369, profit: 10.338, blendedMargin: 46.2, tokensToDeduct: 22.369 },
+      createdAt: '2026-03-01T14:35:00Z',
+    },
+    // ── S-008: 22 min, T-001 ABC Corporation ──
+    {
+      settlementId: 'STL-20260301-002', sessionId: 'S-008', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-01',
+      breakdown: [
+        { serviceCode: 'avatar-session',              type: 'primary', quantity: 22,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000, totalCost: 11.000, totalSell: 22.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 5500, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484, totalCost: 1.650,  totalSell: 2.662 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2200, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419, totalCost: 3.300,  totalSell: 5.322 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 44,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 1.672,  totalSell: 2.787 },
+      ],
+      summary: { totalCost: 17.622, totalSell: 32.771, profit: 15.149, blendedMargin: 46.2, tokensToDeduct: 32.771 },
+      createdAt: '2026-03-01T16:22:00Z',
+    },
+  ],
+
+  // ─── Safeguard Alerts (ระบบแจ้งเตือนป้องกันขาดทุน) ───
+  safeguardAlerts: [
+    { id: 'ALT-001', severity: 'critical', status: 'active', icon: 'fa-triangle-exclamation', type: 'package_below_cost', title: 'Token Package ราคาต่ำกว่าต้นทุน', message: 'Package TP-004 (Enterprise 50,000 tkn @ 0.60/tkn) ต่ำกว่า avgCost — อาจขาดทุนทุก Token', action: { label: 'ดู Package Guard', route: 'cost-pricing', section: 'package-guard' }, createdAt: '2026-03-10T08:00:00Z' },
+    { id: 'ALT-002', severity: 'warning', status: 'active', icon: 'fa-arrow-trend-up', type: 'cost_increase_margin_drop', title: 'ต้นทุน Claude Opus 4.5 อาจเพิ่ม → margin ลด', message: 'CCR-001 pending — หากอนุมัติ margin อาจลดลงสำหรับ Snapshot ที่ใช้ service นี้', action: { label: 'ดู Margin Config', route: 'cost-pricing', section: 'margin-config' }, createdAt: '2026-03-10T08:00:00Z' },
+    { id: 'ALT-003', severity: 'critical', status: 'active', icon: 'fa-lock', type: 'price_lock_loss', title: 'PriceLock ทำให้ขาดทุน', message: 'Thai Finance Group — PriceLock ล็อคราคาเดิม แต่ต้นทุนเพิ่ม → ขาดทุน 12.5% อีก 134 วัน', action: { label: 'ดู PriceLock', route: 'cost-pricing', section: 'pricelocks' }, createdAt: '2026-03-10T08:00:00Z' },
+    { id: 'ALT-004', severity: 'info', status: 'active', icon: 'fa-magnifying-glass-dollar', type: 'retroactive_under_charge', title: 'Session ย้อนหลังหัก Token น้อยกว่าที่ควร', message: 'พบ 2 sessions หักน้อยไป 9.238 Token จากต้นทุนที่เปลี่ยน', action: { label: 'ดู Settlement Log', route: 'cost-pricing', section: 'settlement-log' }, createdAt: '2026-03-10T08:00:00Z' },
   ],
 
   // ─── Sub-Platforms ───
@@ -347,36 +432,41 @@ window.MockData = {
   },
 
   // ─── Token Activities (per tenant, recent transactions) ───
+  // amount = sell-price-based deduction (Token = THB sell price)
   tokenActivities: {
     'T-001': [
-      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',    amount:  5000, balance: 15420 },
-      { date: '2026-02-28', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session (1,200 min)',         amount: -1200, balance: 10420 },
-      { date: '2026-02-14', type: 'purchase',           typeClass: 'chip-green',  description: 'Token Top-up (5,000 tokens)',        amount:  5000, balance: 11620 },
+      { date: '2026-03-02', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session S-002 (5 นาที)',       amount: -7.375,   balance: 15420.000 },
+      { date: '2026-03-02', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session S-001 (13 นาที)',      amount: -18.881,  balance: 15427.375 },
+      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',     amount:  5000,    balance: 15446.256 },
+      { date: '2026-03-01', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session S-008 (22 นาที)',      amount: -32.771,  balance: 10446.256 },
+      { date: '2026-02-14', type: 'purchase',           typeClass: 'chip-green',  description: 'Token Top-up (5,000 tokens)',         amount:  5000,    balance: 10479.027 },
     ],
     'T-002': [
       { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Starter - Monthly Allocation', amount:  1000, balance: 3250 },
-      { date: '2026-02-28', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session (300 min)',            amount:  -300, balance: 2250 },
+      { date: '2026-02-28', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session (300 min)',             amount:  -300, balance: 2250 },
     ],
     'T-003': [
-      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',    amount:  5000, balance: 42800 },
-      { date: '2026-02-27', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session (2,400 min)',         amount: -2400, balance: 37800 },
-      { date: '2026-02-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',    amount:  5000, balance: 40200 },
+      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',     amount:  5000,    balance: 42800.000 },
+      { date: '2026-03-01', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session S-007 (15 นาที)',      amount: -22.369,  balance: 37800.000 },
+      { date: '2026-02-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',     amount:  5000,    balance: 37822.369 },
     ],
     'T-004': [
-      { date: '2026-02-01', type: 'welcome bonus',      typeClass: 'chip-yellow', description: 'Welcome Bonus Tokens (Avatar)',      amount:  1000, balance: 1000 },
+      { date: '2026-02-01', type: 'welcome bonus',      typeClass: 'chip-yellow', description: 'Welcome Bonus Tokens (Avatar)',       amount:  1000, balance: 1000 },
     ],
     'T-005': [
-      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',    amount:  5000, balance: 8900 },
-      { date: '2026-02-28', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session (800 min)',           amount:  -800, balance: 3900 },
+      { date: '2026-03-02', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Session S-004 (27 นาที)',      amount: -40.219,  balance: 8900.000 },
+      { date: '2026-03-01', type: 'subscription alloc', typeClass: 'chip-blue',   description: 'Avatar Pro - Monthly Allocation',     amount:  5000,    balance: 8940.219 },
+      { date: '2026-02-28', type: 'usage',              typeClass: 'chip-orange', description: 'Avatar Sessions (Feb)',                amount: -860.781, balance: 3940.219 },
     ],
   },
 
   // ─── Token Packages (purchasable top-up bundles) ───
+  // 1 Token = 1 THB (selling price) — ราคา Package สะท้อนส่วนลด volume
   tokenPackages: [
-    { id: 'TP-001', name: '1,000 Tokens',  tokens: 1000,  price: 500,   pricePerToken: 0.50, bonus: 0,    subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-002', name: '5,000 Tokens',  tokens: 5000,  price: 2000,  pricePerToken: 0.40, bonus: 250,  subPlatform: 'avatar', popular: true,  status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-003', name: '10,000 Tokens', tokens: 10000, price: 3500,  pricePerToken: 0.35, bonus: 500,  subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-004', name: '50,000 Tokens', tokens: 50000, price: 15000, pricePerToken: 0.30, bonus: 2500, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-001', name: 'Starter',    tokens: 1000,  price: 1000,  pricePerToken: 1.00, discount: 0,  bonus: 0,    subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-002', name: 'Popular',    tokens: 5000,  price: 4000,  pricePerToken: 0.80, discount: 20, bonus: 500,  subPlatform: 'avatar', popular: true,  status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-003', name: 'Value',      tokens: 10000, price: 7000,  pricePerToken: 0.70, discount: 30, bonus: 1000, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-004', name: 'Enterprise', tokens: 50000, price: 30000, pricePerToken: 0.60, discount: 40, bonus: 5000, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Bank Accounts (Payment Global Settings) ───

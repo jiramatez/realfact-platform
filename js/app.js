@@ -444,6 +444,12 @@
       // Logged in but no context selected → show Hub
       Auth.guard();
     } else {
+      // Zone guard: Tenant Admin should be on Hub, not Admin BO
+      var _ctx = Auth.activeContext();
+      if (_ctx && _ctx.role === 'tenant_admin') {
+        window.location.href = 'hub.html';
+        return;
+      }
       // Fully authenticated with context → show app
       Auth.updateProfileUI();
       Auth.filterSidebar();

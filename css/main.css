@@ -1013,3 +1013,28 @@ body.light-mode .user-profile-wrap:hover { background: rgba(0,0,0,.04); }
   .modal { padding: 20px; border-radius: 14px; }
   .modal-overlay { padding: 12px; }
 }
+
+/* ═══ Hub — Tenant Switcher (top-left) ═══ */
+.hub-tenant-switcher {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px; border-radius: 10px;
+  background: transparent; border: 1px solid transparent;
+  cursor: default; transition: all .15s;
+  color: var(--text);
+}
+.hub-tenant-switcher[data-switchable="true"] {
+  cursor: pointer; border-color: var(--border);
+}
+.hub-tenant-switcher[data-switchable="true"]:hover {
+  background: var(--surface2); border-color: var(--primary);
+}
+.hub-tenant-switcher-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: var(--primary); display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.hub-tenant-switcher-icon i { color: #fff; font-size: 14px; }
+.hub-tenant-switcher-text { text-align: left; }
+.hub-tenant-switcher-name { display: block; font-weight: 600; font-size: 13px; line-height: 1.2; }
+.hub-tenant-switcher-sub { display: block; font-size: 11px; color: var(--text-muted); line-height: 1.2; }
+.hub-tenant-switcher-arrow { font-size: 10px; color: var(--text-muted); margin-left: 2px; transition: transform .15s; }

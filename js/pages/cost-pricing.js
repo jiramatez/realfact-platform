@@ -102,6 +102,26 @@ window.Pages.costPricing = {
     const activeSnapshots = snapshots.filter(s => s.isActive).length;
     const activeLocks = priceLocks.filter(pl => pl.status === 'Active').length;
 
+    // ─── Safeguard Alerts data ───
+    const alerts = d.safeguardAlerts || [];
+    const severityStyles = {
+      critical: { border: 'var(--error)', bg: 'rgba(239,68,68,0.08)', icon: 'var(--error)' },
+      warning:  { border: '#f59e0b',      bg: 'rgba(245,158,11,0.08)', icon: '#f59e0b' },
+      info:     { border: 'var(--primary)', bg: 'rgba(59,130,246,0.08)', icon: 'var(--primary)' },
+    };
+
+    // ─── Settlement summary for Package Price Guard ───
+    const settlements = d.settlements || [];
+    const grandTotalCost = settlements.reduce((s, stl) => s + stl.summary.totalCost, 0);
+    const grandTotalTokens = settlements.reduce((s, stl) => s + stl.summary.tokensToDeduct, 0);
+    const avgCostPerToken = grandTotalTokens > 0 ? grandTotalCost / grandTotalTokens : 0;
+    const packages = d.tokenPackages || [];
+
+    // ─── Profit Dashboard from settlements ───
+    const grandTotalSell = settlements.reduce((s, stl) => s + stl.summary.totalSell, 0);
+    const grandProfit = grandTotalSell - grandTotalCost;
+    const grandBlendedMargin = grandTotalSell > 0 ? ((1 - grandTotalCost / grandTotalSell) * 100) : 0;
+
     return `
       <!-- Page Header -->
       <div class="page-header">
@@ -110,6 +130,31 @@ window.Pages.costPricing = {
           <button class="btn btn-outline" id="btn-export-pricing"><i class="fa-solid fa-file-export"></i> ส่งออกข้อมูล</button>
         </div>
       </div>
+
+      <!-- Safeguard Alerts Section -->
+      ${alerts.length ? `
+        <div class="section-title mb-12"><i class="fa-solid fa-bell"></i> การแจ้งเตือน</div>
+        <div class="flex-col gap-12 mb-24">
+          ${alerts.map(a => {
+            const sty = severityStyles[a.severity] || severityStyles.info;
+            return `
+              <div class="card p-16" style="border-left:4px solid ${sty.border};background:${sty.bg};">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-12">
+                    <i class="fa-solid ${a.icon}" style="color:${sty.icon};font-size:18px;"></i>
+                    <div>
+                      <div class="font-600">${a.title}</div>
+                      <div class="text-sm text-muted mt-2">${a.message}</div>
+                    </div>
+                  </div>
+                  <button class="btn btn-sm btn-outline alert-action-btn" data-section="${a.action.section}">
+                    ${a.action.label} <i class="fa-solid fa-arrow-right" style="margin-left:4px;font-size:10px;"></i>
+                  </button>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
 
       <!-- Stats Row -->
       <div class="grid-4 mb-20">
@@ -147,7 +192,183 @@ window.Pages.costPricing = {
         </div>
       </div>
 
+      <!-- Profit Dashboard (from Settlements) -->
+      <div class="divider mb-20"></div>
+      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไร (Token Economy)</div>
+      <div class="text-xs text-muted mb-16">คำนวณจาก Settlement records | Token ที่หัก = Sell Price (THB) — ไม่มี conversion</div>
+
+      <div class="grid-3 gap-16 mb-20">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Sessions ทั้งหมด</span>
+            <div class="stat-icon blue"><i class="fa-solid fa-list-check"></i></div>
+          </div>
+          <div class="stat-value mono">${settlements.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Tokens หัก (= Sell THB)</span>
+            <div class="stat-icon purple"><i class="fa-solid fa-coins"></i></div>
+          </div>
+          <div class="stat-value mono">${d.formatNumber(parseFloat(grandTotalTokens.toFixed(3)))}</div>
+          <div class="stat-change up">= ${grandTotalSell.toFixed(2)} THB</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">ต้นทุนรวม</span>
+            <div class="stat-icon yellow"><i class="fa-solid fa-receipt"></i></div>
+          </div>
+          <div class="stat-value mono" style="color:var(--error);">${grandTotalCost.toFixed(2)}</div>
+          <div class="stat-change up">THB</div>
+        </div>
+      </div>
+      <div class="grid-3 gap-16 mb-20">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">ราคาขายรวม / Tokens หัก</span>
+            <div class="stat-icon green"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+          </div>
+          <div class="stat-value mono" style="color:var(--primary);">${grandTotalSell.toFixed(2)}</div>
+          <div class="stat-change up">THB</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">กำไรรวม</span>
+            <div class="stat-icon green"><i class="fa-solid fa-chart-line"></i></div>
+          </div>
+          <div class="stat-value mono" style="color:var(--success);">${grandProfit.toFixed(2)}</div>
+          <div class="stat-change up">THB</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">Blended Margin</span>
+            <div class="stat-icon green"><i class="fa-solid fa-percent"></i></div>
+          </div>
+          <div class="stat-value mono" style="color:var(--success);">${grandBlendedMargin.toFixed(1)}%</div>
+        </div>
+      </div>
+
+      <!-- Per-platform breakdown table -->
+      <div class="table-wrap mb-24">
+        <table>
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Sessions</th>
+              <th>Tokens หัก</th>
+              <th>ต้นทุนรวม (THB)</th>
+              <th>ราคาขายรวม (THB)</th>
+              <th>กำไร (THB)</th>
+              <th>Blended Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${d.subPlatforms.map(sp => {
+              const spSettlements = settlements.filter(stl => stl.subPlatform === sp.code);
+              if (!spSettlements.length) {
+                return '<tr>' +
+                  '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
+                  '<td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td>' +
+                  '</tr>';
+              }
+              const spCost = spSettlements.reduce((s, stl) => s + stl.summary.totalCost, 0);
+              const spSell = spSettlements.reduce((s, stl) => s + stl.summary.totalSell, 0);
+              const spTokens = spSettlements.reduce((s, stl) => s + stl.summary.tokensToDeduct, 0);
+              const spProfit = spSell - spCost;
+              const spMargin = spSell > 0 ? ((1 - spCost / spSell) * 100) : 0;
+              return '<tr>' +
+                '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
+                '<td class="mono">' + spSettlements.length + '</td>' +
+                '<td class="mono">' + d.formatNumber(parseFloat(spTokens.toFixed(3))) + '</td>' +
+                '<td class="mono" style="color:var(--error);">' + spCost.toFixed(2) + '</td>' +
+                '<td class="mono" style="color:var(--primary);">' + spSell.toFixed(2) + '</td>' +
+                '<td class="mono font-700" style="color:var(--success);">' + spProfit.toFixed(2) + '</td>' +
+                '<td><span class="chip ' + (spMargin >= 30 ? 'chip-green' : 'chip-orange') + ' text-xs mono">' + spMargin.toFixed(1) + '%</span></td>' +
+                '</tr>';
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Settlement Log Section -->
+      <div class="divider mb-20"></div>
+      <div class="section-title mb-12" id="settlement-log"><i class="fa-solid fa-scroll"></i> Settlement Log (ประวัติการคำนวณต่อ Session)</div>
+      <div class="text-xs text-muted mb-16">คลิกแถวเพื่อดูรายละเอียด breakdown ทุก service | Token ที่หัก = Sell Price</div>
+      <div class="table-wrap mb-24">
+        <table>
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>Tenant</th>
+              <th>วันที่</th>
+              <th>ต้นทุนรวม</th>
+              <th>ราคาขายรวม</th>
+              <th>Token หัก</th>
+              <th>กำไร</th>
+              <th>Margin%</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${settlements.map(stl => `
+              <tr class="settlement-row" data-settlement-id="${stl.settlementId}" style="cursor:pointer;">
+                <td class="mono text-primary font-600">${stl.sessionId}</td>
+                <td class="font-600">${stl.tenantName}</td>
+                <td class="mono text-sm">${stl.date}</td>
+                <td class="mono" style="color:var(--error);">${stl.summary.totalCost.toFixed(2)}</td>
+                <td class="mono" style="color:var(--primary);">${stl.summary.totalSell.toFixed(2)}</td>
+                <td class="mono font-600">${stl.summary.tokensToDeduct.toFixed(3)}</td>
+                <td class="mono font-700" style="color:var(--success);">${stl.summary.profit.toFixed(2)}</td>
+                <td><span class="chip ${stl.summary.blendedMargin >= 30 ? 'chip-green' : 'chip-orange'} text-xs mono">${stl.summary.blendedMargin.toFixed(1)}%</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Package Price Guard Section -->
+      <div class="divider mb-20"></div>
+      <div class="section-title mb-12" id="package-guard"><i class="fa-solid fa-shield-halved"></i> Package Price Guard</div>
+      <div class="card p-16 mb-16" style="background:rgba(59,130,246,0.06);border:1px solid var(--border);">
+        <div class="flex items-center gap-8 mb-8">
+          <i class="fa-solid fa-chart-simple" style="color:var(--primary);"></i>
+          <span class="font-600">avgCostPerToken (จาก ${settlements.length} settlements)</span>
+        </div>
+        <div class="mono font-700" style="font-size:24px;color:var(--primary);">${avgCostPerToken.toFixed(4)} THB</div>
+        <div class="text-xs text-muted mt-4">avgCostPerToken = totalCost (${grandTotalCost.toFixed(2)}) / totalTokensDeducted (${grandTotalTokens.toFixed(3)})</div>
+      </div>
+      <div class="table-wrap mb-24">
+        <table>
+          <thead>
+            <tr>
+              <th>Package</th>
+              <th>Tokens</th>
+              <th>ราคา (THB)</th>
+              <th>ราคา/Token</th>
+              <th>avgCost/Token</th>
+              <th>Margin vs Cost</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${packages.map(pkg => {
+              const isSafe = pkg.pricePerToken >= avgCostPerToken;
+              const marginVsCost = avgCostPerToken > 0 ? ((pkg.pricePerToken - avgCostPerToken) / avgCostPerToken * 100) : 0;
+              return '<tr>' +
+                '<td class="font-600">' + pkg.name + ' <span class="text-xs text-muted">(' + pkg.id + ')</span></td>' +
+                '<td class="mono">' + d.formatNumber(pkg.tokens) + '</td>' +
+                '<td class="mono">' + d.formatNumber(pkg.price) + '</td>' +
+                '<td class="mono font-600">' + pkg.pricePerToken.toFixed(2) + '</td>' +
+                '<td class="mono text-muted">' + avgCostPerToken.toFixed(4) + '</td>' +
+                '<td class="mono font-600" style="color:' + (isSafe ? 'var(--success)' : 'var(--error)') + ';">' + (marginVsCost >= 0 ? '+' : '') + marginVsCost.toFixed(1) + '%</td>' +
+                '<td><span class="chip ' + (isSafe ? 'chip-green' : 'chip-red') + '">' + (isSafe ? '<i class="fa-solid fa-check"></i> Safe' : '<i class="fa-solid fa-xmark"></i> Danger') + '</span></td>' +
+                '</tr>';
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
       <!-- Cost Configuration Table -->
+      <div class="divider mb-20"></div>
       <div class="flex justify-between items-center mb-16">
         <div class="flex items-center gap-12">
           <div class="section-title">ตารางต้นทุนบริการ</div>
@@ -534,6 +755,110 @@ window.Pages.costPricing = {
       });
     });
 
+    // ─── Settlement Row Click — show breakdown modal ───
+    document.querySelectorAll('.settlement-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const stlId = row.dataset.settlementId;
+        const settlements = d.settlements || [];
+        const stl = settlements.find(s => s.settlementId === stlId);
+        if (!stl) return;
+
+        const marginSourceLabel = (src) => {
+          if (src === 'service_override') return '<span class="chip chip-purple" style="font-size:10px;">Service</span>';
+          if (src === 'provider_override') return '<span class="chip chip-orange" style="font-size:10px;">Provider</span>';
+          return '<span class="chip chip-gray" style="font-size:10px;">Global</span>';
+        };
+
+        window.App.showModal(`
+          <div class="modal modal-wide">
+            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title heading">Settlement Breakdown</div>
+            <div class="modal-subtitle">
+              Session: <span class="mono font-600">${stl.sessionId}</span> —
+              ${stl.tenantName} —
+              <span class="mono text-muted">${stl.date}</span>
+            </div>
+
+            <!-- Summary cards -->
+            <div class="grid-4 gap-12 mb-16">
+              <div class="card p-12" style="text-align:center;">
+                <div class="text-xs text-muted mb-4">ต้นทุนรวม</div>
+                <div class="mono font-700" style="color:var(--error);">${stl.summary.totalCost.toFixed(2)} THB</div>
+              </div>
+              <div class="card p-12" style="text-align:center;">
+                <div class="text-xs text-muted mb-4">ราคาขายรวม</div>
+                <div class="mono font-700" style="color:var(--primary);">${stl.summary.totalSell.toFixed(2)} THB</div>
+              </div>
+              <div class="card p-12" style="text-align:center;">
+                <div class="text-xs text-muted mb-4">Token หัก</div>
+                <div class="mono font-700">${stl.summary.tokensToDeduct.toFixed(3)}</div>
+              </div>
+              <div class="card p-12" style="text-align:center;">
+                <div class="text-xs text-muted mb-4">กำไร (${stl.summary.blendedMargin.toFixed(1)}%)</div>
+                <div class="mono font-700" style="color:var(--success);">${stl.summary.profit.toFixed(2)} THB</div>
+              </div>
+            </div>
+
+            <div class="text-xs text-muted mb-8">Token ที่หัก = Sell Price — ไม่มี conversion</div>
+
+            <!-- Breakdown table -->
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Service</th>
+                    <th>Type</th>
+                    <th>Quantity</th>
+                    <th>Cost/Unit</th>
+                    <th>Margin%</th>
+                    <th>Sell/Unit</th>
+                    <th>Total Cost</th>
+                    <th>Total Sell</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${stl.breakdown.map(b => `
+                    <tr>
+                      <td class="mono text-sm font-600">${b.serviceCode}</td>
+                      <td><span class="chip chip-gray text-xs">${b.type}</span></td>
+                      <td class="mono">${d.formatNumber(b.quantity)}</td>
+                      <td class="mono text-sm">${b.costPerUnit.toFixed(4)}</td>
+                      <td>
+                        <span class="mono font-600">${(b.effectiveMargin * 100).toFixed(0)}%</span>
+                        ${marginSourceLabel(b.marginSource)}
+                      </td>
+                      <td class="mono text-sm">${b.sellPerUnit.toFixed(6)}</td>
+                      <td class="mono" style="color:var(--error);">${b.totalCost.toFixed(3)}</td>
+                      <td class="mono" style="color:var(--primary);">${b.totalSell.toFixed(3)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+            </div>
+          </div>
+        `);
+      });
+    });
+
+    // ─── Alert Action Buttons — scroll to relevant section ───
+    document.querySelectorAll('.alert-action-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.dataset.section;
+        if (section === 'margin-config') {
+          App.navigate('cost-margin');
+          return;
+        }
+        const target = document.getElementById(section);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
     // ─── Export Button ───
     const btnExport = document.getElementById('btn-export-pricing');
     if (btnExport) {
@@ -917,7 +1242,7 @@ window.Pages.costMargin = {
       <div class="section-title mb-12"><i class="fa-solid fa-calculator"></i> Bidirectional Calculator</div>
       <div class="banner-info mb-16">
         <div class="banner-icon"><i class="fa-solid fa-circle-info"></i></div>
-        <div class="text-sm">สูตร: <span class="mono font-600">Sell Price = Cost ÷ (1 − Margin% ÷ 100)</span></div>
+        <div class="text-sm">สูตร: <span class="mono font-600">Sell Price = Cost ÷ (1 − Margin% ÷ 100)</span> — Token ที่หัก = Sell Price</div>
       </div>
       <div class="card p-20">
         <div class="grid-3 gap-20">
@@ -930,7 +1255,7 @@ window.Pages.costMargin = {
             <input type="number" id="calc-margin" class="form-input" value="${mc.global}" step="0.1" min="0" max="99.99">
           </div>
           <div class="form-group">
-            <label class="form-label">Sell Price (ราคาขาย THB)</label>
+            <label class="form-label">Sell Price = Token ที่หัก (THB)</label>
             <input type="number" id="calc-sell" class="form-input" value="${(1 / (1 - mc.global / 100)).toFixed(2)}" step="0.0001" min="0">
           </div>
         </div>
@@ -950,70 +1275,47 @@ window.Pages.costMargin = {
         </div>
       </div>
 
-      <!-- Platform Token Profit Summary -->
+      <!-- Platform Token Profit Summary (from Settlements) -->
       <div class="divider mb-20 mt-28"></div>
-      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไรต่อ Token แต่ละ Platform</div>
-      <div class="text-xs text-muted mb-16">คำนวณจาก Usage Log × Cost Config × Margin | ดูรายละเอียดเพิ่มเติมได้ที่หน้า Sub-Platform Management → แท็บ "ต้นทุน"</div>
+      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไรต่อ Platform</div>
+      <div class="text-xs text-muted mb-16">คำนวณจาก Settlement records | Token ที่หัก = Sell Price (THB) — ไม่มี conversion step</div>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Platform</th>
-              <th>Exchange Rate</th>
               <th>Sessions</th>
-              <th>ต้นทุน/Token</th>
-              <th>ขาย/Token</th>
-              <th>กำไร/Token</th>
-              <th>Margin</th>
+              <th>Tokens หัก</th>
+              <th>ต้นทุนรวม (THB)</th>
+              <th>ราคาขายรวม (THB)</th>
+              <th>กำไร (THB)</th>
+              <th>Blended Margin</th>
             </tr>
           </thead>
           <tbody>
             ${d.subPlatforms.map(sp => {
-              const platformSessions = d.sessions.filter(s => s.status === 'Completed' && s.subPlatform === sp.code);
-              const usageLogs = d.sessionUsageLogs || [];
-              const sessionIds = platformSessions.map(s => s.id);
-              const relevantLogs = usageLogs.filter(l => sessionIds.includes(l.sessionId));
-              const totalTokens = platformSessions.reduce((sum, s) => sum + (s.tokens || 0), 0);
-
-              if (!relevantLogs.length) {
+              const settlements = (d.settlements || []).filter(stl => stl.subPlatform === sp.code);
+              if (!settlements.length) {
                 return '<tr>' +
                   '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
-                  '<td><span class="chip chip-orange text-xs"><i class="fa-solid fa-coins"></i> ' + sp.exchangeRate + '</span></td>' +
-                  '<td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td>' +
+                  '<td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td><td class="text-muted">—</td>' +
                   '</tr>';
               }
 
-              const svcAgg = {};
-              relevantLogs.forEach(l => {
-                const key = l.serviceCode + '|' + l.type;
-                if (!svcAgg[key]) svcAgg[key] = { serviceCode: l.serviceCode, type: l.type, totalQty: 0 };
-                svcAgg[key].totalQty += l.quantity;
-              });
-
-              let totalCost = 0, totalSell = 0;
-              Object.values(svcAgg).forEach(agg => {
-                const svc = d.costConfig.find(c => c.serviceCode === agg.serviceCode);
-                if (!svc) return;
-                const row = rows.find(r => r.serviceCode === agg.serviceCode);
-                const margin = row ? row.effectiveMargin : mc.global;
-                const unitCost = (agg.type === 'output' && svc.outputCostPerUnit != null) ? svc.outputCostPerUnit : svc.costPerUnit;
-                totalCost += agg.totalQty * unitCost;
-                totalSell += agg.totalQty * self._sell(unitCost, margin);
-              });
-
-              const costPT = totalTokens > 0 ? totalCost / totalTokens : 0;
-              const sellPT = totalTokens > 0 ? totalSell / totalTokens : 0;
-              const profitPT = sellPT - costPT;
-              const blendedM = sellPT > 0 ? ((1 - costPT / sellPT) * 100) : 0;
+              const totalCost = settlements.reduce((s, stl) => s + stl.summary.totalCost, 0);
+              const totalSell = settlements.reduce((s, stl) => s + stl.summary.totalSell, 0);
+              const totalTokens = settlements.reduce((s, stl) => s + stl.summary.tokensToDeduct, 0);
+              const profit = totalSell - totalCost;
+              const blendedM = totalSell > 0 ? ((1 - totalCost / totalSell) * 100) : 0;
 
               return '<tr>' +
                 '<td><div class="flex items-center gap-8"><div style="width:10px;height:10px;border-radius:3px;background:' + sp.primaryColor + ';"></div><span class="font-600">' + sp.name + '</span></div></td>' +
-                '<td><span class="chip chip-orange text-xs"><i class="fa-solid fa-coins"></i> ' + sp.exchangeRate + '</span></td>' +
-                '<td class="mono">' + platformSessions.length + ' <span class="text-xs text-muted">(' + d.formatNumber(totalTokens) + ' tkn)</span></td>' +
-                '<td class="mono" style="color:var(--error);">' + fmtCost(costPT) + '</td>' +
-                '<td class="mono" style="color:var(--primary);">' + fmtCost(sellPT) + '</td>' +
-                '<td class="mono font-700" style="color:var(--success);">' + fmtCost(profitPT) + '</td>' +
+                '<td class="mono">' + settlements.length + '</td>' +
+                '<td class="mono">' + d.formatNumber(parseFloat(totalTokens.toFixed(3))) + '</td>' +
+                '<td class="mono" style="color:var(--error);">' + totalCost.toFixed(2) + '</td>' +
+                '<td class="mono" style="color:var(--primary);">' + totalSell.toFixed(2) + '</td>' +
+                '<td class="mono font-700" style="color:var(--success);">' + profit.toFixed(2) + '</td>' +
                 '<td><span class="chip ' + (blendedM >= 30 ? 'chip-green' : 'chip-orange') + ' text-xs mono">' + blendedM.toFixed(1) + '%</span></td>' +
                 '</tr>';
             }).join('')}

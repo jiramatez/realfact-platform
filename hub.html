@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RealfactAI - Hub</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6.5.1 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Favicon (swapped by theme toggle) -->
+  <link id="favicon" rel="icon" type="image/svg+xml" href="assets/Favicon-DarkMode.svg">
+
+  <!-- Design System CSS (shared) -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <!-- Login Overlay (Auth) -->
+  <div id="login-overlay" class="hidden"></div>
+
+  <div class="app-layout">
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img id="brand-logo-img" src="assets/Favicon-DarkMode.svg" alt="RealFact" style="width:36px;height:36px;object-fit:contain;flex-shrink:0;">
+        <span class="brand-text">REALFACT</span>
+      </div>
+
+      <div class="nav-items">
+        <!-- ══ HUB — Tenant Console ══ -->
+        <div class="nav-group">
+          <div class="nav-section">
+            <i class="fa-solid fa-building nav-section-icon"></i>
+            <span class="nav-section-label" id="hub-tenant-label">TENANT CONSOLE</span>
+          </div>
+          <a href="#hub-dashboard" class="nav-item active" data-page="hub-dashboard">
+            <i class="fa-solid fa-chart-line"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a href="#hub-subscriptions" class="nav-item" data-page="hub-subscriptions">
+            <i class="fa-solid fa-box-open"></i>
+            <span class="nav-label">Subscriptions</span>
+          </a>
+          <a href="#hub-billing" class="nav-item" data-page="hub-billing">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+            <span class="nav-label">Billing</span>
+          </a>
+          <a href="#hub-team" class="nav-item" data-page="hub-team">
+            <i class="fa-solid fa-users-gear"></i>
+            <span class="nav-label">Team</span>
+          </a>
+          <a href="#hub-usage" class="nav-item" data-page="hub-usage">
+            <i class="fa-solid fa-chart-column"></i>
+            <span class="nav-label">Usage Report</span>
+          </a>
+          <a href="#hub-settings" class="nav-item" data-page="hub-settings">
+            <i class="fa-solid fa-gear"></i>
+            <span class="nav-label">Settings</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="nav-item" id="sidebar-lock">
+          <i class="fa-solid fa-thumbtack"></i>
+          <span class="nav-label">Lock Sidebar</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ═══ MAIN AREA ═══ -->
+    <div class="main-area">
+      <!-- Topbar -->
+      <header class="topbar" id="topbar">
+        <div class="topbar-left">
+          <!-- Tenant Switcher (top-left) -->
+          <button class="hub-tenant-switcher" id="hub-tenant-switcher" title="สลับ Tenant">
+            <div class="hub-tenant-switcher-icon">
+              <i class="fa-solid fa-building"></i>
+            </div>
+            <div class="hub-tenant-switcher-text">
+              <span class="hub-tenant-switcher-name" id="hub-topbar-tenant">Tenant</span>
+              <span class="hub-tenant-switcher-sub">Tenant Console</span>
+            </div>
+            <i class="fa-solid fa-chevron-down hub-tenant-switcher-arrow" id="hub-switch-arrow" style="display:none;"></i>
+          </button>
+
+          <div class="topbar-divider"></div>
+          <span class="topbar-page text-muted" id="page-title">Dashboard</span>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn" id="theme-toggle" title="Toggle Theme">
+            <span id="theme-icon">&#127769;</span>
+          </button>
+          <div class="user-profile-wrap" id="user-profile-wrap">
+            <div class="user-avatar" id="user-profile-btn" title="User">U</div>
+            <span class="user-display-name" id="user-display-name">User</span>
+            <span class="chip chip-blue" id="user-role-badge" style="font-size:10px;">Tenant Admin</span>
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown" id="profile-dropdown">
+              <div class="profile-dropdown-header">
+                <div class="user-avatar" id="pd-avatar" style="width:40px;height:40px;font-size:15px;">U</div>
+                <div>
+                  <div class="font-600" id="pd-name">User</div>
+                  <div class="mono text-xs text-muted" id="pd-email">user@email.com</div>
+                  <div id="pd-role" style="margin-top:3px;"><span class="chip chip-blue" style="font-size:9px;">Tenant Admin</span></div>
+                </div>
+              </div>
+              <div class="profile-dropdown-divider"></div>
+              <button class="profile-dropdown-item" id="pd-account-settings">
+                <i class="fa-solid fa-gear"></i> ตั้งค่าบัญชี
+              </button>
+              <div class="profile-dropdown-divider"></div>
+              <button class="profile-dropdown-item profile-dropdown-danger" id="pd-logout">
+                <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="content" id="content">
+        <!-- Pages render here via JS -->
+      </main>
+    </div>
+  </div>
+
+  <!-- ═══ SCRIPTS ═══ -->
+  <script src="js/mock-data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/pages/hub-dashboard.js"></script>
+  <script src="js/pages/hub-subscriptions.js"></script>
+  <script src="js/pages/hub-billing.js"></script>
+  <script src="js/pages/hub-team.js"></script>
+  <script src="js/pages/hub-usage.js"></script>
+  <script src="js/pages/hub-settings.js"></script>
+  <script src="js/hub-app.js"></script>
+</body>
+</html>

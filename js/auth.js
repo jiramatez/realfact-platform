@@ -23,6 +23,26 @@ window.Auth = (function () {
   // ─── Role hierarchy (higher number = higher rank) ───
   var _roleRank = { super_admin: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 };
 
+  // ─── Zone Detection (which HTML file are we on?) ───
+  function _getAppZone() {
+    var path = window.location.pathname;
+    if (path.indexOf('hub.html') !== -1) return 'hub';
+    return 'admin';
+  }
+
+  // Redirect to the correct zone based on role
+  function _redirectToZone(role) {
+    var currentZone = _getAppZone();
+    if (role === 'super_admin') {
+      // Owner always goes to Admin BO
+      if (currentZone !== 'admin') window.location.href = 'index.html';
+    } else if (role === 'tenant_admin') {
+      // Tenant Admin goes to Hub
+      if (currentZone !== 'hub') window.location.href = 'hub.html';
+    }
+    // SP Admin / Member: stay where they are for now (SP App is external)
+  }
+
   // ─── Init: restore session from localStorage ───
   function init() {
     var stored = localStorage.getItem(SESSION_KEY);
@@ -68,6 +88,7 @@ window.Auth = (function () {
       // Low-level with single membership → auto-select, skip Hub
       _setActiveContext(memberships[0]);
       _saveSession();
+      // SP Admin/Member stay on current page (SP App is external in production)
       return true;
     }
 
@@ -100,6 +121,11 @@ window.Auth = (function () {
     _currentUser = null;
     _activeContext = null;
     localStorage.removeItem(SESSION_KEY);
+    // Always return to main login page (index.html)
+    if (_getAppZone() !== 'admin') {
+      window.location.href = 'index.html';
+      return;
+    }
     _hideApp();
     _showLogin();
   }
@@ -313,11 +339,15 @@ window.Auth = (function () {
 
         var result = login(email, pw);
         if (result === true) {
+          // Auto-selected single membership — check if we need to redirect zone
+          if (_activeContext) {
+            _redirectToZone(_activeContext.role);
+          }
           _hideLogin();
           _showApp();
           _updateProfileUI();
-          _filterSidebar();
-          _filterContextSwitcher();
+          if (typeof _filterSidebar === 'function') _filterSidebar();
+          if (typeof _filterContextSwitcher === 'function') _filterContextSwitcher();
           var hash = location.hash.replace('#', '') || defaultPage();
           if (!canAccessPage(hash)) {
             location.hash = defaultPage();
@@ -534,11 +564,21 @@ window.Auth = (function () {
       card.addEventListener('click', function () {
         var mbId = card.dataset.mbId;
         if (switchContext(mbId)) {
+          // Redirect to correct zone based on selected role
+          var ctx = _activeContext;
+          if (ctx) {
+            _redirectToZone(ctx.role);
+            // If _redirectToZone triggered a redirect, stop here
+            if ((ctx.role === 'super_admin' && _getAppZone() !== 'admin') ||
+                (ctx.role === 'tenant_admin' && _getAppZone() !== 'hub')) {
+              return;
+            }
+          }
           _hideLogin();
           _showApp();
           _updateProfileUI();
-          _filterSidebar();
-          _filterContextSwitcher();
+          if (typeof _filterSidebar === 'function') _filterSidebar();
+          if (typeof _filterContextSwitcher === 'function') _filterContextSwitcher();
           location.hash = defaultPage();
           window.dispatchEvent(new HashChangeEvent('hashchange'));
           if (window.App) App.toast('เข้าใช้งานสำเร็จ', 'success');
@@ -624,21 +664,41 @@ window.Auth = (function () {
 
   // ─── Render Login Page HTML ───
   function renderLoginPage() {
-    var demoAccounts = [
+    var backofficeAccounts = [
       { email: 'admin@realfact.ai',       pw: 'admin123',  chip: 'chip-orange', label: 'Owner' },
+    ];
+    var tenantAccounts = [
       { email: 'somphon@realfact.ai',      pw: 'tenant123', chip: 'chip-blue',   label: 'Tenant Admin' },
       { email: 'wichai@realfact.ai',       pw: 'spadmin123', chip: 'chip-green',  label: 'SP Admin' },
       { email: 'napa@realfact.ai',         pw: 'member123', chip: 'chip-purple',  label: 'Member' },
       { email: 'new.member@realfact.ai',   pw: '',          chip: 'chip-blue',    label: 'Invited' },
     ];
 
-    var demoRows = demoAccounts.map(function (acc) {
+    function _buildDemoRow(acc) {
       return '<div class="login-demo-row" data-email="' + acc.email + '" data-pw="' + acc.pw + '">' +
         '<span class="chip ' + acc.chip + '" style="font-size:10px;">' + acc.label + '</span>' +
         '<span class="mono text-xs">' + acc.email + '</span>' +
         _buildDemoPopover(acc.email) +
       '</div>';
-    }).join('');
+    }
+
+    var boRows = backofficeAccounts.map(_buildDemoRow).join('');
+    var tenantRows = tenantAccounts.map(_buildDemoRow).join('');
+
+    var demoRows =
+      '<div style="margin-bottom:6px;">' +
+        '<div class="text-xs text-muted font-600" style="padding:4px 0 2px;display:flex;align-items:center;gap:6px;">' +
+          '<i class="fa-solid fa-crown" style="color:var(--primary);font-size:10px;"></i> Backoffice (Internal)' +
+        '</div>' +
+        boRows +
+      '</div>' +
+      '<div style="border-top:1px solid var(--border);margin:8px 0;"></div>' +
+      '<div>' +
+        '<div class="text-xs text-muted font-600" style="padding:4px 0 2px;display:flex;align-items:center;gap:6px;">' +
+          '<i class="fa-solid fa-building" style="color:#3b82f6;font-size:10px;"></i> Tenant (Customer)' +
+        '</div>' +
+        tenantRows +
+      '</div>';
 
     return '<div class="login-container">' +
       '<div class="login-card">' +
@@ -1004,5 +1064,8 @@ window.Auth = (function () {
     scopedTenantId: scopedTenantId,
     scopedSubPlatformId: scopedSubPlatformId,
     isOwner: isOwner,
+    getAppZone: _getAppZone,
+    redirectToZone: _redirectToZone,
+    showHub: _showHub,
   };
 })();
