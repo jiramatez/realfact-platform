@@ -45,9 +45,9 @@ window.Auth = (function () {
   function _redirectToZone(role) {
     var currentZone = _getAppZone();
     if (role === 'super_admin') {
-      if (currentZone !== 'admin') window.location.href = _resolveUrl('backoffice-ui/index.html');
+      if (currentZone !== 'admin') window.location.href = _resolveUrl('index.html');
     } else if (role === 'tenant_admin') {
-      if (currentZone !== 'hub') window.location.href = _resolveUrl('backoffice-ui/hub.html');
+      if (currentZone !== 'hub') window.location.href = _resolveUrl('hub.html');
     } else if (role === 'subplatform_admin' || role === 'subplatform_member') {
       // Determine which SP App based on activeContext.subPlatformId
       var spId = _activeContext ? _activeContext.subPlatformId : null;
@@ -61,7 +61,7 @@ window.Auth = (function () {
   // Resolve URL relative to project root (works from any zone)
   function _resolveUrl(target) {
     var path = window.location.pathname;
-    if (path.indexOf('/backoffice-ui/') !== -1) return '../' + target;
+    // When inside a subdirectory, go up one level to reach project root
     if (path.indexOf('/avatar/') !== -1) return '../' + target;
     if (path.indexOf('/developer-portal/') !== -1) return '../' + target;
     return target;
@@ -148,7 +148,7 @@ window.Auth = (function () {
     // Always return to main login page (index.html)
     var zone = _getAppZone();
     if (zone !== 'admin') {
-      window.location.href = _resolveUrl('backoffice-ui/index.html');
+      window.location.href = _resolveUrl('index.html');
       return;
     }
     _hideApp();
