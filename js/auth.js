@@ -23,10 +23,21 @@ window.Auth = (function () {
   // ─── Role hierarchy (higher number = higher rank) ───
   var _roleRank = { super_admin: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 };
 
+  // ─── SP App URL Map (subPlatformId → app path + zone key) ───
+  var _spAppMap = {
+    'SP-001': { zone: 'avatar-app',    path: 'avatar/realfactavatar-demo_1.html',              detect: 'realfactavatar-demo' },
+    'SP-003': { zone: 'devportal-app', path: 'developer-portal/developer-portal-mockup.html',  detect: 'developer-portal-mockup' },
+  };
+
   // ─── Zone Detection (which HTML file are we on?) ───
   function _getAppZone() {
-    var path = window.location.pathname;
-    if (path.indexOf('hub.html') !== -1) return 'hub';
+    var pathname = window.location.pathname;
+    if (pathname.indexOf('hub.html') !== -1) return 'hub';
+    // Check all SP app zones dynamically
+    var spIds = Object.keys(_spAppMap);
+    for (var i = 0; i < spIds.length; i++) {
+      if (pathname.indexOf(_spAppMap[spIds[i]].detect) !== -1) return _spAppMap[spIds[i]].zone;
+    }
     return 'admin';
   }
 
@@ -34,13 +45,26 @@ window.Auth = (function () {
   function _redirectToZone(role) {
     var currentZone = _getAppZone();
     if (role === 'super_admin') {
-      // Owner always goes to Admin BO
-      if (currentZone !== 'admin') window.location.href = 'index.html';
+      if (currentZone !== 'admin') window.location.href = _resolveUrl('backoffice-ui/index.html');
     } else if (role === 'tenant_admin') {
-      // Tenant Admin goes to Hub
-      if (currentZone !== 'hub') window.location.href = 'hub.html';
+      if (currentZone !== 'hub') window.location.href = _resolveUrl('backoffice-ui/hub.html');
+    } else if (role === 'subplatform_admin' || role === 'subplatform_member') {
+      // Determine which SP App based on activeContext.subPlatformId
+      var spId = _activeContext ? _activeContext.subPlatformId : null;
+      var spApp = spId ? _spAppMap[spId] : null;
+      if (spApp) {
+        if (currentZone !== spApp.zone) window.location.href = _resolveUrl(spApp.path);
+      }
     }
-    // SP Admin / Member: stay where they are for now (SP App is external)
+  }
+
+  // Resolve URL relative to project root (works from any zone)
+  function _resolveUrl(target) {
+    var path = window.location.pathname;
+    if (path.indexOf('/backoffice-ui/') !== -1) return '../' + target;
+    if (path.indexOf('/avatar/') !== -1) return '../' + target;
+    if (path.indexOf('/developer-portal/') !== -1) return '../' + target;
+    return target;
   }
 
   // ─── Init: restore session from localStorage ───
@@ -122,8 +146,9 @@ window.Auth = (function () {
     _activeContext = null;
     localStorage.removeItem(SESSION_KEY);
     // Always return to main login page (index.html)
-    if (_getAppZone() !== 'admin') {
-      window.location.href = 'index.html';
+    var zone = _getAppZone();
+    if (zone !== 'admin') {
+      window.location.href = _resolveUrl('backoffice-ui/index.html');
       return;
     }
     _hideApp();
@@ -460,6 +485,12 @@ window.Auth = (function () {
           if (!formValid) return;
 
           if (setPassword(email, pw1)) {
+            // After set password, redirect to correct zone based on role
+            if (_activeContext) {
+              _redirectToZone(_activeContext.role);
+              // If redirected (SP users), stop here
+              if (_activeContext.role === 'subplatform_admin' || _activeContext.role === 'subplatform_member') return;
+            }
             _hideLogin();
             _showApp();
             _updateProfileUI();
@@ -493,13 +524,19 @@ window.Auth = (function () {
       super_admin: 'Owner', tenant_admin: 'Tenant Admin',
       subplatform_admin: 'SP Admin', subplatform_member: 'Member',
     };
-    var _ri = {
-      super_admin: 'fa-crown', tenant_admin: 'fa-building',
-      subplatform_admin: 'fa-cubes', subplatform_member: 'fa-user',
-    };
     var _rc = {
       super_admin: 'chip-orange', tenant_admin: 'chip-blue',
-      subplatform_admin: 'chip-green', subplatform_member: 'chip-gray',
+      subplatform_admin: 'chip-green', subplatform_member: 'chip-purple',
+    };
+    var _spIcons = {
+      avatar: 'fa-robot', devportal: 'fa-code', booking: 'fa-calendar-check',
+    };
+    var _spColors = {
+      avatar: '#f15b26', devportal: '#4263eb', booking: '#3b82f6',
+    };
+    var _zoneLabels = {
+      super_admin: 'Admin Backoffice', tenant_admin: 'Tenant Hub',
+      subplatform_admin: 'SP App', subplatform_member: 'SP App',
     };
 
     var cards = memberships.map(function (mb) {
@@ -507,52 +544,84 @@ window.Auth = (function () {
       var sp = mb.subPlatformId ? subPlatforms.find(function (s) { return s.id === mb.subPlatformId; }) : null;
       var cr = mb.customRoleId ? _getCustomRoles().find(function (r) { return r.id === mb.customRoleId; }) : null;
 
-      var title = '';
+      var spIcon = sp ? (_spIcons[sp.code] || 'fa-cube') : (mb.role === 'super_admin' ? 'fa-crown' : 'fa-building');
+      var spColor = sp ? (_spColors[sp.code] || 'var(--primary)') : (mb.role === 'super_admin' ? 'var(--primary)' : '#3b82f6');
+      var zoneLabel = _zoneLabels[mb.role] || 'App';
+      var zoneDomain = sp ? sp.domain : (mb.role === 'tenant_admin' ? 'hub.realfact.ai' : 'admin.realfact.ai');
+
+      // ── Left: SP icon + Hierarchy grid ──
+      var gridRows = '';
+
+      // Tenant row
       if (mb.role === 'super_admin') {
-        title = 'ทุก Tenant (Global)';
+        gridRows +=
+          '<i class="fa-solid fa-crown" style="font-size:10px;color:var(--primary);"></i>' +
+          '<span>Platform</span>' +
+          '<span class="font-600" style="color:var(--text);">ทุก Tenant (Global)</span>';
       } else if (tenant) {
-        title = tenant.name;
-        if (sp) title += ' &rsaquo; ' + sp.name;
+        gridRows +=
+          '<i class="fa-solid fa-building" style="font-size:10px;color:#3b82f6;"></i>' +
+          '<span>Tenant</span>' +
+          '<span class="font-600" style="color:var(--text);">' + tenant.name + '</span>';
       }
 
-      var crBadge = cr ? ' <span class="chip chip-blue" style="font-size:9px;">' + cr.name + '</span>' : '';
+      // Sub-Platform row
+      if (sp) {
+        gridRows +=
+          '<i class="fa-solid ' + spIcon + '" style="font-size:10px;color:' + spColor + ';"></i>' +
+          '<span>SP</span>' +
+          '<span style="color:var(--text);">' + sp.name + '</span>';
+      }
 
-      return '<div class="hub-card" data-mb-id="' + mb.id + '" tabindex="0" style="border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .15s;">' +
-        '<div class="flex items-center gap-12">' +
-          '<div style="width:42px;height:42px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;">' +
-            '<i class="fa-solid ' + (_ri[mb.role] || 'fa-user') + '" style="font-size:18px;color:var(--primary);"></i>' +
-          '</div>' +
-          '<div style="flex:1;">' +
-            '<div class="font-600" style="font-size:15px;">' + title + '</div>' +
-            '<div class="flex items-center gap-6 mt-4" style="flex-wrap:wrap;">' +
-              '<span class="chip ' + (_rc[mb.role] || 'chip-gray') + '" style="font-size:9px;">' + (_rl[mb.role] || mb.role) + '</span>' +
-              crBadge +
-            '</div>' +
-          '</div>' +
-          '<i class="fa-solid fa-chevron-right text-muted"></i>' +
+      // Role row
+      var crBadge = cr ? '<span class="chip chip-blue" style="font-size:8px;padding:1px 6px;">' + cr.name + '</span>' : '';
+      gridRows +=
+        '<i class="fa-solid fa-id-badge" style="font-size:10px;color:var(--text-dim);"></i>' +
+        '<span>Role</span>' +
+        '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">' +
+          '<span class="chip ' + (_rc[mb.role] || 'chip-gray') + '" style="font-size:9px;">' + (_rl[mb.role] || mb.role) + '</span>' +
+          crBadge +
+        '</div>';
+
+      // ── Right: arrow ──
+      var arrow =
+        '<div class="hub-card-arrow" style="display:flex;align-items:center;padding-left:12px;opacity:.4;transition:all .2s;flex-shrink:0;">' +
+          '<i class="fa-solid fa-chevron-right" style="font-size:14px;color:var(--text-muted);"></i>' +
+        '</div>';
+
+      return '<div class="hub-card" data-mb-id="' + mb.id + '" tabindex="0" ' +
+        'style="border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;">' +
+        // SP icon (large, left)
+        '<div style="width:44px;height:44px;border-radius:11px;background:' + spColor + '15;border:1px solid ' + spColor + '25;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+          '<i class="fa-solid ' + spIcon + '" style="font-size:18px;color:' + spColor + ';"></i>' +
         '</div>' +
+        // Hierarchy grid
+        '<div style="flex:1;min-width:0;display:grid;grid-template-columns:14px 44px 1fr;gap:4px 8px;align-items:center;font-size:12px;color:var(--text-muted);">' +
+          gridRows +
+        '</div>' +
+        arrow +
       '</div>';
     }).join('');
 
     return '<div class="login-container">' +
-      '<div class="login-card" style="max-width:520px;">' +
+      '<div class="login-card" style="max-width:560px;">' +
         '<div class="login-brand">' +
           '<img src="assets/Favicon-DarkMode.svg" alt="RealFact" style="width:48px;height:48px;object-fit:contain;">' +
           '<div class="login-brand-text">REALFACT</div>' +
           '<div class="login-brand-sub">เลือก Context เข้าใช้งาน</div>' +
         '</div>' +
-        '<div style="text-align:center;margin-bottom:16px;">' +
+        '<div style="text-align:center;margin-bottom:18px;">' +
           '<div class="text-sm text-muted">สวัสดี</div>' +
           '<div class="font-700" style="font-size:18px;">' + _currentUser.name + '</div>' +
           '<div class="mono text-sm text-muted">' + _currentUser.email + '</div>' +
         '</div>' +
-        '<div class="text-xs uppercase text-muted font-600 mb-8">' +
-          '<i class="fa-solid fa-building"></i> คุณมีสิทธิ์ใน ' + memberships.length + ' Tenant — เลือกเพื่อเข้าจัดการ' +
+        '<div class="text-xs text-muted font-600 mb-10" style="display:flex;align-items:center;gap:6px;">' +
+          '<i class="fa-solid fa-layer-group"></i> คุณมีสิทธิ์ ' + memberships.length + ' รายการ — เลือกเพื่อเข้าจัดการ' +
         '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:8px;">' +
+        '<div style="display:flex;flex-direction:column;gap:10px;">' +
           cards +
         '</div>' +
-        '<div style="margin-top:16px;text-align:center;">' +
+        '<div style="margin-top:18px;text-align:center;">' +
           '<a href="#" id="hub-logout" class="text-sm text-muted" style="text-decoration:underline;"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</a>' +
         '</div>' +
       '</div>' +
@@ -568,7 +637,8 @@ window.Auth = (function () {
           var ctx = _activeContext;
           if (ctx) {
             _redirectToZone(ctx.role);
-            // If _redirectToZone triggered a redirect, stop here
+            // If _redirectToZone triggered a page redirect (SP users always redirect out), stop here
+            if (ctx.role === 'subplatform_admin' || ctx.role === 'subplatform_member') return;
             if ((ctx.role === 'super_admin' && _getAppZone() !== 'admin') ||
                 (ctx.role === 'tenant_admin' && _getAppZone() !== 'hub')) {
               return;
@@ -664,14 +734,49 @@ window.Auth = (function () {
 
   // ─── Render Login Page HTML ───
   function renderLoginPage() {
-    var backofficeAccounts = [
-      { email: 'admin@realfact.ai',       pw: 'admin123',  chip: 'chip-orange', label: 'Owner' },
-    ];
-    var tenantAccounts = [
-      { email: 'somphon@realfact.ai',      pw: 'tenant123', chip: 'chip-blue',   label: 'Tenant Admin' },
-      { email: 'wichai@realfact.ai',       pw: 'spadmin123', chip: 'chip-green',  label: 'SP Admin' },
-      { email: 'napa@realfact.ai',         pw: 'member123', chip: 'chip-purple',  label: 'Member' },
-      { email: 'new.member@realfact.ai',   pw: '',          chip: 'chip-blue',    label: 'Invited' },
+    // ─── Demo Accounts: grouped by Case (redirect destination) ───
+    var demoGroups = [
+      {
+        icon: 'fa-crown', color: 'var(--primary)',
+        title: 'Admin Backoffice',
+        desc: 'เข้า Backoffice ตรง',
+        accounts: [
+          { email: 'admin@realfact.ai', pw: 'admin123', chip: 'chip-orange', label: 'Owner' },
+        ]
+      },
+      {
+        icon: 'fa-building', color: '#3b82f6',
+        title: 'Hub (Tenant Console)',
+        desc: 'เลือก Tenant → เข้า Hub',
+        accounts: [
+          { email: 'somphon@realfact.ai', pw: 'tenant123', chip: 'chip-blue', label: 'Tenant Admin (2 Tenants)' },
+        ]
+      },
+      {
+        icon: 'fa-robot', color: '#f15b26',
+        title: 'Avatar SP App',
+        desc: 'redirect → avatar.realfact.ai',
+        accounts: [
+          { email: 'wichai@realfact.ai',     pw: 'spadmin123', chip: 'chip-green',  label: 'SP Admin' },
+          { email: 'napa@realfact.ai',       pw: 'member123',  chip: 'chip-purple', label: 'Member' },
+        ]
+      },
+      {
+        icon: 'fa-code', color: '#4263eb',
+        title: 'Developer Portal SP App',
+        desc: 'redirect → developer.realfact.ai',
+        accounts: [
+          { email: 'ploy@realfact.ai', pw: 'devmem123', chip: 'chip-purple', label: 'Member' },
+        ]
+      },
+      {
+        icon: 'fa-shuffle', color: '#22c55e',
+        title: 'Multi-SP (เลือก SP ผ่าน Picker)',
+        desc: 'มีหลาย SP → Hub Picker → เลือกไป Avatar หรือ DevPortal',
+        accounts: [
+          { email: 'kong@realfact.ai', pw: 'devadmin123', chip: 'chip-green', label: 'SP Admin + Member' },
+        ]
+      },
     ];
 
     function _buildDemoRow(acc) {
@@ -682,23 +787,18 @@ window.Auth = (function () {
       '</div>';
     }
 
-    var boRows = backofficeAccounts.map(_buildDemoRow).join('');
-    var tenantRows = tenantAccounts.map(_buildDemoRow).join('');
-
-    var demoRows =
-      '<div style="margin-bottom:6px;">' +
-        '<div class="text-xs text-muted font-600" style="padding:4px 0 2px;display:flex;align-items:center;gap:6px;">' +
-          '<i class="fa-solid fa-crown" style="color:var(--primary);font-size:10px;"></i> Backoffice (Internal)' +
-        '</div>' +
-        boRows +
-      '</div>' +
-      '<div style="border-top:1px solid var(--border);margin:8px 0;"></div>' +
-      '<div>' +
-        '<div class="text-xs text-muted font-600" style="padding:4px 0 2px;display:flex;align-items:center;gap:6px;">' +
-          '<i class="fa-solid fa-building" style="color:#3b82f6;font-size:10px;"></i> Tenant (Customer)' +
-        '</div>' +
-        tenantRows +
-      '</div>';
+    var demoRows = demoGroups.map(function (group, idx) {
+      var rows = group.accounts.map(_buildDemoRow).join('');
+      var divider = idx > 0 ? '<div style="border-top:1px solid var(--border);margin:8px 0;"></div>' : '';
+      return divider +
+        '<div style="margin-bottom:4px;">' +
+          '<div class="text-xs text-muted font-600" style="padding:4px 0 1px;display:flex;align-items:center;gap:6px;">' +
+            '<i class="fa-solid ' + group.icon + '" style="color:' + group.color + ';font-size:10px;"></i> ' + group.title +
+          '</div>' +
+          '<div class="text-xs text-dim" style="padding:0 0 4px 16px;font-size:10px;opacity:.6;">' + group.desc + '</div>' +
+          rows +
+        '</div>';
+    }).join('');
 
     return '<div class="login-container">' +
       '<div class="login-card">' +

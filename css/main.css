@@ -1038,3 +1038,10 @@ body.light-mode .user-profile-wrap:hover { background: rgba(0,0,0,.04); }
 .hub-tenant-switcher-name { display: block; font-weight: 600; font-size: 13px; line-height: 1.2; }
 .hub-tenant-switcher-sub { display: block; font-size: 11px; color: var(--text-muted); line-height: 1.2; }
 .hub-tenant-switcher-arrow { font-size: 10px; color: var(--text-muted); margin-left: 2px; transition: transform .15s; }
+
+/* ─── Hub Context Picker Cards ─── */
+.hub-card { position: relative; }
+.hub-card:hover { border-color: var(--primary) !important; background: rgba(241,91,38,.04); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+.hub-card:hover .hub-card-arrow { opacity: 1; color: var(--primary); }
+.hub-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.hub-card:active { transform: translateY(0); }

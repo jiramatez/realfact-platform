@@ -24,7 +24,7 @@ window.MockData = {
     kbUploadSuccess: 97,
     presetsCreated: 34,
     presetsActive: 28,
-    subPlatforms: 2,
+    subPlatforms: 3,
   },
 
   // ─── Device Models ───
@@ -256,7 +256,8 @@ window.MockData = {
   // ─── Sub-Platforms ───
   subPlatforms: [
     { id: 'SP-001', name: 'Avatar (Live Interact)', code: 'avatar',  domain: 'avatar.realfact.ai',  status: 'Active',     tenants: 45, revenue: 234500, tokenUsage: 128750, plans: ['Free', 'Starter', 'Pro'],     exchangeRateValue: 1, exchangeRateUnit: 'Minute',  exchangeRate: '1 Token = 1 Minute',  logo: null, primaryColor: '#f15b26', created: '2025-10-01', modifiedDate: '2026-02-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'SP-002', name: 'AI Booking',            code: 'booking', domain: 'booking.realfact.ai', status: 'Configured', tenants: 0,  revenue: 0,      tokenUsage: 0,      plans: ['Free', 'Basic', 'Premium'], exchangeRateValue: 1, exchangeRateUnit: 'Request', exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'SP-002', name: 'AI Booking',            code: 'booking',   domain: 'booking.realfact.ai',   status: 'Configured', tenants: 0,  revenue: 0,      tokenUsage: 0,      plans: ['Free', 'Basic', 'Premium'], exchangeRateValue: 1, exchangeRateUnit: 'Request', exchangeRate: '1 Token = 1 Request', logo: null, primaryColor: '#3b82f6', created: '2026-02-15', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'SP-003', name: 'Developer Portal',      code: 'devportal', domain: 'developer.realfact.ai', status: 'Active',     tenants: 12, revenue: 89500,  tokenUsage: 45200,  plans: ['Free', 'Pro', 'Enterprise'], exchangeRateValue: 1, exchangeRateUnit: 'API Call', exchangeRate: '1 Token = 1 API Call', logo: null, primaryColor: '#4263eb', created: '2026-01-15', modifiedDate: '2026-03-01', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Subscription Plans ───
@@ -404,8 +405,9 @@ window.MockData = {
   // ─── Tenant Subscriptions (Multi-tenancy: TenantID → Sub-Platforms) ───
   tenantSubscriptions: {
     'T-001': [
-      { subPlatformCode: 'avatar',  label: 'avatar',  subPlatformName: 'Live Interact Avatar', plan: 'Pro',     price: 4990, status: 'Active',  renewDate: '2026-04-01' },
-      { subPlatformCode: 'booking', label: 'booking', subPlatformName: 'AI Booking',           plan: 'Starter', price: 990,  status: 'Active',  renewDate: '2026-04-01' },
+      { subPlatformCode: 'avatar',    label: 'avatar',    subPlatformName: 'Live Interact Avatar', plan: 'Pro',     price: 4990, status: 'Active',  renewDate: '2026-04-01' },
+      { subPlatformCode: 'booking',   label: 'booking',   subPlatformName: 'AI Booking',           plan: 'Starter', price: 990,  status: 'Active',  renewDate: '2026-04-01' },
+      { subPlatformCode: 'devportal', label: 'devportal', subPlatformName: 'Developer Portal',     plan: 'Pro',     price: 2990, status: 'Active',  renewDate: '2026-04-01' },
     ],
     'T-002': [
       { subPlatformCode: 'avatar',  label: 'avatar',  subPlatformName: 'Live Interact Avatar', plan: 'Starter', price: 990,  status: 'Active',  renewDate: '2026-03-15' },
@@ -855,6 +857,8 @@ window.MockData = {
     { id: 'USR-005', email: 'anant@realfact.ai',       password: 'viewer123',   name: 'อนันต์ เทคโน',   initials: 'AN', avatar: null, status: 'Active',    lastLogin: '2026-03-02 11:00', createdDate: '2026-02-10' },
     { id: 'USR-006', email: 'new.member@realfact.ai',  password: null,          name: 'New Member',      initials: 'NM', avatar: null, status: 'Invited',   lastLogin: null,               createdDate: '2026-03-04' },
     { id: 'USR-007', email: 'suspended@realfact.ai',   password: 'suspended1',  name: 'Suspended User',  initials: 'SU', avatar: null, status: 'Suspended', lastLogin: '2026-02-15 10:00', createdDate: '2026-01-20' },
+    { id: 'USR-008', email: 'kong@realfact.ai',        password: 'devadmin123', name: 'ก้อง สมาร์ท',    initials: 'KS', avatar: null, status: 'Active',    lastLogin: '2026-03-05 10:30', createdDate: '2026-01-15' },
+    { id: 'USR-009', email: 'ploy@realfact.ai',        password: 'devmem123',   name: 'พลอย เดฟ',      initials: 'PD', avatar: null, status: 'Active',    lastLogin: '2026-03-04 09:15', createdDate: '2026-02-20' },
   ],
 
   // ─── User Memberships (Role × Scope — many-to-many) ───
@@ -876,8 +880,15 @@ window.MockData = {
     // ── Invited user — pending SP member ──
     { id: 'MB-007', userId: 'USR-006', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-005', status: 'Invited', invitedBy: 'USR-003', createdDate: '2026-03-04' },
 
+    // ── Developer Portal — USR-008 (SP Admin DevPortal + Member Avatar = multi-SP), USR-009 (Member) ──
+    { id: 'MB-008', userId: 'USR-008', role: 'subplatform_admin',  tenantId: 'T-001', subPlatformId: 'SP-003', customRoleId: 'CR-006', status: 'Active', invitedBy: 'USR-002', createdDate: '2026-01-15' },
+    { id: 'MB-009', userId: 'USR-009', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-003', customRoleId: 'CR-007', status: 'Active', invitedBy: 'USR-008', createdDate: '2026-02-20' },
+
+    // ── Multi-SP — USR-008 (kong) ยังเป็น Member ใน Avatar (SP-001) ด้วย ──
+    { id: 'MB-011', userId: 'USR-008', role: 'subplatform_member', tenantId: 'T-001', subPlatformId: 'SP-001', customRoleId: 'CR-004', status: 'Active', invitedBy: 'USR-003', createdDate: '2026-02-25' },
+
     // ── Suspended — was tenant_admin of T-003 ──
-    { id: 'MB-008', userId: 'USR-007', role: 'tenant_admin',      tenantId: 'T-003', subPlatformId: null,     customRoleId: 'CR-001', status: 'Suspended', invitedBy: 'USR-001', createdDate: '2026-01-20' },
+    { id: 'MB-010', userId: 'USR-007', role: 'tenant_admin',      tenantId: 'T-003', subPlatformId: null,     customRoleId: 'CR-001', status: 'Suspended', invitedBy: 'USR-001', createdDate: '2026-01-20' },
   ],
 
   // ─── Custom Roles (created by higher-level admins for lower levels) ───
@@ -902,6 +913,15 @@ window.MockData = {
     { id: 'CR-005', name: 'Viewer',         targetLevel: 'subplatform_member', scopeType: 'subplatform', scopeId: 'SP-001', createdBy: 'USR-003', createdDate: '2026-02-01',
       permissions: { canEdit: false, canDelete: false, canApprove: false, canManageMembers: false, canViewBilling: false, canViewAnalytics: false,
         pages: ['avatar-dashboard', 'knowledge-base'] } },
+
+    // Developer Portal — SP Admin (scoped to SP-003)
+    { id: 'CR-006', name: 'DevPortal Manager', targetLevel: 'subplatform_admin',  scopeType: 'tenant',      scopeId: 'T-001', createdBy: 'USR-002', createdDate: '2026-01-15',
+      permissions: { canEdit: true, canDelete: false, canApprove: true, canManageMembers: true, canViewBilling: false, canViewAnalytics: true,
+        pages: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'platform-members'] } },
+    // Developer Portal — SP Member (scoped to SP-003)
+    { id: 'CR-007', name: 'Developer',        targetLevel: 'subplatform_member', scopeType: 'subplatform', scopeId: 'SP-003', createdBy: 'USR-008', createdDate: '2026-02-20',
+      permissions: { canEdit: true, canDelete: false, canApprove: false, canManageMembers: false, canViewBilling: false, canViewAnalytics: false,
+        pages: ['dp-dashboard', 'dp-api-presets'] } },
   ],
 
   // ─── [COMPAT] platformMembers — computed view for backward compatibility ───

@@ -256,8 +256,8 @@
         // Owner should be on Admin BO
         window.location.href = 'index.html';
       } else if (ctx && (ctx.role === 'subplatform_admin' || ctx.role === 'subplatform_member')) {
-        // SP Admin/Member should go to SP App (for now, redirect to index.html)
-        window.location.href = 'index.html';
+        // SP Admin/Member should go to Avatar SP App
+        Auth.redirectToZone(ctx.role);
       } else {
         // Tenant Admin — correct zone
         Auth.updateProfileUI();
