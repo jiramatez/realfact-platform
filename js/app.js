@@ -451,6 +451,13 @@
         return;
       }
       if (_ctx && (_ctx.role === 'subplatform_admin' || _ctx.role === 'subplatform_member')) {
+        // If already on the correct SP zone, stay. Otherwise show login instead of auto-redirect.
+        var _spZone = Auth.getAppZone ? Auth.getAppZone() : 'admin';
+        if (_spZone === 'admin') {
+          // On index.html with SP session → clear session and show login
+          Auth.logout();
+          return;
+        }
         Auth.redirectToZone(_ctx.role);
         return;
       }

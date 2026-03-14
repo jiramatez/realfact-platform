@@ -801,6 +801,12 @@ window.Auth = (function () {
     }).join('');
 
     return '<div class="login-container">' +
+      '<div class="login-last-updated" style="text-align:center;margin-bottom:12px;padding:8px 16px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(4px);">' +
+        '<span class="text-xs" style="font-size:11px;color:var(--text-muted);">' +
+          '<i class="fa-solid fa-clock-rotate-left" style="margin-right:5px;color:var(--primary);"></i>' +
+          'Last Updated: 14 March 2026 — 18:00' +
+        '</span>' +
+      '</div>' +
       '<div class="login-card">' +
         '<div class="login-brand">' +
           '<img src="assets/Favicon-DarkMode.svg" alt="RealFact" style="width:48px;height:48px;object-fit:contain;">' +
@@ -828,11 +834,6 @@ window.Auth = (function () {
           '<div class="login-demo-accounts">' +
             demoRows +
           '</div>' +
-        '</div>' +
-        '<div class="login-last-updated" style="text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">' +
-          '<span class="text-xs text-dim" style="font-size:10px;opacity:.6;">' +
-            '<i class="fa-solid fa-clock-rotate-left" style="margin-right:4px;"></i>Last Updated: 14 March 2026' +
-          '</span>' +
         '</div>' +
       '</div>' +
     '</div>';
@@ -1171,6 +1172,7 @@ window.Auth = (function () {
     isOwner: isOwner,
     getAppZone: _getAppZone,
     redirectToZone: _redirectToZone,
+    getAppZone: _getAppZone,
     showHub: _showHub,
   };
 })();
