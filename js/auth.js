@@ -804,7 +804,7 @@ window.Auth = (function () {
       '<div class="login-last-updated" style="text-align:center;margin-bottom:12px;padding:8px 16px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(4px);">' +
         '<span class="text-xs" style="font-size:11px;color:var(--text-muted);">' +
           '<i class="fa-solid fa-clock-rotate-left" style="margin-right:5px;color:var(--primary);"></i>' +
-          'Last Updated: 14 March 2026 — 18:00' +
+          'Last Updated: 25 March 2026 — 17:00' +
         '</span>' +
       '</div>' +
       '<div class="login-card">' +
