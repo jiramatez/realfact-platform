@@ -843,6 +843,7 @@ body.light-mode .nav-item:hover { background: rgba(0,0,0,.04); }
 #login-overlay {
   position: fixed; inset: 0; z-index: 9999;
   background: var(--bg);
+  overflow-y: auto;
 }
 #login-overlay.hidden { display: none; }
 
@@ -850,7 +851,7 @@ body.light-mode .nav-item:hover { background: rgba(0,0,0,.04); }
   min-height: 100vh; display: flex;
   flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 20px;
+  padding: 32px 20px;
   background: radial-gradient(ellipse at 50% 30%, rgba(241,91,38,.08), transparent 60%);
 }
 .login-card {
