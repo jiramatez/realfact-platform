@@ -48,16 +48,13 @@ window.Auth = (function () {
     if (role === 'super_admin' || role === 'bo_admin' || role === 'bo_member') {
       if (currentZone !== 'admin') window.location.href = _resolveUrl('index.html');
     } else if (role === 'tenant_admin') {
-      // tenant_admin can be in hub OR admin — don't redirect between them
-      if (currentZone !== 'hub' && currentZone !== 'admin') window.location.href = _resolveUrl('hub.html');
+      if (currentZone !== 'hub') window.location.href = _resolveUrl('hub.html');
     } else if (role === 'subplatform_admin' || role === 'subplatform_member') {
-      // SP roles can access hub and admin
-      if (currentZone !== 'hub' && currentZone !== 'admin') {
-        var spId = _activeContext ? _activeContext.subPlatformId : null;
-        var spApp = spId ? _spAppMap[spId] : null;
-        if (spApp) {
-          if (currentZone !== spApp.zone) window.location.href = _resolveUrl(spApp.path);
-        }
+      // SP roles → redirect to their SP app
+      var spId = _activeContext ? _activeContext.subPlatformId : null;
+      var spApp = spId ? _spAppMap[spId] : null;
+      if (spApp) {
+        if (currentZone !== spApp.zone) window.location.href = _resolveUrl(spApp.path);
       }
     }
   }

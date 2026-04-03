@@ -23,14 +23,14 @@ window.HubPages.hubDashboard = (function () {
     Suspended: 'chip-red',
   };
 
-  // SP entry URLs — link to the correct app page per SP
+  // SP entry URLs — link to actual SP apps
   var _spEntryUrls = {
-    avatar:    'index.html#avatar-dashboard',
-    booking:   'index.html#avatar-dashboard',   // Booking shares Avatar app for now
-    devportal: 'index.html#dp-dashboard',
+    avatar:    'avatar/realfactavatar-demo_1.html',
+    booking:   'avatar/realfactavatar-demo_1.html',  // Booking shares Avatar app for now
+    devportal: 'developer-portal/developer-portal-mockup.html',
   };
   function _spEntryUrl(code) {
-    return _spEntryUrls[code] || 'index.html';
+    return _spEntryUrls[code] || '#';
   }
 
   function _getData() {

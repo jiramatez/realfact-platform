@@ -460,16 +460,13 @@
       // Logged in but no context selected → show Hub
       Auth.guard();
     } else {
-      // Zone guard: redirect users to their correct zone
+      // Zone guard: SP roles redirect to their SP app
       var _ctx = Auth.activeContext();
-      if (_ctx && _ctx.role === 'tenant_admin') {
-        window.location.href = 'hub.html';
-        return;
-      }
       if (_ctx && (_ctx.role === 'subplatform_admin' || _ctx.role === 'subplatform_member')) {
         Auth.redirectToZone(_ctx.role);
         return;
       }
+      // tenant_admin can access index.html (for SP pages from Hub links)
       // Fully authenticated with context → show app
       Auth.updateProfileUI();
       Auth.filterSidebar();
