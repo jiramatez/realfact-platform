@@ -21,7 +21,7 @@ window.Auth = (function () {
   var _activeContext = null;  // { membershipId, role, tenantId, subPlatformId, customRoleId }
 
   // ─── Role hierarchy (higher number = higher rank) ───
-  var _roleRank = { super_admin: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 };
+  var _roleRank = { super_admin: 6, bo_admin: 5, bo_member: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 };
 
   // ─── SP App URL Map (subPlatformId → app path + zone key) ───
   var _spAppMap = {
@@ -42,18 +42,22 @@ window.Auth = (function () {
   }
 
   // Redirect to the correct zone based on role
+  // tenant_admin can access both hub and admin (for SP pages)
   function _redirectToZone(role) {
     var currentZone = _getAppZone();
-    if (role === 'super_admin') {
+    if (role === 'super_admin' || role === 'bo_admin' || role === 'bo_member') {
       if (currentZone !== 'admin') window.location.href = _resolveUrl('index.html');
     } else if (role === 'tenant_admin') {
-      if (currentZone !== 'hub') window.location.href = _resolveUrl('hub.html');
+      // tenant_admin can be in hub OR admin — don't redirect between them
+      if (currentZone !== 'hub' && currentZone !== 'admin') window.location.href = _resolveUrl('hub.html');
     } else if (role === 'subplatform_admin' || role === 'subplatform_member') {
-      // Determine which SP App based on activeContext.subPlatformId
-      var spId = _activeContext ? _activeContext.subPlatformId : null;
-      var spApp = spId ? _spAppMap[spId] : null;
-      if (spApp) {
-        if (currentZone !== spApp.zone) window.location.href = _resolveUrl(spApp.path);
+      // SP roles can access hub and admin
+      if (currentZone !== 'hub' && currentZone !== 'admin') {
+        var spId = _activeContext ? _activeContext.subPlatformId : null;
+        var spApp = spId ? _spAppMap[spId] : null;
+        if (spApp) {
+          if (currentZone !== spApp.zone) window.location.href = _resolveUrl(spApp.path);
+        }
       }
     }
   }
@@ -105,7 +109,7 @@ window.Auth = (function () {
 
     // High-level roles always show Hub (per design: Owner / Tenant Admin choose scope first)
     var hasHighLevel = memberships.some(function (m) {
-      return m.role === 'super_admin' || m.role === 'tenant_admin';
+      return m.role === 'super_admin' || m.role === 'bo_admin' || m.role === 'bo_member' || m.role === 'tenant_admin';
     });
 
     if (memberships.length === 1 && !hasHighLevel) {
@@ -230,14 +234,14 @@ window.Auth = (function () {
   var _contextPages = {
     backoffice: ['dashboard', 'sub-platforms', 'tenants', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'plans-packages', 'plans-tokens', 'plans-bonus', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-customers', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue'],
     avatar: ['avatar-dashboard', 'avatar-tenants', 'hardware', 'devices', 'service-builder', 'knowledge-base', 'analytics-usage', 'platform-members'],
-    devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint'],
+    devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'dp-app-approval'],
   };
 
   // Pages that uniquely identify each context (used to determine visibility of context switcher)
   var _contextIdentifiers = {
     backoffice: ['dashboard', 'tenants', 'sub-platforms', 'cost-pricing', 'billing'],
     avatar: ['avatar-dashboard', 'hardware', 'devices', 'service-builder'],
-    devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets'],
+    devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-app-approval'],
   };
 
   function canAccessContext(ctx) {
@@ -521,11 +525,13 @@ window.Auth = (function () {
     var subPlatforms = _getSubPlatforms();
 
     var _rl = {
-      super_admin: 'Owner', tenant_admin: 'Tenant Admin',
+      super_admin: 'Owner', bo_admin: 'BO Admin', bo_member: 'BO Staff',
+      tenant_admin: 'Tenant Admin',
       subplatform_admin: 'SP Admin', subplatform_member: 'Member',
     };
     var _rc = {
-      super_admin: 'chip-orange', tenant_admin: 'chip-blue',
+      super_admin: 'chip-orange', bo_admin: 'chip-purple', bo_member: 'chip-gray',
+      tenant_admin: 'chip-blue',
       subplatform_admin: 'chip-green', subplatform_member: 'chip-purple',
     };
     var _spIcons = {
@@ -535,7 +541,8 @@ window.Auth = (function () {
       avatar: '#f15b26', devportal: '#4263eb', booking: '#3b82f6',
     };
     var _zoneLabels = {
-      super_admin: 'Admin Backoffice', tenant_admin: 'Tenant Hub',
+      super_admin: 'Admin Backoffice', bo_admin: 'Admin Backoffice', bo_member: 'Admin Backoffice',
+      tenant_admin: 'Tenant Hub',
       subplatform_admin: 'SP App', subplatform_member: 'SP App',
     };
 
@@ -544,8 +551,9 @@ window.Auth = (function () {
       var sp = mb.subPlatformId ? subPlatforms.find(function (s) { return s.id === mb.subPlatformId; }) : null;
       var cr = mb.customRoleId ? _getCustomRoles().find(function (r) { return r.id === mb.customRoleId; }) : null;
 
-      var spIcon = sp ? (_spIcons[sp.code] || 'fa-cube') : (mb.role === 'super_admin' ? 'fa-crown' : 'fa-building');
-      var spColor = sp ? (_spColors[sp.code] || 'var(--primary)') : (mb.role === 'super_admin' ? 'var(--primary)' : '#3b82f6');
+      var isBo = mb.role === 'super_admin' || mb.role === 'bo_admin' || mb.role === 'bo_member';
+      var spIcon = sp ? (_spIcons[sp.code] || 'fa-cube') : (isBo ? 'fa-shield-halved' : 'fa-building');
+      var spColor = sp ? (_spColors[sp.code] || 'var(--primary)') : (isBo ? 'var(--primary)' : '#3b82f6');
       var zoneLabel = _zoneLabels[mb.role] || 'App';
       var zoneDomain = sp ? sp.domain : (mb.role === 'tenant_admin' ? 'hub.realfact.ai' : 'admin.realfact.ai');
 
@@ -553,11 +561,11 @@ window.Auth = (function () {
       var gridRows = '';
 
       // Tenant row
-      if (mb.role === 'super_admin') {
+      if (isBo) {
         gridRows +=
-          '<i class="fa-solid fa-crown" style="font-size:10px;color:var(--primary);"></i>' +
+          '<i class="fa-solid fa-shield-halved" style="font-size:10px;color:var(--primary);"></i>' +
           '<span>Platform</span>' +
-          '<span class="font-600" style="color:var(--text);">ทุก Tenant (Global)</span>';
+          '<span class="font-600" style="color:var(--text);">Backoffice</span>';
       } else if (tenant) {
         gridRows +=
           '<i class="fa-solid fa-building" style="font-size:10px;color:#3b82f6;"></i>' +
@@ -633,17 +641,25 @@ window.Auth = (function () {
       card.addEventListener('click', function () {
         var mbId = card.dataset.mbId;
         if (switchContext(mbId)) {
-          // Redirect to correct zone based on selected role
           var ctx = _activeContext;
-          if (ctx) {
-            _redirectToZone(ctx.role);
-            // If _redirectToZone triggered a page redirect (SP users always redirect out), stop here
-            if (ctx.role === 'subplatform_admin' || ctx.role === 'subplatform_member') return;
-            if ((ctx.role === 'super_admin' && _getAppZone() !== 'admin') ||
-                (ctx.role === 'tenant_admin' && _getAppZone() !== 'hub')) {
-              return;
-            }
+          if (!ctx) return;
+          var zone = _getAppZone();
+
+          // Tenant Admin must go to hub.html
+          if (ctx.role === 'tenant_admin' && zone !== 'hub') {
+            window.location.href = _resolveUrl('hub.html');
+            return;
           }
+          // Backoffice roles must go to index.html
+          if ((ctx.role === 'super_admin' || ctx.role === 'bo_admin' || ctx.role === 'bo_member') && zone !== 'admin') {
+            window.location.href = _resolveUrl('index.html');
+            return;
+          }
+          // SP roles — redirect to correct SP app if needed
+          if (ctx.role === 'subplatform_admin' || ctx.role === 'subplatform_member') {
+            _redirectToZone(ctx.role);
+          }
+
           _hideLogin();
           _showApp();
           _updateProfileUI();
@@ -801,12 +817,6 @@ window.Auth = (function () {
     }).join('');
 
     return '<div class="login-container">' +
-      '<div class="login-last-updated" style="text-align:center;margin-bottom:12px;padding:8px 16px;background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:8px;backdrop-filter:blur(4px);">' +
-        '<span class="text-xs" style="font-size:11px;color:var(--text-muted);">' +
-          '<i class="fa-solid fa-clock-rotate-left" style="margin-right:5px;color:var(--primary);"></i>' +
-          'Last Updated: 25 March 2026 — 17:00' +
-        '</span>' +
-      '</div>' +
       '<div class="login-card">' +
         '<div class="login-brand">' +
           '<img src="assets/Favicon-DarkMode.svg" alt="RealFact" style="width:48px;height:48px;object-fit:contain;">' +
@@ -1172,7 +1182,6 @@ window.Auth = (function () {
     isOwner: isOwner,
     getAppZone: _getAppZone,
     redirectToZone: _redirectToZone,
-    getAppZone: _getAppZone,
     showHub: _showHub,
   };
 })();

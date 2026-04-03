@@ -371,74 +371,6 @@ window.Pages.paymentSettings = {
           </div>
         </div>
 
-        <!-- Layer 2: Per-Context -->
-        <div class="section-title mb-12"><i class="fa-solid fa-layer-group text-muted"></i> Per-Context Override</div>
-        <div class="text-sm text-muted mb-16">ตั้งค่ารอบบิลเฉพาะ Context — ถ้าเปิด "ใช้ Platform Default" จะ fallback ไปค่าด้านบน</div>
-
-        ${Object.entries(btCfg.contexts).map(([key, ctx]) => `
-          <div class="card p-20 mb-16" style="border-left:3px solid #8b5cf6;">
-            <div class="flex items-center gap-12 mb-16">
-              <i class="fa-solid ${ctx.icon} text-primary"></i>
-              <div class="font-700">${ctx.label}</div>
-              <span class="chip chip-purple">Credit Line</span>
-              ${ctx.useDefault ? '<span class="chip chip-gray">ใช้ Platform Default</span>' : '<span class="chip chip-blue">Custom</span>'}
-            </div>
-            <div class="grid-3 gap-16 mb-12">
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Billing Cycle</label>
-                <select class="form-input bt-ctx-cycle" data-ctx="${key}" ${ctx.useDefault ? 'disabled' : ''}>
-                  <option value="15" ${ctx.billingCycle === 15 ? 'selected' : ''}>15 วัน</option>
-                  <option value="30" ${ctx.billingCycle === 30 ? 'selected' : ''}>30 วัน</option>
-                  <option value="60" ${ctx.billingCycle === 60 ? 'selected' : ''}>60 วัน</option>
-                  <option value="90" ${ctx.billingCycle === 90 ? 'selected' : ''}>90 วัน</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">Payment Terms</label>
-                <select class="form-input bt-ctx-terms" data-ctx="${key}" ${ctx.useDefault ? 'disabled' : ''}>
-                  <option value="Net 15" ${ctx.paymentTerms === 'Net 15' ? 'selected' : ''}>Net 15</option>
-                  <option value="Net 30" ${ctx.paymentTerms === 'Net 30' ? 'selected' : ''}>Net 30</option>
-                  <option value="Net 60" ${ctx.paymentTerms === 'Net 60' ? 'selected' : ''}>Net 60</option>
-                  <option value="Net 90" ${ctx.paymentTerms === 'Net 90' ? 'selected' : ''}>Net 90</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin:0;">
-                <label class="form-label">&nbsp;</label>
-                <label class="flex items-center gap-8" style="cursor:pointer;height:38px;">
-                  <input type="checkbox" class="bt-ctx-use-default" data-ctx="${key}" ${ctx.useDefault ? 'checked' : ''} style="width:18px;height:18px;">
-                  <span class="text-sm font-600">ใช้ Platform Default</span>
-                </label>
-              </div>
-            </div>
-            <div class="flex items-center justify-between">
-              <div class="text-xs text-muted">แก้ไขล่าสุด: ${ctx.modifiedDate} โดย ${ctx.modifiedBy}</div>
-              <button class="btn btn-outline btn-sm bt-ctx-save" data-ctx="${key}"><i class="fa-solid fa-save"></i> บันทึก</button>
-            </div>
-          </div>
-        `).join('')}
-
-        <!-- Resolution Preview -->
-        <div class="section-title mb-12"><i class="fa-solid fa-diagram-project text-muted"></i> Resolution Preview</div>
-        <div class="card p-20">
-          <div class="text-sm text-muted mb-12">ค่าที่จะถูกใช้เมื่อสร้าง Credit Line ใหม่ (Resolved)</div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Context</th><th>Billing Cycle (Resolved)</th><th>Payment Terms (Resolved)</th><th>Source</th></tr></thead>
-              <tbody>
-                ${Object.entries(btCfg.contexts).map(([key, ctx]) => {
-                  const resolved = d.resolveBillingTerms(key);
-                  const src = ctx.useDefault ? 'Platform Default' : ctx.label;
-                  return `<tr>
-                    <td class="font-600"><i class="fa-solid ${ctx.icon}"></i> ${ctx.label}</td>
-                    <td class="mono">${resolved.billingCycle} วัน</td>
-                    <td class="mono">${resolved.paymentTerms}</td>
-                    <td>${ctx.useDefault ? '<span class="chip chip-gray">Platform Default</span>' : '<span class="chip chip-blue">Custom</span>'}</td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
     `;
   },
@@ -711,32 +643,5 @@ window.Pages.paymentSettings = {
       self._rerender('billing-terms');
     });
 
-    // ─── Billing Terms: Context "Use Default" toggle ───
-    document.querySelectorAll('.bt-ctx-use-default').forEach(chk => {
-      chk.addEventListener('change', () => {
-        const ctx = chk.dataset.ctx;
-        const row = chk.closest('.card');
-        row.querySelectorAll('.bt-ctx-cycle, .bt-ctx-terms').forEach(sel => {
-          sel.disabled = chk.checked;
-        });
-      });
-    });
-
-    // ─── Billing Terms: Save Context ───
-    document.querySelectorAll('.bt-ctx-save').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.ctx;
-        const ctx = d.billingTermsConfig.contexts[key];
-        if (!ctx) return;
-        const card = btn.closest('.card');
-        ctx.useDefault = card.querySelector('.bt-ctx-use-default').checked;
-        ctx.billingCycle = parseInt(card.querySelector('.bt-ctx-cycle').value);
-        ctx.paymentTerms = card.querySelector('.bt-ctx-terms').value;
-        ctx.modifiedDate = new Date().toISOString().slice(0, 10);
-        ctx.modifiedBy = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
-        App.toast('บันทึก ' + ctx.label + ' สำเร็จ', 'success');
-        self._rerender('billing-terms');
-      });
-    });
   },
 };

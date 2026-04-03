@@ -12,6 +12,7 @@
     'hub-subscriptions': { title: 'Subscriptions',    module: 'hubSubscriptions' },
     'hub-billing':       { title: 'Billing',          module: 'hubBilling' },
     'hub-team':          { title: 'Team',             module: 'hubTeam' },
+    'hub-wallet':        { title: 'Wallet',           module: 'hubWallet' },
     'hub-usage':         { title: 'Usage Report',     module: 'hubUsage' },
     'hub-settings':      { title: 'Settings',         module: 'hubSettings' },
   };
@@ -63,7 +64,11 @@
   // ─── Hash Router ───
   function onHashChange() {
     var hash = location.hash.replace('#', '') || 'hub-dashboard';
-    navigate(hash);
+    // Parse params: e.g. hub-subscriptions/avatar → page=hub-subscriptions, param=avatar
+    var parts = hash.split('/');
+    var page = parts[0];
+    window._hubPageParam = parts[1] || null;
+    navigate(page);
   }
   window.addEventListener('hashchange', onHashChange);
 

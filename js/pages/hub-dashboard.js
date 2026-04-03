@@ -23,6 +23,16 @@ window.HubPages.hubDashboard = (function () {
     Suspended: 'chip-red',
   };
 
+  // SP entry URLs — link to the correct app page per SP
+  var _spEntryUrls = {
+    avatar:    'index.html#avatar-dashboard',
+    booking:   'index.html#avatar-dashboard',   // Booking shares Avatar app for now
+    devportal: 'index.html#dp-dashboard',
+  };
+  function _spEntryUrl(code) {
+    return _spEntryUrls[code] || 'index.html';
+  }
+
   function _getData() {
     var d = window.MockData;
     if (!d) return null;
@@ -37,9 +47,8 @@ window.HubPages.hubDashboard = (function () {
     var devices = (d.devices || []).filter(function (dv) { return dv.soldTo === tid && dv.status === 'Activated'; });
     var subPlatforms = d.subPlatforms || [];
 
-    // Monthly cost from invoices this month
-    var now = new Date();
-    var monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    // Monthly cost — use mock date 2026-03 as reference
+    var monthKey = '2026-03';
     var monthlyInvoices = invoices.filter(function (i) { return i.issuedDate && i.issuedDate.slice(0, 7) === monthKey; });
     var monthlyCost = monthlyInvoices.reduce(function (sum, i) { return sum + (i.total || 0); }, 0);
 
@@ -48,6 +57,7 @@ window.HubPages.hubDashboard = (function () {
 
     // Pending invoices
     var pendingInvoices = invoices.filter(function (i) { return i.status === 'Issued' || i.status === 'Pending Verification'; }).length;
+    var overdueInvoices = invoices.filter(function (i) { return i.status === 'Overdue'; }).length;
 
     return {
       tenant: tenant,
@@ -58,8 +68,10 @@ window.HubPages.hubDashboard = (function () {
       devices: devices,
       subPlatforms: subPlatforms,
       monthlyCost: monthlyCost,
+      monthlyInvoiceCount: monthlyInvoices.length,
       activeSessions: activeSessions,
       pendingInvoices: pendingInvoices,
+      overdueInvoices: overdueInvoices,
     };
   }
 
@@ -70,68 +82,103 @@ window.HubPages.hubDashboard = (function () {
     }
     var t = data.tenant;
 
+    // Wallet data
+    var _d = window.MockData || {};
+    var _tid = (window.Auth && Auth.activeContext()) ? Auth.activeContext().tenantId : '';
+    var uWallet = (_d.universalWallet || {})[_tid] || [];
+    var sAlloc  = (_d.subscriptionAlloc || {})[_tid] || [];
+    var uTotal  = uWallet.reduce(function (s, b) { return s + b.amount; }, 0);
+
     // KPI Cards
     var kpis = [
       {
-        icon: 'fa-coins', color: 'var(--primary)',
-        label: 'Token คงเหลือ',
-        value: _fmt(t.tokenBalance),
-        sub: 'Bonus ' + _fmt(t.bonusTokens) + ' + ซื้อ ' + _fmt(t.purchasedTokens),
+        icon: 'fa-wallet', color: 'var(--primary)',
+        label: 'Universal Wallet',
+        value: _fmt(uTotal),
+        sub: _walletLegend(uWallet),
+        link: '#hub-wallet',
       },
       {
-        icon: 'fa-baht-sign', color: 'var(--success)',
-        label: 'ค่าใช้จ่ายเดือนนี้',
+        icon: 'fa-calendar-check', color: '#3b82f6',
+        label: 'รายเดือน (Sub-Platform)',
+        value: sAlloc.length > 0 ? sAlloc.length + ' แพลน' : '—',
+        sub: _allocLegend(sAlloc),
+        link: '#hub-wallet',
+      },
+      {
+        icon: 'fa-file-invoice-dollar', color: 'var(--success)',
+        label: 'Billing เดือนนี้',
         value: '฿' + _fmt(data.monthlyCost, true),
-        sub: data.recentInvoices.length + ' invoice(s)',
-      },
-      {
-        icon: 'fa-display', color: '#3b82f6',
-        label: 'Devices ใช้งาน',
-        value: data.devices.length,
-        sub: data.activeSessions + ' session กำลังทำงาน',
-      },
-      {
-        icon: 'fa-file-invoice', color: '#f59e0b',
-        label: 'Invoice รอดำเนินการ',
-        value: data.pendingInvoices,
-        sub: data.pendingInvoices > 0 ? 'รอชำระ/ตรวจสอบ' : 'ไม่มีรายการค้าง',
+        sub: data.monthlyInvoiceCount + ' invoice' +
+          (data.overdueInvoices > 0 ? ' · <span style="color:var(--error);">' + data.overdueInvoices + ' ค้างชำระ</span>' : '') +
+          (data.pendingInvoices > 0 ? ' · <span style="color:var(--warning);">' + data.pendingInvoices + ' รอตรวจสอบ</span>' : '') +
+          (data.overdueInvoices === 0 && data.pendingInvoices === 0 ? ' · ชำระครบ' : ''),
+        link: '#hub-billing',
+        linkText: 'ดูทั้งหมด',
       },
     ];
 
     var kpiHtml = kpis.map(function (k) {
-      return '<div class="card" style="padding:20px;flex:1;min-width:200px;">' +
-        '<div class="flex items-center gap-12 mb-12">' +
-          '<div style="width:40px;height:40px;border-radius:10px;background:' + k.color + '15;display:flex;align-items:center;justify-content:center;">' +
-            '<i class="fa-solid ' + k.icon + '" style="font-size:18px;color:' + k.color + ';"></i>' +
+      return '<div class="card" style="padding:16px 20px;display:flex;flex-direction:column;">' +
+        '<div class="flex items-center justify-between mb-10">' +
+          '<div class="flex items-center gap-8">' +
+            '<div style="width:32px;height:32px;border-radius:8px;background:' + k.color + '15;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<i class="fa-solid ' + k.icon + '" style="font-size:14px;color:' + k.color + ';"></i>' +
+            '</div>' +
+            '<div class="text-xs text-muted uppercase font-600">' + k.label + '</div>' +
           '</div>' +
-          '<div class="text-xs text-muted uppercase font-600">' + k.label + '</div>' +
+          (k.linkText && k.link ? '<a href="' + k.link + '" class="text-xs text-primary" style="text-decoration:none;white-space:nowrap;">' + k.linkText + ' <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i></a>' : '') +
         '</div>' +
-        '<div class="font-700" style="font-size:28px;line-height:1;">' + k.value + '</div>' +
-        '<div class="text-xs text-muted mt-6">' + k.sub + '</div>' +
+        '<div class="font-700" style="font-size:24px;line-height:1;">' + k.value + '</div>' +
+        '<div class="mt-8" style="flex:1;">' + k.sub + '</div>' +
       '</div>';
     }).join('');
 
-    // Sub-Platform Cards
+    // Sub-Platform Cards — metrics per type
     var spHtml = data.subs.map(function (sub) {
       var sp = data.subPlatforms.find(function (s) { return s.code === sub.subPlatformCode; });
       var icon = _spIcons[sub.subPlatformCode] || 'fa-cubes';
       var color = _spColors[sub.subPlatformCode] || 'var(--primary)';
       var domain = sp ? sp.domain : sub.subPlatformCode + '.realfact.ai';
       var chipCls = _statusChip[sub.status] || 'chip-gray';
-
-      // Count devices for this SP
-      var spDevices = data.devices.length;
       var spSessions = data.sessions.filter(function (s) { return s.subPlatform === sub.subPlatformCode; });
       var spActiveSessions = spSessions.filter(function (s) { return s.status === 'Active'; }).length;
+      var spDevices = data.devices.filter(function (dv) { return dv.subPlatform === sub.subPlatformCode; }).length || data.devices.length;
 
-      return '<div class="card" style="padding:0;overflow:hidden;min-width:280px;flex:1;">' +
-        '<div style="padding:20px 20px 16px;border-bottom:1px solid var(--border);">' +
+      // Metrics differ by SP type
+      var metricsHtml = '';
+      if (sub.subPlatformCode === 'avatar') {
+        metricsHtml =
+          '<div><div class="text-xs text-muted">Devices</div><div class="font-600 mono">' + spDevices + '</div></div>' +
+          '<div><div class="text-xs text-muted">Sessions</div><div class="font-600 mono">' + spActiveSessions + ' active</div></div>' +
+          '<div><div class="text-xs text-muted">Plan</div><div class="font-600">' + sub.plan + '</div></div>' +
+          '<div><div class="text-xs text-muted">ราคา/เดือน</div><div class="font-600 mono">' + (sub.price > 0 ? '฿' + _fmt(sub.price, true) : 'Free') + '</div></div>';
+      } else if (sub.subPlatformCode === 'booking') {
+        metricsHtml =
+          '<div><div class="text-xs text-muted">Reservations</div><div class="font-600 mono">—</div></div>' +
+          '<div><div class="text-xs text-muted">Rooms/Services</div><div class="font-600 mono">—</div></div>' +
+          '<div><div class="text-xs text-muted">Plan</div><div class="font-600">' + sub.plan + '</div></div>' +
+          '<div><div class="text-xs text-muted">ราคา/เดือน</div><div class="font-600 mono">' + (sub.price > 0 ? '฿' + _fmt(sub.price, true) : 'Free') + '</div></div>';
+      } else if (sub.subPlatformCode === 'devportal') {
+        metricsHtml =
+          '<div><div class="text-xs text-muted">API Calls</div><div class="font-600 mono">—</div></div>' +
+          '<div><div class="text-xs text-muted">Credit Usage</div><div class="font-600 mono">—</div></div>' +
+          '<div><div class="text-xs text-muted">Billing</div><div class="font-600">Credit Line</div></div>' +
+          '<div><div class="text-xs text-muted">ราคา/เดือน</div><div class="font-600 mono">' + (sub.price > 0 ? '฿' + _fmt(sub.price, true) : 'Free') + '</div></div>';
+      } else {
+        metricsHtml =
+          '<div><div class="text-xs text-muted">Plan</div><div class="font-600">' + sub.plan + '</div></div>' +
+          '<div><div class="text-xs text-muted">ราคา/เดือน</div><div class="font-600 mono">' + (sub.price > 0 ? '฿' + _fmt(sub.price, true) : 'Free') + '</div></div>';
+      }
+
+      return '<div class="card" style="padding:0;overflow:hidden;">' +
+        '<div style="padding:16px 20px;border-bottom:1px solid var(--border);">' +
           '<div class="flex items-center gap-12">' +
-            '<div style="width:44px;height:44px;border-radius:12px;background:' + color + ';display:flex;align-items:center;justify-content:center;">' +
-              '<i class="fa-solid ' + icon + '" style="font-size:20px;color:#fff;"></i>' +
+            '<div style="width:40px;height:40px;border-radius:10px;background:' + color + ';display:flex;align-items:center;justify-content:center;">' +
+              '<i class="fa-solid ' + icon + '" style="font-size:18px;color:#fff;"></i>' +
             '</div>' +
             '<div style="flex:1;">' +
-              '<div class="font-600" style="font-size:15px;">' + (sp ? sp.name : sub.subPlatformName) + '</div>' +
+              '<div class="font-600" style="font-size:14px;">' + (sp ? sp.name : sub.subPlatformName) + '</div>' +
               '<div class="flex items-center gap-6 mt-2">' +
                 '<span class="chip ' + chipCls + '" style="font-size:9px;">' + sub.status + '</span>' +
                 '<span class="text-xs text-muted">' + sub.plan + '</span>' +
@@ -140,15 +187,16 @@ window.HubPages.hubDashboard = (function () {
           '</div>' +
         '</div>' +
         '<div style="padding:14px 20px;">' +
-          '<div class="flex gap-16 mb-12">' +
-            '<div><div class="text-xs text-muted">Devices</div><div class="font-600">' + spDevices + '</div></div>' +
-            '<div><div class="text-xs text-muted">Sessions</div><div class="font-600">' + spActiveSessions + ' active</div></div>' +
-            '<div><div class="text-xs text-muted">Plan</div><div class="font-600">' + sub.plan + ' (' + (sub.price > 0 ? '฿' + _fmt(sub.price, true) : 'Free') + ')</div></div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:12px;">' + metricsHtml + '</div>' +
+          (sub.renewDate ? '<div class="text-xs text-muted mb-10"><i class="fa-solid fa-calendar"></i> ต่ออายุ: ' + sub.renewDate + '</div>' : '') +
+          '<div class="flex gap-8">' +
+            '<a href="#hub-subscriptions/' + sub.subPlatformCode + '" class="btn btn-outline btn-sm" style="flex:1;text-align:center;">' +
+              '<i class="fa-solid fa-gear"></i> จัดการ' +
+            '</a>' +
+            '<a href="' + _spEntryUrl(sub.subPlatformCode) + '" class="btn btn-primary btn-sm" style="flex:1;text-align:center;">' +
+              '<i class="fa-solid fa-arrow-right"></i> เข้าใช้งาน' +
+            '</a>' +
           '</div>' +
-          (sub.renewDate ? '<div class="text-xs text-muted mb-12"><i class="fa-solid fa-calendar"></i> ต่ออายุ: ' + sub.renewDate + '</div>' : '') +
-          '<a href="https://' + domain + '" target="_blank" rel="noopener" class="btn btn-primary btn-sm w-full" style="text-align:center;">' +
-            '<i class="fa-solid fa-arrow-up-right-from-square"></i> เข้าใช้งาน' +
-          '</a>' +
         '</div>' +
       '</div>';
     }).join('');
@@ -160,55 +208,7 @@ window.HubPages.hubDashboard = (function () {
       '</div>';
     }
 
-    // Recent Invoices — group by Sub-Platform
-    var _spIconMap = { 'Avatar': 'fa-robot', 'Developer Portal': 'fa-code', 'AI Booking': 'fa-calendar-check' };
-    var _spColorMap = { 'Avatar': '#f15b26', 'Developer Portal': '#8b5cf6', 'AI Booking': '#3b82f6' };
-
-    // Collect unique sub-platforms from invoices
-    var spGroups = {};
-    data.recentInvoices.forEach(function (inv) {
-      var sp = inv.subPlatform || 'อื่นๆ';
-      if (!spGroups[sp]) spGroups[sp] = [];
-      spGroups[sp].push(inv);
-    });
-
-    var statusMap = {
-      'Paid': '<span class="chip chip-green" style="font-size:10px;">Paid</span>',
-      'Issued': '<span class="chip chip-yellow" style="font-size:10px;">Issued</span>',
-      'Pending Verification': '<span class="chip chip-blue" style="font-size:10px;">รอตรวจสอบ</span>',
-      'Overdue': '<span class="chip chip-red" style="font-size:10px;">Overdue</span>',
-    };
-
-    var invoiceRows = '';
-    var spKeys = Object.keys(spGroups);
-    spKeys.forEach(function (sp) {
-      var spIcon = _spIconMap[sp] || 'fa-cubes';
-      var spColor = _spColorMap[sp] || 'var(--primary)';
-      // SP group header row
-      invoiceRows += '<tr><td colspan="5" style="padding:10px 12px 6px;background:var(--surface2);border-bottom:1px solid var(--border);">' +
-        '<div class="flex items-center gap-8">' +
-          '<i class="fa-solid ' + spIcon + '" style="color:' + spColor + ';font-size:13px;"></i>' +
-          '<span class="font-600 text-sm">' + sp + '</span>' +
-          '<span class="text-xs text-muted">(' + spGroups[sp].length + ')</span>' +
-        '</div>' +
-      '</td></tr>';
-      // Invoice rows for this SP
-      spGroups[sp].forEach(function (inv) {
-        invoiceRows += '<tr>' +
-          '<td class="mono text-sm" style="white-space:nowrap;">' + inv.id + '</td>' +
-          '<td>' + inv.description + '</td>' +
-          '<td class="text-right" style="white-space:nowrap;">฿' + _fmt(inv.total, true) + '</td>' +
-          '<td>' + (statusMap[inv.status] || inv.status) + '</td>' +
-          '<td class="text-sm text-muted" style="white-space:nowrap;">' + inv.issuedDate + '</td>' +
-        '</tr>';
-      });
-    });
-
-    if (data.recentInvoices.length === 0) {
-      invoiceRows = '<tr><td colspan="5" class="text-center text-muted" style="padding:24px;">ยังไม่มี Invoice</td></tr>';
-    }
-
-    return '<div style="max-width:1200px;margin:0 auto;">' +
+    return '<div>' +
       // Welcome
       '<div class="mb-20">' +
         '<div class="font-700" style="font-size:22px;line-height:1.3;">' +
@@ -218,29 +218,55 @@ window.HubPages.hubDashboard = (function () {
       '</div>' +
 
       // KPI Cards
-      '<div class="flex gap-16 mb-24" style="flex-wrap:wrap;">' + kpiHtml + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" class="mb-24">' + kpiHtml + '</div>' +
 
       // Sub-Platforms Section
       '<div class="mb-24">' +
         '<div class="text-xs uppercase text-muted font-600 mb-12"><i class="fa-solid fa-cubes"></i> Sub-Platforms ของฉัน</div>' +
-        '<div class="flex gap-16" style="flex-wrap:wrap;">' + spHtml + '</div>' +
+        '<div style="display:grid;grid-template-columns:repeat(' + Math.min(data.subs.length, 3) + ',1fr);gap:16px;">' + spHtml + '</div>' +
       '</div>' +
 
-      // Recent Invoices
-      '<div class="card" style="padding:0;">' +
-        '<div style="padding:16px 20px;border-bottom:1px solid var(--border);">' +
-          '<div class="flex items-center justify-between">' +
-            '<div class="font-600"><i class="fa-solid fa-file-invoice-dollar text-muted"></i> Invoice ล่าสุด</div>' +
-            '<a href="#hub-billing" class="text-sm text-primary" style="text-decoration:none;">ดูทั้งหมด <i class="fa-solid fa-arrow-right"></i></a>' +
-          '</div>' +
-        '</div>' +
-        '<div class="table-wrap">' +
-          '<table>' +
-            '<thead><tr><th>Invoice #</th><th>รายการ</th><th class="text-right">จำนวน</th><th>สถานะ</th><th>วันที่</th></tr></thead>' +
-            '<tbody>' + invoiceRows + '</tbody>' +
-          '</table>' +
-        '</div>' +
-      '</div>' +
+    '</div>';
+  }
+
+  var _walletColors = { subscription: '#3b82f6', purchased: '#22c55e', bonus: '#f59e0b', promo: '#a855f7' };
+
+  function _fmtExpiry(dateStr) {
+    if (!dateStr) return '';
+    var d = new Date(dateStr);
+    var m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return d.getDate() + ' ' + m[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+  }
+
+  var _spIcMap = { avatar: 'fa-robot', booking: 'fa-calendar-check', devportal: 'fa-code' };
+  var _spClMap = { avatar: '#f15b26', booking: '#3b82f6', devportal: '#8b5cf6' };
+
+  function _pill(color, label, amount, expiry) {
+    var exp = _fmtExpiry(expiry);
+    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:6px;background:' + color + '12;border:1px solid ' + color + '25;">' +
+      '<span style="width:7px;height:7px;border-radius:2px;background:' + color + ';flex-shrink:0;"></span>' +
+      '<span style="color:' + color + ';font-weight:600;">' + label + '</span>' +
+      '<span class="font-700">' + _fmt(amount) + '</span>' +
+      (exp ? '<span class="text-muted" style="font-size:10px;"><i class="fa-regular fa-clock" style="margin-right:2px;"></i>' + exp + '</span>' : '') +
+    '</span>';
+  }
+
+  function _walletLegend(balances) {
+    if (!balances || !balances.length) return '<span class="text-xs text-muted">ไม่มี</span>';
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+      balances.map(function (b) {
+        return _pill(_walletColors[b.type] || '#888', b.label, b.amount, b.expiry);
+      }).join('') +
+    '</div>';
+  }
+
+  function _allocLegend(allocs) {
+    if (!allocs || !allocs.length) return '<span class="text-xs text-muted">ไม่มี</span>';
+    return '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+      allocs.map(function (a) {
+        var color = _spClMap[a.sp] || '#888';
+        return _pill(color, a.spName + ' ' + a.plan, a.amount, a.expiry);
+      }).join('') +
     '</div>';
   }
 

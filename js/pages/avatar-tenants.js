@@ -6,6 +6,34 @@
 window.Pages = window.Pages || {};
 window.Pages.avatarTenants = {
 
+  // ─── Wallet legend helpers ───
+  _walletColors: { subscription: '#3b82f6', purchased: '#22c55e', bonus: '#f59e0b', promo: '#a855f7' },
+  _fmtExpiry(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const m = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return d.getDate() + ' ' + m[d.getMonth()] + ' ' + (d.getFullYear() + 543);
+  },
+  _spColorMap: { avatar: '#f15b26', booking: '#3b82f6', devportal: '#8b5cf6' },
+  _walletLegend(tid) {
+    const d = window.MockData || {};
+    const uW = (d.universalWallet || {})[tid] || [];
+    const sA = (d.subscriptionAlloc || {})[tid] || [];
+    if (!uW.length && !sA.length) return '';
+    const self = window.Pages.avatarTenants;
+    const uPills = uW.map(b => {
+      const c = self._walletColors[b.type] || '#888';
+      const exp = self._fmtExpiry(b.expiry);
+      return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:5px;background:${c}12;border:1px solid ${c}25;"><span style="width:6px;height:6px;border-radius:2px;background:${c};flex-shrink:0;"></span><span style="color:${c};font-weight:600;">${b.label}</span><span class="font-700">${Number(b.amount).toLocaleString('th-TH')}</span>${exp ? `<span class="text-muted" style="font-size:9px;"><i class="fa-regular fa-clock" style="margin-right:1px;"></i>${exp}</span>` : ''}</span>`;
+    }).join('');
+    const sPills = sA.map(a => {
+      const c = self._spColorMap[a.sp] || '#888';
+      const exp = self._fmtExpiry(a.expiry);
+      return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 7px;border-radius:5px;background:${c}12;border:1px solid ${c}25;"><span style="width:6px;height:6px;border-radius:2px;background:${c};flex-shrink:0;"></span><span style="color:${c};font-weight:600;">${a.spName} ${a.plan}</span><span class="font-700">${Number(a.amount).toLocaleString('th-TH')}</span>${exp ? `<span class="text-muted" style="font-size:9px;"><i class="fa-regular fa-clock" style="margin-right:1px;"></i>${exp}</span>` : ''}</span>`;
+    }).join('');
+    return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${uPills}${sPills}</div>`;
+  },
+
   // ─── Plan badge helper ───
   _planChip(plan) {
     const map = {
@@ -197,6 +225,7 @@ window.Pages.avatarTenants = {
                 <td>
                   <span class="mono font-600 ${t.tokenBalance < 500 ? 'text-error' : t.tokenBalance < 2000 ? 'text-warning' : ''}">${d.formatNumber(t.tokenBalance)}</span>
                   <span class="text-xs text-muted"> tokens</span>
+                  ${window.Pages.avatarTenants._walletLegend(t.id)}
                 </td>
                 <td class="text-sm text-muted mono">${sub.renewDate || '—'}</td>
                 <td>${self._statusChip(sub.status)}</td>
@@ -387,20 +416,8 @@ window.Pages.avatarTenants = {
             <i class="fa-solid fa-coins text-primary"></i>
             <span class="font-700 text-sm uppercase">Token Wallet</span>
           </div>
-          <div class="grid-3 gap-16">
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">Total Balance</div>
-              <div class="mono font-700" style="font-size:26px;">${d.formatNumber(t.tokenBalance)}</div>
-            </div>
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">Subscription Tokens</div>
-              <div class="mono font-700 text-primary" style="font-size:26px;">${d.formatNumber(t.bonusTokens)}</div>
-            </div>
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">Purchased Tokens</div>
-              <div class="mono font-700 text-success" style="font-size:26px;">${d.formatNumber(t.purchasedTokens)}</div>
-            </div>
-          </div>
+          <div class="mono font-700" style="font-size:26px;">${d.formatNumber(t.tokenBalance)} <span class="text-sm font-400 text-muted">tokens</span></div>
+          <div class="mt-8">${window.Pages.avatarTenants._walletLegend(t.id)}</div>
         </div>
 
         <!-- Presets Assigned -->

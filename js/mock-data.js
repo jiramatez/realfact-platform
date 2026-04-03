@@ -105,6 +105,7 @@ window.MockData = {
     { id: 'INV-202603-00002', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Paid',                 issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: '2026-03-01', method: 'Card (2C2P)' },
     { id: 'INV-202603-00003', tenantId: 'T-002', tenantName: 'XYZ Trading',        subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - March 2026', amount: 990,  vat: 69.30,  total: 1059.30, status: 'Issued',               issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: null },
     { id: 'INV-202603-00004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Pro - March 2026',     amount: 4990, vat: 349.30, total: 5339.30, status: 'Pending Verification', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: 'Bank Transfer' },
+    { id: 'INV-202603-00005', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'Avatar', type: 'Token Top-up', description: 'Token Top-up (10,000 tokens)', amount: 5000, vat: 350.00, total: 5350.00, status: 'Pending Verification', issuedDate: '2026-03-02', dueDate: '2026-03-16', paidDate: null,         method: 'Bank Transfer' },
     { id: 'INV-202602-00012', tenantId: 'T-001', tenantName: 'ABC Corporation',    subPlatform: 'Avatar', type: 'Token Top-up', description: 'Token Top-up (5,000 tokens)', amount: 2500, vat: 175.00, total: 2675.00, status: 'Paid',                 issuedDate: '2026-02-14', dueDate: '2026-02-28', paidDate: '2026-02-14', method: 'Card (2C2P)' },
     { id: 'INV-202602-00008', tenantId: 'T-008', tenantName: 'Sunrise Education',  subPlatform: 'Avatar', type: 'Subscription', description: 'Avatar Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Overdue',              issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: null,         method: null },
     // ── AI Booking — Subscription Invoices ──
@@ -112,6 +113,8 @@ window.MockData = {
     { id: 'INV-BK-202602-001', tenantId: 'T-001', tenantName: 'ABC Corporation',     subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Paid',    issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: '2026-02-03', method: 'Card (2C2P)' },
     { id: 'INV-BK-202603-002', tenantId: 'T-006', tenantName: 'Phuket Resort & Spa', subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - March 2026', amount: 990,  vat: 69.30,  total: 1059.30, status: 'Issued',  issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null,         method: null },
     { id: 'INV-BK-202602-002', tenantId: 'T-006', tenantName: 'Phuket Resort & Spa', subPlatform: 'AI Booking', type: 'Subscription', description: 'AI Booking Starter - Feb 2026',   amount: 990,  vat: 69.30,  total: 1059.30, status: 'Paid',    issuedDate: '2026-02-01', dueDate: '2026-02-15', paidDate: '2026-02-05', method: 'Bank Transfer' },
+    // ── Developer Portal — T-001 Overdue ──
+    { id: 'INV-DP-202603-001', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'Developer Portal', type: 'Credit Line', description: 'Developer Portal Pro - March 2026', amount: 2990, vat: 209.30, total: 3199.30, status: 'Overdue', issuedDate: '2026-03-01', dueDate: '2026-03-15', paidDate: null, method: null },
     // ── Developer Portal — Credit Line Invoices ──
     { id: 'INV-DEV-202602-001', tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Feb 2026',  amount: 38500, vat: 2695.00, total: 41195.00, status: 'Paid',    issuedDate: '2026-02-28', dueDate: '2026-03-30', paidDate: '2026-03-05', method: 'Bank Transfer' },
     { id: 'INV-DEV-202601-001', tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',  subPlatform: 'Developer Portal', type: 'Credit Line', description: 'API Usage — Jan 2026',  amount: 31200, vat: 2184.00, total: 33384.00, status: 'Paid',    issuedDate: '2026-01-31', dueDate: '2026-03-02', paidDate: '2026-02-20', method: 'Bank Transfer' },
@@ -260,24 +263,46 @@ window.MockData = {
     { id: 'SP-003', name: 'Developer Portal',      code: 'devportal', domain: 'developer.realfact.ai', status: 'Active',     tenants: 12, revenue: 89500,  tokenUsage: 45200,  plans: ['Free', 'Pro', 'Enterprise'], exchangeRateValue: 1, exchangeRateUnit: 'API Call', exchangeRate: '1 Token = 1 API Call', logo: null, primaryColor: '#4263eb', created: '2026-01-15', modifiedDate: '2026-03-01', modifiedBy: 'super@realfact.ai' },
   ],
 
+  // ─── Feature Catalog (per Sub-Platform) ───
+  // type: 'number' = input ตัวเลข (unlimited=true → มี checkbox ∞)
+  // type: 'toggle' = เปิด/ปิด
+  // type: 'select' = dropdown
+  featureCatalog: {
+    avatar: [
+      { key: 'presets',     label: 'จำนวน Avatar',    type: 'number', unit: 'ตัว', unlimited: true },
+      { key: 'kb',          label: 'Knowledge Base',   type: 'toggle' },
+      { key: 'priorityKb',  label: 'Priority KB',      type: 'toggle' },
+      { key: 'customAgent', label: 'Custom Agent',     type: 'toggle' },
+      { key: 'support',     label: 'Support SLA',      type: 'select', options: ['Community', 'Email', 'Phone', 'Priority'] },
+    ],
+    booking: [
+      { key: 'locations',   label: 'จำนวนสาขา',       type: 'number', unit: 'สาขา', unlimited: true },
+      { key: 'calSync',     label: 'Calendar Sync',    type: 'toggle' },
+      { key: 'smsReminder', label: 'SMS Reminder',     type: 'toggle' },
+      { key: 'branding',    label: 'Custom Branding',  type: 'toggle' },
+      { key: 'apiAccess',   label: 'API Access',       type: 'toggle' },
+      { key: 'support',     label: 'Support SLA',      type: 'select', options: ['Community', 'Email', 'Phone', 'Priority'] },
+    ],
+  },
+
   // ─── Subscription Plans ───
   plans: [
-    { id: 'PL-001', name: 'Free',    subPlatform: 'avatar', price: 0,    bonusTokens: 100,  features: ['Basic Avatar', '1 Preset', 'Community Support'],                                         status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'PL-002', name: 'Starter', subPlatform: 'avatar', price: 990,  bonusTokens: 1000, features: ['3 Avatars', '5 Presets', 'Knowledge Base', 'Email Support'],                            status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'PL-003', name: 'Pro',     subPlatform: 'avatar', price: 4990, bonusTokens: 5000, features: ['Unlimited Avatars', 'Unlimited Presets', 'Priority KB', 'Custom Agent', 'Phone Support'], status: 'Active', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
+    { id: 'PL-001', name: 'Free',    subPlatform: 'avatar', price: 0,    monthlyTokens: 100,  bonusTokens: 0,   features: { presets: 1,  kb: false, priorityKb: false, customAgent: false, support: 'Community' }, status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'PL-002', name: 'Starter', subPlatform: 'avatar', price: 990,  monthlyTokens: 1000, bonusTokens: 100, features: { presets: 5,  kb: true,  priorityKb: false, customAgent: false, support: 'Email' },     status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { id: 'PL-003', name: 'Pro',     subPlatform: 'avatar', price: 4990, monthlyTokens: 5000, bonusTokens: 500, features: { presets: -1, kb: true,  priorityKb: true,  customAgent: true,  support: 'Phone' },      status: 'Active', modifiedDate: '2026-02-15', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Cost Config (Service Codes) ───
   costConfig: [
     // ── Platform ──
-    { serviceCode: 'avatar-session',              name: 'Avatar Session',     provider: 'RealfactAI', model: '-',                     billingType: 'Per Minute',  costPerUnit: 0.5000,    currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+    { serviceCode: 'avatar-session',              name: 'Avatar Session',     provider: 'RealfactAI', model: '-',                     billingType: 'Per Minute',  costPerUnit: 0.50,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
     // ── LLM ──
-    { serviceCode: 'anthropic-claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic',  model: 'claude-sonnet-4-6',     billingType: 'Per Token',   costPerUnit: 0.0003,    outputCostPerUnit: 0.0015,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
-    { serviceCode: 'openai-gpt-4o',               name: 'GPT-4o',            provider: 'OpenAI',     model: 'gpt-4o',                billingType: 'Per Token',   costPerUnit: 0.00018,   outputCostPerUnit: 0.00054, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    { serviceCode: 'anthropic-claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic',  model: 'claude-sonnet-4-6',     billingType: 'Per Token',   costPerUnit: 0.003,  outputCostPerUnit: 0.015,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    { serviceCode: 'openai-gpt-4o',               name: 'GPT-4o',            provider: 'OpenAI',     model: 'gpt-4o',                billingType: 'Per Token',   costPerUnit: 0.002,  outputCostPerUnit: 0.006,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
     // ── TTS ──
-    { serviceCode: 'elevenlabs-turbo-v2-5',       name: 'ElevenLabs Turbo',  provider: 'ElevenLabs', model: 'eleven_turbo_v2_5',     billingType: 'Per Request', costPerUnit: 0.0380,    currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    { serviceCode: 'elevenlabs-turbo-v2-5',       name: 'ElevenLabs Turbo',  provider: 'ElevenLabs', model: 'eleven_turbo_v2_5',     billingType: 'Per Request', costPerUnit: 0.04,   currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
     // ── Embedding ──
-    { serviceCode: 'openai-embedding-3-small',    name: 'Embedding 3 Small', provider: 'OpenAI',     model: 'text-embedding-3-small', billingType: 'Per Token',  costPerUnit: 0.0000007, currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    { serviceCode: 'openai-embedding-3-small',    name: 'Embedding 3 Small', provider: 'OpenAI',     model: 'text-embedding-3-small', billingType: 'Per Token',  costPerUnit: 0.001,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Margin Config ───
@@ -313,7 +338,10 @@ window.MockData = {
 
   // ─── Credit Line Requests ───
   creditLineRequests: [
-    { id: 'CLR-001', tenantId: 'T-005', tenantName: 'Northern Star Hotel', requestedLimit: 80000, companyName: 'Northern Star Hotel Co., Ltd.', taxId: '0105565012345', documents: 2, status: 'Pending', requestDate: '2026-03-01', reviewedBy: null, modifiedDate: '2026-03-01', modifiedBy: 'finance@realfact.ai' },
+    { id: 'CLR-001', tenantId: 'T-005', tenantName: 'Northern Star Hotel', requestedLimit: 80000, companyName: 'Northern Star Hotel Co., Ltd.', taxId: '0105565012345', documents: 2, documentFiles: [
+      { name: 'หนังสือรับรองบริษัท.pdf', type: 'pdf', size: '1.2 MB', uploadedAt: '2026-03-01' },
+      { name: 'งบการเงิน-2025.pdf', type: 'pdf', size: '3.8 MB', uploadedAt: '2026-03-01' },
+    ], status: 'Pending', requestDate: '2026-03-01', reviewedBy: null, modifiedDate: '2026-03-01', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Credit Line Approval Log ───
@@ -370,7 +398,7 @@ window.MockData = {
 
   // ─── Collection Notices (M-BE-07 FR78) ───
   collectionNotices: [
-    { id: 'CN-001', tenantId: 'T-008', tenantName: 'Sunrise Education', invoiceId: 'INV-202602-00008', amount: 1059.30, sentDate: '2026-02-20', channel: 'Email + Telegram', cooldownUntil: '2026-02-27', status: 'Sent', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
+    { id: 'CN-001', tenantId: 'T-008', tenantName: 'Sunrise Education', invoiceId: 'INV-2026-005', amount: 1059.30, sentDate: '2026-02-20', sentTime: '14:30', channel: 'Email (admin@sunrise-edu.ac.th)', detail: 'แจ้งเตือนครั้งที่ 1 — ขอให้ชำระภายใน 7 วัน', status: 'Sent', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Refund Requests (M-BE-07 FR80) ───
@@ -387,7 +415,7 @@ window.MockData = {
 
   // ─── Aging Report ───
   agingReport: [
-    { tenantId: 'T-008', tenantName: 'Sunrise Education', totalOverdue: 1059.30, daysOverdue: 16, invoiceCount: 1, lastNotice: '2026-02-20', creditStatus: 'Suspended', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
+    { tenantId: 'T-008', tenantName: 'Sunrise Education', totalOverdue: 1059.30, daysOverdue: 16, invoiceCount: 1, invoiceIds: ['INV-2026-005'], lastNotice: '2026-02-20', creditStatus: 'Suspended', modifiedDate: '2026-02-20', modifiedBy: 'finance@realfact.ai' },
   ],
 
   // ─── Tenant Meta (contact person + billing info) ───
@@ -433,6 +461,54 @@ window.MockData = {
     ],
   },
 
+  // ─── Wallet: Universal (ซื้อ+โบนัส, ใช้ข้าม SP) ───
+  universalWallet: {
+    'T-001': [
+      { type: 'purchased', label: 'ซื้อเพิ่ม', amount: 9620, expiry: null },
+      { type: 'bonus',     label: 'โบนัส',    amount: 800,  expiry: '2026-05-01' },
+    ],
+    'T-002': [
+      { type: 'purchased', label: 'ซื้อเพิ่ม', amount: 2250, expiry: null },
+    ],
+    'T-003': [
+      { type: 'purchased', label: 'ซื้อเพิ่ม', amount: 31300, expiry: null },
+      { type: 'bonus',     label: 'โบนัส',    amount: 1500,  expiry: '2026-04-20' },
+    ],
+    'T-004': [
+      { type: 'bonus',     label: 'โบนัส',    amount: 1000,  expiry: '2026-05-02' },
+    ],
+    'T-005': [
+      { type: 'purchased', label: 'ซื้อเพิ่ม', amount: 2700, expiry: '2027-01-20' },
+      { type: 'bonus',     label: 'โบนัส',    amount: 1200,  expiry: '2026-04-25' },
+    ],
+    'T-006': [
+      { type: 'bonus',     label: 'โบนัส',    amount: 1000,  expiry: '2026-05-25' },
+    ],
+    'T-007': [
+      { type: 'bonus',     label: 'โบนัส',    amount: 100,   expiry: '2026-05-28' },
+    ],
+    'T-008': [
+      { type: 'purchased', label: 'ซื้อเพิ่ม', amount: 450,   expiry: '2026-10-15' },
+    ],
+  },
+
+  // ─── Wallet: Subscription Alloc (ผูก Sub-Platform, รีเซ็ตรายเดือน) ───
+  subscriptionAlloc: {
+    'T-001': [
+      { sp: 'avatar',  spName: 'Avatar',    plan: 'Pro',     amount: 5000, expiry: '2026-04-30' },
+      { sp: 'booking', spName: 'Booking',   plan: 'Starter', amount: 1000, expiry: '2026-04-30' },
+    ],
+    'T-002': [
+      { sp: 'avatar',  spName: 'Avatar',    plan: 'Starter', amount: 1000, expiry: '2026-04-30' },
+    ],
+    'T-003': [
+      { sp: 'avatar',  spName: 'Avatar',    plan: 'Pro',     amount: 5000, expiry: '2026-04-30' },
+    ],
+    'T-005': [
+      { sp: 'avatar',  spName: 'Avatar',    plan: 'Pro',     amount: 5000, expiry: '2026-04-30' },
+    ],
+  },
+
   // ─── Token Activities (per tenant, recent transactions) ───
   // amount = sell-price-based deduction (Token = THB sell price)
   tokenActivities: {
@@ -464,11 +540,12 @@ window.MockData = {
 
   // ─── Token Packages (purchasable top-up bundles) ───
   // 1 Token = 1 THB (selling price) — ราคา Package สะท้อนส่วนลด volume
+  // ─── Token Packages (Universal — ใช้ได้ข้าม Sub-Platform) ───
   tokenPackages: [
-    { id: 'TP-001', name: 'Starter',    tokens: 1000,  price: 1000,  pricePerToken: 1.00, discount: 0,  bonus: 0,    subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-002', name: 'Popular',    tokens: 5000,  price: 4000,  pricePerToken: 0.80, discount: 20, bonus: 500,  subPlatform: 'avatar', popular: true,  status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-003', name: 'Value',      tokens: 10000, price: 7000,  pricePerToken: 0.70, discount: 30, bonus: 1000, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
-    { id: 'TP-004', name: 'Enterprise', tokens: 50000, price: 30000, pricePerToken: 0.60, discount: 40, bonus: 5000, subPlatform: 'avatar', popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-001', name: 'Starter',    tokens: 1000,  price: 1000,  bonus: 0,    popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-002', name: 'Popular',    tokens: 5000,  price: 4000,  bonus: 500,  popular: true,  status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-003', name: 'Value',      tokens: 10000, price: 7000,  bonus: 1000, popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
+    { id: 'TP-004', name: 'Enterprise', tokens: 50000, price: 30000, bonus: 5000, popular: false, status: 'Active', modifiedDate: '2026-03-10', modifiedBy: 'super@realfact.ai' },
   ],
 
   // ─── Bank Accounts (Payment Global Settings) ───
@@ -754,12 +831,8 @@ window.MockData = {
   },
 
   // ─── Helpers ───
-  resolveBillingTerms(context) {
+  resolveBillingTerms() {
     var cfg = this.billingTermsConfig;
-    var ctx = cfg.contexts[context];
-    if (ctx && !ctx.useDefault) {
-      return { billingCycle: ctx.billingCycle, paymentTerms: ctx.paymentTerms };
-    }
     return { billingCycle: cfg.platformDefault.billingCycle, paymentTerms: cfg.platformDefault.paymentTerms };
   },
   billingCyclesPaid(tenantId) {
@@ -781,6 +854,25 @@ window.MockData = {
     if (n == null) return '-';
     return n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' THB';
   },
+  _thaiStatusMap: {
+    'Active': 'ใช้งาน', 'Activated': 'เปิดใช้งาน', 'Ready': 'พร้อมใช้',
+    'Paid': 'ชำระแล้ว', 'Completed': 'สำเร็จ', 'Online': 'ออนไลน์',
+    'Approved': 'อนุมัติแล้ว', 'Production': 'ใช้งานจริง',
+    'Sold': 'ขายแล้ว', 'Pending': 'รอดำเนินการ', 'Pending Verification': 'รอตรวจสอบ',
+    'Processing': 'กำลังประมวลผล', 'Issued': 'ออกแล้ว', 'Configured': 'ตั้งค่าแล้ว',
+    'Pending Approval': 'รออนุมัติ', 'Pending Dual Approval': 'รออนุมัติคู่',
+    'Sent': 'ส่งแล้ว', 'Sandbox': 'ทดสอบ',
+    'Draft': 'แบบร่าง', 'Registered': 'ลงทะเบียน', 'Free': 'ฟรี',
+    'Starter': 'Starter', 'Pro': 'Pro',
+    'Edited': 'แก้ไขแล้ว',
+    'Deprecated': 'เลิกใช้', 'Rejected': 'ปฏิเสธ',
+    'Decommissioned': 'ปลดระวาง', 'Suspended': 'ระงับ', 'Overdue': 'เกินกำหนด',
+    'Offline': 'ออฟไลน์', 'Discontinued': 'ยกเลิก', 'Retired': 'เกษียณ',
+    'Revoked': 'เพิกถอน', 'Invited': 'เชิญแล้ว',
+  },
+  thaiStatus(status) {
+    return this._thaiStatusMap[status] || status;
+  },
   statusChip(status) {
     const map = {
       'Active': 'chip-green', 'Activated': 'chip-green', 'Ready': 'chip-green',
@@ -796,10 +888,12 @@ window.MockData = {
       'Deprecated': 'chip-red', 'Rejected': 'chip-red',
       'Decommissioned': 'chip-red', 'Suspended': 'chip-red', 'Overdue': 'chip-red',
       'Offline': 'chip-red', 'Discontinued': 'chip-red', 'Retired': 'chip-red',
+      'Revoked': 'chip-red',
       'Invited': 'chip-blue',
     };
     const cls = map[status] || 'chip-gray';
-    return `<span class="chip ${cls}">${status}</span>`;
+    const label = this._thaiStatusMap[status] || status;
+    return `<span class="chip ${cls}">${label}</span>`;
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -859,12 +953,21 @@ window.MockData = {
     { id: 'USR-007', email: 'suspended@realfact.ai',   password: 'suspended1',  name: 'Suspended User',  initials: 'SU', avatar: null, status: 'Suspended', lastLogin: '2026-02-15 10:00', createdDate: '2026-01-20' },
     { id: 'USR-008', email: 'kong@realfact.ai',        password: 'devadmin123', name: 'ก้อง สมาร์ท',    initials: 'KS', avatar: null, status: 'Active',    lastLogin: '2026-03-05 10:30', createdDate: '2026-01-15' },
     { id: 'USR-009', email: 'ploy@realfact.ai',        password: 'devmem123',   name: 'พลอย เดฟ',      initials: 'PD', avatar: null, status: 'Active',    lastLogin: '2026-03-04 09:15', createdDate: '2026-02-20' },
+    // Backoffice team
+    { id: 'USR-010', email: 'finance@realfact.ai',     password: 'fin123',      name: 'สุดา การเงิน',   initials: 'SD', avatar: null, status: 'Active',    lastLogin: '2026-03-05 08:00', createdDate: '2025-12-10' },
+    { id: 'USR-011', email: 'ops@realfact.ai',          password: 'ops123',      name: 'ธนา ปฏิบัติการ', initials: 'TN', avatar: null, status: 'Active',    lastLogin: '2026-03-04 17:45', createdDate: '2026-01-05' },
+    { id: 'USR-012', email: 'support@realfact.ai',      password: 'sup123',      name: 'มานี ซัพพอร์ต',  initials: 'MN', avatar: null, status: 'Invited',   lastLogin: null,               createdDate: '2026-03-01' },
   ],
 
   // ─── User Memberships (Role × Scope — many-to-many) ───
   userMemberships: [
     // ── Owner — global, no scope ──
     { id: 'MB-001', userId: 'USR-001', role: 'super_admin',       tenantId: null,    subPlatformId: null,     customRoleId: null,     status: 'Active', invitedBy: null,      createdDate: '2025-12-01' },
+
+    // ── Backoffice team ──
+    { id: 'MB-012', userId: 'USR-010', role: 'bo_admin',          tenantId: null,    subPlatformId: null,     customRoleId: 'CR-002', status: 'Active',  invitedBy: 'USR-001', createdDate: '2025-12-10' },
+    { id: 'MB-013', userId: 'USR-011', role: 'bo_admin',          tenantId: null,    subPlatformId: null,     customRoleId: null,     status: 'Active',  invitedBy: 'USR-001', createdDate: '2026-01-05' },
+    { id: 'MB-014', userId: 'USR-012', role: 'bo_member',         tenantId: null,    subPlatformId: null,     customRoleId: null,     status: 'Invited', invitedBy: 'USR-001', createdDate: '2026-03-01' },
 
     // ── Tenant Admin — USR-002 manages T-001 and T-002 ──
     { id: 'MB-002', userId: 'USR-002', role: 'tenant_admin',      tenantId: 'T-001', subPlatformId: null,     customRoleId: 'CR-001', status: 'Active', invitedBy: 'USR-001', createdDate: '2025-12-15' },
@@ -917,14 +1020,142 @@ window.MockData = {
     // Developer Portal — SP Admin (scoped to SP-003)
     { id: 'CR-006', name: 'DevPortal Manager', targetLevel: 'subplatform_admin',  scopeType: 'tenant',      scopeId: 'T-001', createdBy: 'USR-002', createdDate: '2026-01-15',
       permissions: { canEdit: true, canDelete: false, canApprove: true, canManageMembers: true, canViewBilling: false, canViewAnalytics: true,
-        pages: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'platform-members'] } },
+        pages: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'dp-app-approval', 'platform-members'] } },
     // Developer Portal — SP Member (scoped to SP-003)
     { id: 'CR-007', name: 'Developer',        targetLevel: 'subplatform_member', scopeType: 'subplatform', scopeId: 'SP-003', createdBy: 'USR-008', createdDate: '2026-02-20',
       permissions: { canEdit: true, canDelete: false, canApprove: false, canManageMembers: false, canViewBilling: false, canViewAnalytics: false,
         pages: ['dp-dashboard', 'dp-api-presets'] } },
   ],
 
+  // ─── Member Audit Log ───
+  memberAuditLog: [
+    { id: 'MAL-001', userId: 'USR-002', userName: 'สมพร วงศ์ดี',   userEmail: 'somphon@realfact.ai',   action: 'Invited',     detail: 'เชิญเป็น Tenant Admin ของ ABC Corporation',                        actionBy: 'admin@realfact.ai',   actionDate: '2025-12-15', actionTime: '10:00' },
+    { id: 'MAL-002', userId: 'USR-003', userName: 'วิชัย การเงิน',  userEmail: 'wichai@realfact.ai',    action: 'Invited',     detail: 'เชิญเป็น SP Admin ของ RealFact Avatar ภายใต้ ABC Corporation',     actionBy: 'somphon@realfact.ai', actionDate: '2026-01-20', actionTime: '14:30' },
+    { id: 'MAL-003', userId: 'USR-004', userName: 'นภา โรงแรม',    userEmail: 'napha@northernstar.co.th', action: 'Invited',   detail: 'เชิญเป็น Member ของ RealFact Avatar',                               actionBy: 'wichai@realfact.ai',  actionDate: '2026-02-01', actionTime: '09:15' },
+    { id: 'MAL-004', userId: 'USR-005', userName: 'อนันต์ เทคโน',  userEmail: 'anan@bkktech.co.th',     action: 'Edited',      detail: 'เปลี่ยน Custom Role เป็น Viewer',                                   actionBy: 'wichai@realfact.ai',  actionDate: '2026-02-12', actionTime: '16:45' },
+    { id: 'MAL-005', userId: 'USR-007', userName: 'Suspended User', userEmail: 'suspended@example.com',  action: 'Suspended',   detail: 'ระงับ Tenant Admin ของ Northern Star Hotel — เหตุผล: ไม่ได้ใช้งาน', actionBy: 'admin@realfact.ai',   actionDate: '2026-02-15', actionTime: '11:00' },
+  ],
+
   // ─── [COMPAT] platformMembers — computed view for backward compatibility ───
+  // ═══════════════════════════════════════════════════════════════
+  //  Developer Portal — App Approval
+  // ═══════════════════════════════════════════════════════════════
+
+  dpApps: [
+    { id: 'DPA-001', name: 'FinBot',       description: 'AI chatbot สำหรับให้คำปรึกษาทางการเงิน',          tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',
+      developerName: 'นายวิชัย การเงิน',  developerEmail: 'vichai@fintechco.com',
+      companyName: 'FinTech Co., Ltd.',    companyRegNumber: '0105558012345', companyAddress: '789 ถ.สาทรใต้ แขวงยานนาวา เขตสาทร กรุงเทพฯ 10120',
+      useCase: 'ให้บริการที่ปรึกษาการเงินผ่าน AI chatbot สำหรับลูกค้ารายย่อย',
+      clientId: 'rf_client_abc123', status: 'approved', rateLimit: '10,000 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',  type: 'pdf',   size: '1.2 MB', uploadDate: '2025-11-10' },
+        { name: 'สำเนาบัตรกรรมการ.pdf',     type: 'pdf',   size: '0.8 MB', uploadDate: '2025-11-10' },
+      ],
+      submittedDate: '2025-11-10', approvedDate: '2025-11-15', rejectedDate: null, rejectionReason: null,
+      createdDate: '2025-10-20', modifiedDate: '2025-11-15', modifiedBy: 'admin@realfact.ai' },
+
+    { id: 'DPA-002', name: 'HotelAssist', description: 'ระบบ concierge อัจฉริยะสำหรับโรงแรม',              tenantId: 'T-DP-004', tenantName: 'CloudNine Tech',
+      developerName: 'นางสาวนภา โรงแรม', developerEmail: 'napa@cloudnine.dev',
+      companyName: 'CloudNine Tech Co., Ltd.', companyRegNumber: '0505559056789', companyAddress: '99 ถ.ช้างคลาน ต.ช้างคลาน อ.เมือง จ.เชียงใหม่ 50100',
+      useCase: 'ระบบ concierge อัจฉริยะสำหรับแขกโรงแรม ตอบคำถามบริการ จองทัวร์ แนะนำร้านอาหาร',
+      clientId: 'rf_client_xyz789', status: 'sandbox', rateLimit: '100 calls/day',
+      documents: [],
+      submittedDate: null, approvedDate: null, rejectedDate: null, rejectionReason: null,
+      createdDate: '2026-02-25', modifiedDate: '2026-02-25', modifiedBy: 'napa@cloudnine.dev' },
+
+    { id: 'DPA-003', name: 'EduBot',      description: 'AI tutor สำหรับนักเรียนระดับมัธยม',                tenantId: 'T-DP-002', tenantName: 'DataDriven Ltd.',
+      developerName: 'นายอนันต์ เทคโน',  developerEmail: 'anan@datadriven.io',
+      companyName: 'DataDriven Ltd.',      companyRegNumber: '0105563045678', companyAddress: '321 ถ.รัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพฯ 10400',
+      useCase: 'AI tutor ช่วยสอนวิชาคณิตศาสตร์และวิทยาศาสตร์สำหรับนักเรียน ม.ปลาย',
+      clientId: 'rf_client_edu456', status: 'pending_approval', rateLimit: '100 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',    type: 'pdf',   size: '1.5 MB', uploadDate: '2026-03-01' },
+        { name: 'ใบอนุญาตประกอบธุรกิจ.pdf',  type: 'pdf',   size: '0.9 MB', uploadDate: '2026-03-01' },
+        { name: 'แผนการใช้งาน API.pdf',       type: 'pdf',   size: '2.1 MB', uploadDate: '2026-03-01' },
+      ],
+      submittedDate: '2026-03-01', approvedDate: null, rejectedDate: null, rejectionReason: null,
+      createdDate: '2026-02-15', modifiedDate: '2026-03-01', modifiedBy: 'anan@datadriven.io' },
+
+    { id: 'DPA-004', name: 'MediChat',    description: 'แชทบอทให้ข้อมูลสุขภาพเบื้องต้น',                  tenantId: 'T-DP-003', tenantName: 'SmartBot Inc.',
+      developerName: 'นายแพทย์มนัส โรงพยาบาล', developerEmail: 'manas@smartbot.co.th',
+      companyName: 'SmartBot Inc.',        companyRegNumber: '0993000012345', companyAddress: '88 ซ.เพชรบุรี 47 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310',
+      useCase: 'ให้ข้อมูลสุขภาพเบื้องต้นและแนะนำการพบแพทย์ ไม่ใช่การวินิจฉัยโรค',
+      clientId: 'rf_client_med001', status: 'pending_approval', rateLimit: '100 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',    type: 'pdf',   size: '1.1 MB', uploadDate: '2026-03-10' },
+        { name: 'ใบอนุญาต อย..pdf',           type: 'pdf',   size: '0.7 MB', uploadDate: '2026-03-10' },
+      ],
+      submittedDate: '2026-03-10', approvedDate: null, rejectedDate: null, rejectionReason: null,
+      createdDate: '2026-03-05', modifiedDate: '2026-03-10', modifiedBy: 'manas@smartbot.co.th' },
+
+    { id: 'DPA-005', name: 'TravelGenie', description: 'AI trip planner สำหรับนักท่องเที่ยว',              tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',
+      developerName: 'นายวิชัย การเงิน',  developerEmail: 'vichai@fintechco.com',
+      companyName: 'FinTech Co., Ltd.',    companyRegNumber: '0105558012345', companyAddress: '789 ถ.สาทรใต้ แขวงยานนาวา เขตสาทร กรุงเทพฯ 10120',
+      useCase: 'วางแผนการท่องเที่ยวด้วย AI แนะนำที่พัก ร้านอาหาร สถานที่ท่องเที่ยว',
+      clientId: 'rf_client_trv002', status: 'pending_approval', rateLimit: '100 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',  type: 'pdf',   size: '1.2 MB', uploadDate: '2026-03-18' },
+        { name: 'Mockup แอปพลิเคชัน.png',  type: 'image', size: '3.4 MB', uploadDate: '2026-03-18' },
+      ],
+      submittedDate: '2026-03-18', approvedDate: null, rejectedDate: null, rejectionReason: null,
+      createdDate: '2026-03-12', modifiedDate: '2026-03-18', modifiedBy: 'vichai@fintechco.com' },
+
+    { id: 'DPA-006', name: 'ShopSmart',   description: 'ผู้ช่วยช้อปปิ้งอัจฉริยะ เปรียบเทียบราคาสินค้า',  tenantId: 'T-DP-002', tenantName: 'DataDriven Ltd.',
+      developerName: 'นายอนันต์ เทคโน',  developerEmail: 'anan@datadriven.io',
+      companyName: 'DataDriven Ltd.',      companyRegNumber: '0105563045678', companyAddress: '321 ถ.รัชดาภิเษก แขวงดินแดง เขตดินแดง กรุงเทพฯ 10400',
+      useCase: 'เปรียบเทียบราคาสินค้าออนไลน์และแนะนำดีลที่ดีที่สุดให้ผู้ใช้',
+      clientId: 'rf_client_shp003', status: 'approved', rateLimit: '5,000 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',  type: 'pdf',   size: '1.5 MB', uploadDate: '2026-01-05' },
+        { name: 'สำเนาบัตรกรรมการ.pdf',     type: 'pdf',   size: '0.8 MB', uploadDate: '2026-01-05' },
+      ],
+      submittedDate: '2026-01-05', approvedDate: '2026-01-12', rejectedDate: null, rejectionReason: null,
+      createdDate: '2025-12-20', modifiedDate: '2026-01-12', modifiedBy: 'admin@realfact.ai' },
+
+    { id: 'DPA-007', name: 'LegalAI',     description: 'AI ช่วยร่างสัญญาและให้คำปรึกษากฎหมายเบื้องต้น',   tenantId: 'T-DP-003', tenantName: 'SmartBot Inc.',
+      developerName: 'นายแพทย์มนัส โรงพยาบาล', developerEmail: 'manas@smartbot.co.th',
+      companyName: 'SmartBot Inc.',        companyRegNumber: '0993000012345', companyAddress: '88 ซ.เพชรบุรี 47 แขวงบางกะปิ เขตห้วยขวาง กรุงเทพฯ 10310',
+      useCase: 'ร่างสัญญาทั่วไปและตอบคำถามกฎหมายเบื้องต้น ไม่ใช่คำปรึกษาทางกฎหมาย',
+      clientId: 'rf_client_leg004', status: 'rejected', rateLimit: '100 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',  type: 'pdf',   size: '1.1 MB', uploadDate: '2026-02-01' },
+      ],
+      submittedDate: '2026-02-01', approvedDate: null, rejectedDate: '2026-02-05', rejectionReason: 'เอกสารประกอบไม่ครบถ้วน กรุณาแนบใบอนุญาตประกอบวิชาชีพทนายความและแผนการใช้งาน API ที่ละเอียดกว่านี้',
+      createdDate: '2026-01-25', modifiedDate: '2026-02-05', modifiedBy: 'admin@realfact.ai' },
+
+    { id: 'DPA-008', name: 'FoodFinder',  description: 'แนะนำร้านอาหารและเมนูตามความชอบ',                 tenantId: 'T-DP-004', tenantName: 'CloudNine Tech',
+      developerName: 'นางสาวนภา โรงแรม', developerEmail: 'napa@cloudnine.dev',
+      companyName: 'CloudNine Tech Co., Ltd.', companyRegNumber: '0505559056789', companyAddress: '99 ถ.ช้างคลาน ต.ช้างคลาน อ.เมือง จ.เชียงใหม่ 50100',
+      useCase: 'แนะนำร้านอาหารใกล้เคียงตามรสนิยมและข้อจำกัดด้านอาหารของผู้ใช้',
+      clientId: 'rf_client_fdf005', status: 'sandbox', rateLimit: '100 calls/day',
+      documents: [],
+      submittedDate: null, approvedDate: null, rejectedDate: null, rejectionReason: null,
+      createdDate: '2026-03-20', modifiedDate: '2026-03-20', modifiedBy: 'napa@cloudnine.dev' },
+
+    { id: 'DPA-009', name: 'InsureBot',   description: 'เปรียบเทียบแผนประกันและให้คำแนะนำ',                tenantId: 'T-DP-001', tenantName: 'FinTech Co., Ltd.',
+      developerName: 'นายวิชัย การเงิน',  developerEmail: 'vichai@fintechco.com',
+      companyName: 'FinTech Co., Ltd.',    companyRegNumber: '0105558012345', companyAddress: '789 ถ.สาทรใต้ แขวงยานนาวา เขตสาทร กรุงเทพฯ 10120',
+      useCase: 'เปรียบเทียบแผนประกันชีวิตและประกันสุขภาพ ให้คำแนะนำแบบ personalized',
+      clientId: 'rf_client_ins006', status: 'revoked', rateLimit: '5,000 calls/day',
+      documents: [
+        { name: 'หนังสือรับรองบริษัท.pdf',         type: 'pdf', size: '1.2 MB', uploadDate: '2025-09-10' },
+        { name: 'ใบอนุญาตนายหน้าประกันภัย.pdf',   type: 'pdf', size: '0.6 MB', uploadDate: '2025-09-10' },
+      ],
+      submittedDate: '2025-09-10', approvedDate: '2025-09-18', rejectedDate: null, rejectionReason: null,
+      createdDate: '2025-09-01', modifiedDate: '2026-02-28', modifiedBy: 'admin@realfact.ai' },
+  ],
+
+  dpAppApprovalLog: [
+    { id: 'DPAL-001', appId: 'DPA-001', appName: 'FinBot',      action: 'Approved',  reason: null,                                                                                                                       actionBy: 'admin@realfact.ai',   actionDate: '2025-11-15', actionTime: '09:30' },
+    { id: 'DPAL-002', appId: 'DPA-006', appName: 'ShopSmart',   action: 'Approved',  reason: null,                                                                                                                       actionBy: 'admin@realfact.ai',   actionDate: '2026-01-12', actionTime: '14:15' },
+    { id: 'DPAL-003', appId: 'DPA-007', appName: 'LegalAI',     action: 'Rejected',  reason: 'เอกสารประกอบไม่ครบถ้วน กรุณาแนบใบอนุญาตประกอบวิชาชีพทนายความและแผนการใช้งาน API ที่ละเอียดกว่านี้',                        actionBy: 'admin@realfact.ai',   actionDate: '2026-02-05', actionTime: '11:45' },
+    { id: 'DPAL-004', appId: 'DPA-009', appName: 'InsureBot',   action: 'Approved',  reason: null,                                                                                                                       actionBy: 'admin@realfact.ai',   actionDate: '2025-09-18', actionTime: '16:00' },
+    { id: 'DPAL-005', appId: 'DPA-009', appName: 'InsureBot',   action: 'Revoked',   reason: 'ตรวจพบการใช้งาน API ผิดวัตถุประสงค์ ส่งข้อมูลไปยัง third-party โดยไม่ได้รับอนุญาต',                                        actionBy: 'admin@realfact.ai',   actionDate: '2026-02-28', actionTime: '10:20' },
+    { id: 'DPAL-006', appId: 'DPA-003', appName: 'EduBot',      action: 'Submitted', reason: null,                                                                                                                       actionBy: 'anan@datadriven.io',  actionDate: '2026-03-01', actionTime: '08:45' },
+    { id: 'DPAL-007', appId: 'DPA-004', appName: 'MediChat',    action: 'Submitted', reason: null,                                                                                                                       actionBy: 'manas@smartbot.co.th', actionDate: '2026-03-10', actionTime: '13:20' },
+    { id: 'DPAL-008', appId: 'DPA-005', appName: 'TravelGenie', action: 'Submitted', reason: null,                                                                                                                       actionBy: 'vichai@fintechco.com', actionDate: '2026-03-18', actionTime: '15:30' },
+  ],
+
   get platformMembers() {
     var self = this;
     return self.users.map(function (u) {

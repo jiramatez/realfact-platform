@@ -27,7 +27,8 @@ window.Pages.dashboard = {
     const pendingVerif     = invoices.filter(inv => inv.status === 'Pending Verification');
     const pendingCL        = creditLineReqs.filter(r => r.status === 'Pending');
     const pendingRefunds   = refundReqs.filter(r => r.status.includes('Pending'));
-    const totalActions     = overdueInvoices.length + pendingVerif.length + pendingCL.length + pendingRefunds.length;
+    const pendingDpApps    = (d.dpApps || []).filter(a => a.status === 'pending_approval');
+    const totalActions     = overdueInvoices.length + pendingVerif.length + pendingCL.length + pendingRefunds.length + pendingDpApps.length;
 
     const activeSPs = d.subPlatforms.filter(sp => sp.status === 'Active').length;
 
@@ -86,6 +87,97 @@ window.Pages.dashboard = {
           <div class="stat-value mono ${totalActions > 0 ? 'text-error' : 'text-success'}">${totalActions}</div>
           <div class="stat-change ${totalActions > 0 ? 'down' : 'up'}">${totalActions > 0 ? 'รายการต้องตรวจสอบ' : 'ทุกอย่างเรียบร้อย'}</div>
         </div>
+      </div>
+
+      <!-- Action Items (moved to top — alerts need immediate attention) -->
+      <div class="section-title">
+        <i class="fa-solid fa-${totalActions > 0 ? 'triangle-exclamation text-error' : 'circle-check text-success'}"></i>
+        รายการที่ต้องดำเนินการ
+        ${totalActions > 0 ? `<span class="chip chip-red" style="margin-left:8px;">${totalActions}</span>` : ''}
+      </div>
+      <div class="card-accent mb-24">
+        ${totalActions === 0 ? `
+          <div class="empty-state">
+            <i class="fa-solid fa-circle-check" style="color:var(--success)"></i>
+            <p>ไม่มีรายการค้างอยู่</p>
+          </div>
+        ` : `<div class="flex-col gap-10">
+
+          ${overdueInvoices.length > 0 ? `
+            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--error);">
+              <div class="flex items-center gap-10">
+                <i class="fa-solid fa-circle-xmark text-error"></i>
+                <div>
+                  <div class="font-600 text-sm">Invoice เกินกำหนดชำระ${overdueInvoices.length > 1 ? ` <span class="text-muted font-400">(+${overdueInvoices.length - 1} รายการ)</span>` : ''}</div>
+                  <div class="text-xs text-muted">${overdueInvoices[0].tenantName} · ${overdueInvoices[0].id} · ค้างมา ${d.agingReport?.find(a => a.tenantId === overdueInvoices[0].tenantId)?.daysOverdue ?? '—'} วัน</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-12">
+                <span class="mono text-sm text-error font-600">${d.formatCurrency(overdueInvoices[0].total)}</span>
+                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">ดูรายละเอียด</button>
+              </div>
+            </div>
+          ` : ''}
+
+          ${pendingVerif.length > 0 ? `
+            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--warning);">
+              <div class="flex items-center gap-10">
+                <i class="fa-solid fa-clock" style="color:var(--warning)"></i>
+                <div>
+                  <div class="font-600 text-sm">รอตรวจสอบการโอนเงิน${pendingVerif.length > 1 ? ` <span class="text-muted font-400">(+${pendingVerif.length - 1} รายการ)</span>` : ''}</div>
+                  <div class="text-xs text-muted">${pendingVerif[0].tenantName} · ${pendingVerif[0].id}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-12">
+                <span class="mono text-sm font-600">${d.formatCurrency(pendingVerif[0].total)}</span>
+                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">ตรวจสอบ</button>
+              </div>
+            </div>
+          ` : ''}
+
+          ${pendingCL.length > 0 ? `
+            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid #3b82f6;">
+              <div class="flex items-center gap-10">
+                <i class="fa-solid fa-credit-card" style="color:#3b82f6"></i>
+                <div>
+                  <div class="font-600 text-sm">คำขอ Credit Line รอพิจารณา${pendingCL.length > 1 ? ` <span class="text-muted font-400">(+${pendingCL.length - 1} รายการ)</span>` : ''}</div>
+                  <div class="text-xs text-muted">${pendingCL[0].tenantName} · วงเงินที่ขอ ${d.formatCurrency(pendingCL[0].requestedLimit)}</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">พิจารณา</button>
+            </div>
+          ` : ''}
+
+          ${pendingRefunds.length > 0 ? `
+            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--warning);">
+              <div class="flex items-center gap-10">
+                <i class="fa-solid fa-rotate-left" style="color:var(--warning)"></i>
+                <div>
+                  <div class="font-600 text-sm">คำขอ Refund รอ Dual Approval${pendingRefunds.length > 1 ? ` <span class="text-muted font-400">(+${pendingRefunds.length - 1} รายการ)</span>` : ''}</div>
+                  <div class="text-xs text-muted">${pendingRefunds[0].tenantName} · ${pendingRefunds[0].invoiceId}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-12">
+                <span class="mono text-sm font-600">${d.formatCurrency(pendingRefunds[0].amount)}</span>
+                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">อนุมัติ</button>
+              </div>
+            </div>
+          ` : ''}
+
+          ${pendingDpApps.length > 0 ? `
+            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid #8b5cf6;">
+              <div class="flex items-center gap-10">
+                <i class="fa-solid fa-clipboard-check" style="color:#8b5cf6"></i>
+                <div>
+                  <div class="font-600 text-sm">แอปรออนุมัติ (Developer Portal)${pendingDpApps.length > 1 ? ` <span class="text-muted font-400">(+${pendingDpApps.length - 1} รายการ)</span>` : ''}</div>
+                  <div class="text-xs text-muted">${pendingDpApps[0].name} · ${pendingDpApps[0].developerName}</div>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-outline" onclick="location.hash='dp-app-approval'" style="border-color:#8b5cf6;color:#8b5cf6;">พิจารณา</button>
+            </div>
+          ` : ''}
+
+        </div>`}
       </div>
 
       <!-- Sub-Platform Cards -->
@@ -199,84 +291,6 @@ window.Pages.dashboard = {
           <div class="stat-value mono">${planCounts.Free}</div>
           <div class="stat-change down">฿0 / เดือน</div>
         </div>
-      </div>
-
-      <!-- Action Items -->
-      <div class="section-title">
-        <i class="fa-solid fa-${totalActions > 0 ? 'triangle-exclamation text-error' : 'circle-check text-success'}"></i>
-        รายการที่ต้องดำเนินการ
-        ${totalActions > 0 ? `<span class="chip chip-red" style="margin-left:8px;">${totalActions}</span>` : ''}
-      </div>
-      <div class="card-accent mb-24">
-        ${totalActions === 0 ? `
-          <div class="empty-state">
-            <i class="fa-solid fa-circle-check" style="color:var(--success)"></i>
-            <p>ไม่มีรายการค้างอยู่</p>
-          </div>
-        ` : `<div class="flex-col gap-10">
-
-          ${overdueInvoices.map(inv => `
-            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--error);">
-              <div class="flex items-center gap-10">
-                <i class="fa-solid fa-circle-xmark text-error"></i>
-                <div>
-                  <div class="font-600 text-sm">Invoice เกินกำหนดชำระ</div>
-                  <div class="text-xs text-muted">${inv.tenantName} · ${inv.id} · ค้างมา ${d.agingReport?.find(a => a.tenantId === inv.tenantId)?.daysOverdue ?? '—'} วัน</div>
-                </div>
-              </div>
-              <div class="flex items-center gap-12">
-                <span class="mono text-sm text-error font-600">${d.formatCurrency(inv.total)}</span>
-                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">ดูรายละเอียด</button>
-              </div>
-            </div>
-          `).join('')}
-
-          ${pendingVerif.map(inv => `
-            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--warning);">
-              <div class="flex items-center gap-10">
-                <i class="fa-solid fa-clock" style="color:var(--warning)"></i>
-                <div>
-                  <div class="font-600 text-sm">รอตรวจสอบการโอนเงิน</div>
-                  <div class="text-xs text-muted">${inv.tenantName} · ${inv.id}</div>
-                </div>
-              </div>
-              <div class="flex items-center gap-12">
-                <span class="mono text-sm font-600">${d.formatCurrency(inv.total)}</span>
-                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">ตรวจสอบ</button>
-              </div>
-            </div>
-          `).join('')}
-
-          ${pendingCL.map(cl => `
-            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid #3b82f6;">
-              <div class="flex items-center gap-10">
-                <i class="fa-solid fa-credit-card" style="color:#3b82f6"></i>
-                <div>
-                  <div class="font-600 text-sm">คำขอ Credit Line รอพิจารณา</div>
-                  <div class="text-xs text-muted">${cl.tenantName} · วงเงินที่ขอ ${d.formatCurrency(cl.requestedLimit)}</div>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">พิจารณา</button>
-            </div>
-          `).join('')}
-
-          ${pendingRefunds.map(ref => `
-            <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;border-left:3px solid var(--warning);">
-              <div class="flex items-center gap-10">
-                <i class="fa-solid fa-rotate-left" style="color:var(--warning)"></i>
-                <div>
-                  <div class="font-600 text-sm">คำขอ Refund รอ Dual Approval</div>
-                  <div class="text-xs text-muted">${ref.tenantName} · ${ref.invoiceId}</div>
-                </div>
-              </div>
-              <div class="flex items-center gap-12">
-                <span class="mono text-sm font-600">${d.formatCurrency(ref.amount)}</span>
-                <button class="btn btn-sm btn-outline" onclick="location.hash='billing'">อนุมัติ</button>
-              </div>
-            </div>
-          `).join('')}
-
-        </div>`}
       </div>
 
       <!-- Quick Navigation -->

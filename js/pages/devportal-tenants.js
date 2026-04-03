@@ -129,6 +129,23 @@ window.Pages.dpTenants = {
     var creditPct = cl.creditLimit ? Math.round(cl.availableCredit / cl.creditLimit * 100) : 0;
     var creditColor = creditPct > 50 ? 'var(--success)' : creditPct > 20 ? 'var(--warning)' : 'var(--error)';
 
+    // Tenant's apps
+    var tenantApps = (d.dpApps || []).filter(function(a) { return a.tenantId === tenantId; });
+    var _appChip = function(status) {
+      var map = { 'sandbox': 'chip-blue', 'pending_approval': 'chip-yellow', 'approved': 'chip-green', 'rejected': 'chip-red', 'revoked': 'chip-red' };
+      var labels = { 'sandbox': 'Sandbox', 'pending_approval': 'Pending Approval', 'approved': 'Approved', 'rejected': 'Rejected', 'revoked': 'Revoked' };
+      return '<span class="chip ' + (map[status] || 'chip-gray') + '">' + (labels[status] || status) + '</span>';
+    };
+    var appsHtml = '';
+    tenantApps.forEach(function(a) {
+      appsHtml += '<div class="flex items-center gap-8" style="padding:8px 0;border-bottom:1px solid var(--border);">' +
+        '<i class="fa-solid fa-cube text-primary"></i>' +
+        '<div class="flex-1"><strong>' + a.name + '</strong> <span class="mono text-muted text-xs">' + a.id + '</span></div>' +
+        _appChip(a.status) +
+      '</div>';
+    });
+    if (!appsHtml) appsHtml = '<p class="text-muted">ยังไม่มีแอปพลิเคชัน</p>';
+
     // Assigned presets
     var presetsHtml = '';
     t.assignedPresets.forEach(function(pid) {
@@ -169,7 +186,7 @@ window.Pages.dpTenants = {
         '<!-- General Info -->' +
         '<div class="grid-4 gap-12 mb-20">' +
           '<div><span class="text-muted text-xs uppercase">Subscribed</span><br>' + t.subscribedDate + '</div>' +
-          '<div><span class="text-muted text-xs uppercase">API Calls Today</span><br><span class="mono">' + d.formatNumber(t.apiCallsToday) + '</span></div>' +
+          '<div><span class="text-muted text-xs uppercase">Apps</span><br><span class="mono">' + tenantApps.length + '</span></div>' +
           '<div><span class="text-muted text-xs uppercase">API Calls Month</span><br><span class="mono">' + d.formatNumber(t.apiCallsMonth) + '</span></div>' +
           '<div><span class="text-muted text-xs uppercase">แก้ไขล่าสุด</span><br><span class="mono text-sm">' + (t.modifiedDate || '-') + '</span>' + (t.modifiedBy ? '<br><span class="text-xs text-dim">' + t.modifiedBy.split('@')[0] + '</span>' : '') + '</div>' +
         '</div>' +
@@ -194,6 +211,10 @@ window.Pages.dpTenants = {
             '<div><span class="text-muted">Approved By</span><br>' + cl.approvedBy + '</div>' +
           '</div>' +
         '</div>' +
+
+        '<!-- Applications -->' +
+        '<div class="section-title"><i class="fa-solid fa-cube text-muted"></i> Applications (' + tenantApps.length + ')</div>' +
+        '<div class="mb-20">' + appsHtml + '</div>' +
 
         '<!-- Assigned API Presets -->' +
         '<div class="section-title"><i class="fa-solid fa-puzzle-piece text-muted"></i> Assigned API Presets</div>' +

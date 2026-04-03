@@ -30,7 +30,10 @@ window.Pages.costPricing = {
     if (n == null) return '—';
     const v = (unit === 'per-1m') ? n * 1e6 : n;
     if (v >= 1000) return v.toLocaleString('en-US', { maximumFractionDigits: 2 });
-    return v.toFixed(2);
+    if (v >= 0.01) return v.toFixed(2);
+    if (v >= 0.0001) return v.toFixed(4);
+    if (v === 0) return '0.00';
+    return v.toPrecision(3);
   },
 
   // ─── Build cost cell HTML for a row ───
@@ -971,12 +974,18 @@ window.Pages.costMargin = {
 
     function fmtCost(n) {
       if (n == null) return '—';
-      return n.toFixed(2);
+      if (n === 0) return '0.00';
+      if (Math.abs(n) >= 0.01) return n.toFixed(2);
+      if (Math.abs(n) >= 0.0001) return n.toFixed(4);
+      return n.toPrecision(3);
     }
 
     function fmtSell(cost, margin) {
       const s = self._sell(cost, margin);
-      return s.toFixed(2);
+      if (s === 0) return '0.00';
+      if (Math.abs(s) >= 0.01) return s.toFixed(2);
+      if (Math.abs(s) >= 0.0001) return s.toFixed(4);
+      return s.toPrecision(3);
     }
 
     function overrideBadge(row) {

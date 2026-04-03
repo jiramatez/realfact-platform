@@ -125,11 +125,16 @@ window.Pages.billing = {
           <div class="form-group" style="margin:0;min-width:190px;">
             <select id="inv-filter-status" class="form-input">
               <option value="">สถานะทั้งหมด</option>
-              <option value="Paid">Paid</option>
-              <option value="Issued">Issued</option>
-              <option value="Pending Verification">Pending Verification</option>
-              <option value="Overdue">Overdue</option>
+              <option value="Paid">ชำระแล้ว</option>
+              <option value="Issued">ออกแล้ว</option>
+              <option value="Pending Verification">รอตรวจสอบ</option>
+              <option value="Overdue">เกินกำหนด</option>
             </select>
+          </div>
+          <div class="date-range-group">
+            <input type="date" id="inv-date-from" class="form-input" title="ตั้งแต่วันที่">
+            <span class="date-sep">ถึง</span>
+            <input type="date" id="inv-date-to" class="form-input" title="ถึงวันที่">
           </div>
           <div class="flex gap-8">
             <button class="btn btn-outline btn-sm" id="inv-export-csv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
@@ -141,7 +146,7 @@ window.Pages.billing = {
             <thead>
               <tr>
                 <th>เลขที่ใบแจ้งหนี้</th><th>TENANT</th><th>ประเภท</th><th>รายละเอียด</th>
-                <th>จำนวนเงิน</th><th>VAT</th><th>รวมทั้งสิ้น</th><th>สถานะ</th><th>วันครบกำหนด</th><th>ช่องทาง</th><th>รอบที่ชำระ</th>
+                <th>จำนวนเงิน</th><th>VAT</th><th>รวมทั้งสิ้น</th><th>สถานะ</th><th>วันครบกำหนด</th><th>ช่องทาง</th><th>รอบที่ชำระ</th><th>จัดการ</th>
               </tr>
             </thead>
             <tbody id="inv-table-body">
@@ -153,7 +158,7 @@ window.Pages.billing = {
                     : '<span class="chip chip-blue">Subscription</span>';
                 const cycles = d.billingCyclesPaid(inv.tenantId);
                 return `
-                <tr data-platform="${inv.subPlatform || ''}" data-type="${inv.type}" data-status="${inv.status}" data-search="${inv.id.toLowerCase()} ${inv.tenantName.toLowerCase()}">
+                <tr data-platform="${inv.subPlatform || ''}" data-type="${inv.type}" data-status="${inv.status}" data-date="${inv.issuedDate}" data-search="${inv.id.toLowerCase()} ${inv.tenantName.toLowerCase()}"${inv.status === 'Overdue' ? ' style="background:rgba(239,68,68,0.08);border-left:3px solid var(--error);"' : ''}>
                   <td class="mono text-sm">${inv.id}</td>
                   <td class="font-600">${inv.tenantName}<br><span class="text-xs text-muted">${inv.subPlatform || '-'}</span></td>
                   <td>${typeChip}</td>
@@ -165,12 +170,25 @@ window.Pages.billing = {
                   <td class="text-sm text-muted">${inv.dueDate}</td>
                   <td class="text-sm">${inv.method || '-'}</td>
                   <td class="mono text-center">${cycles > 0 ? '<span class="chip chip-green">' + cycles + ' รอบ</span>' : '<span class="text-muted">—</span>'}</td>
+                  <td>
+                    <button class="btn btn-outline btn-sm inv-detail-btn" data-id="${inv.id}" title="ดูรายละเอียด">
+                      <i class="fa-solid fa-file-lines"></i> ดู
+                    </button>
+                  </td>
                 </tr>`;
               }).join('')}
             </tbody>
           </table>
         </div>
-        <div class="text-sm text-muted p-8" id="inv-count">${invoices.length} รายการ</div>
+        <div class="pagination" id="inv-pagination">
+          <div class="pagination-info" id="inv-page-info"></div>
+          <div class="pagination-controls" id="inv-page-controls"></div>
+          <div class="pagination-size">
+            <span>แสดง</span>
+            <select id="inv-page-size"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select>
+            <span>รายการ/หน้า</span>
+          </div>
+        </div>
       </div>
 
       <!-- Purchase Log -->
@@ -195,8 +213,13 @@ window.Pages.billing = {
           <div class="form-group" style="margin:0;min-width:160px;">
             <select id="pl-filter-status" class="form-input">
               <option value="">สถานะทั้งหมด</option>
-              ${logStatuses.map(s => `<option value="${s}">${s}</option>`).join('')}
+              ${logStatuses.map(s => `<option value="${s}">${d.thaiStatus(s)}</option>`).join('')}
             </select>
+          </div>
+          <div class="date-range-group">
+            <input type="date" id="pl-date-from" class="form-input" title="ตั้งแต่วันที่">
+            <span class="date-sep">ถึง</span>
+            <input type="date" id="pl-date-to" class="form-input" title="ถึงวันที่">
           </div>
           <div class="flex gap-8">
             <button class="btn btn-outline btn-sm" id="pl-export-csv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
@@ -213,7 +236,7 @@ window.Pages.billing = {
             </thead>
             <tbody id="pl-table-body">
               ${purchaseLog.map(p => `
-                <tr data-platform="${p.subPlatform}" data-type="${p.type}" data-status="${p.status}" data-search="${p.tenantName.toLowerCase()} ${p.ref.toLowerCase()}">
+                <tr data-platform="${p.subPlatform}" data-type="${p.type}" data-status="${p.status}" data-date="${p.date}" data-search="${p.tenantName.toLowerCase()} ${p.ref.toLowerCase()}">
                   <td class="text-sm text-muted">${p.date}</td>
                   <td class="font-600">${p.tenantName}</td>
                   <td class="text-sm">${p.subPlatform}</td>
@@ -227,7 +250,15 @@ window.Pages.billing = {
             </tbody>
           </table>
         </div>
-        <div class="text-sm text-muted p-8" id="pl-count">${purchaseLog.length} รายการ</div>
+        <div class="pagination" id="pl-pagination">
+          <div class="pagination-info" id="pl-page-info"></div>
+          <div class="pagination-controls" id="pl-page-controls"></div>
+          <div class="pagination-size">
+            <span>แสดง</span>
+            <select id="pl-page-size"><option value="10">10</option><option value="25" selected>25</option><option value="50">50</option><option value="100">100</option></select>
+            <span>รายการ/หน้า</span>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -252,33 +283,79 @@ window.Pages.billing = {
       });
     });
 
-    // Invoice filters
-    const invSearch = document.getElementById('inv-search');
-    const invFP     = document.getElementById('inv-filter-platform');
-    const invFT     = document.getElementById('inv-filter-type');
-    const invFS     = document.getElementById('inv-filter-status');
-    function applyInvFilters() {
-      const query    = (invSearch?.value || '').toLowerCase();
-      const platform = invFP?.value || '';
-      const type     = invFT?.value || '';
-      const status   = invFS?.value || '';
-      let count = 0;
-      document.querySelectorAll('#inv-table-body tr').forEach(row => {
-        const match =
+    // ─── Shared pagination renderer ───
+    function renderPagination(containerId, infoId, currentPage, totalPages, totalFiltered, pageSize, onPageChange) {
+      var infoEl = document.getElementById(infoId);
+      var ctrlEl = document.getElementById(containerId);
+      if (!ctrlEl) return;
+      var start = totalFiltered === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      var end = Math.min(currentPage * pageSize, totalFiltered);
+      if (infoEl) infoEl.textContent = totalFiltered === 0 ? 'ไม่พบรายการ' : 'แสดง ' + start + '–' + end + ' จาก ' + totalFiltered + ' รายการ';
+      if (totalPages <= 1) { ctrlEl.innerHTML = ''; return; }
+      var btns = '';
+      btns += '<button ' + (currentPage <= 1 ? 'disabled' : '') + ' data-p="' + (currentPage - 1) + '"><i class="fa-solid fa-chevron-left" style="font-size:10px;"></i></button>';
+      var startP = Math.max(1, currentPage - 2);
+      var endP = Math.min(totalPages, startP + 4);
+      if (endP - startP < 4) startP = Math.max(1, endP - 4);
+      for (var i = startP; i <= endP; i++) {
+        btns += '<button ' + (i === currentPage ? 'class="active"' : '') + ' data-p="' + i + '">' + i + '</button>';
+      }
+      btns += '<button ' + (currentPage >= totalPages ? 'disabled' : '') + ' data-p="' + (currentPage + 1) + '"><i class="fa-solid fa-chevron-right" style="font-size:10px;"></i></button>';
+      ctrlEl.innerHTML = btns;
+      ctrlEl.querySelectorAll('button[data-p]').forEach(function(b) {
+        b.addEventListener('click', function() { if (!b.disabled) onPageChange(parseInt(b.dataset.p)); });
+      });
+    }
+
+    // ─── Invoice filters + pagination ───
+    var invPage = 1;
+    var invSearch = document.getElementById('inv-search');
+    var invFP    = document.getElementById('inv-filter-platform');
+    var invFT    = document.getElementById('inv-filter-type');
+    var invFS    = document.getElementById('inv-filter-status');
+    var invDF    = document.getElementById('inv-date-from');
+    var invDT    = document.getElementById('inv-date-to');
+    var invPS    = document.getElementById('inv-page-size');
+
+    function applyInvFilters(resetPage) {
+      if (resetPage) invPage = 1;
+      var query    = (invSearch?.value || '').toLowerCase();
+      var platform = invFP?.value || '';
+      var type     = invFT?.value || '';
+      var status   = invFS?.value || '';
+      var dateFrom = invDF?.value || '';
+      var dateTo   = invDT?.value || '';
+      var pageSize = parseInt(invPS?.value || '25');
+      var allRows = document.querySelectorAll('#inv-table-body tr');
+      var matched = [];
+      allRows.forEach(function(row) {
+        var rowDate = row.dataset.date || '';
+        var match =
           (!query    || (row.dataset.search || '').includes(query)) &&
           (!platform || row.dataset.platform === platform)          &&
           (!type     || row.dataset.type     === type)              &&
-          (!status   || row.dataset.status   === status);
-        row.style.display = match ? '' : 'none';
-        if (match) count++;
+          (!status   || row.dataset.status   === status)            &&
+          (!dateFrom || rowDate >= dateFrom)                         &&
+          (!dateTo   || rowDate <= dateTo);
+        if (match) matched.push(row); else row.style.display = 'none';
       });
-      const countEl = document.getElementById('inv-count');
-      if (countEl) countEl.textContent = `${count} รายการ`;
+      var totalPages = Math.max(1, Math.ceil(matched.length / pageSize));
+      if (invPage > totalPages) invPage = totalPages;
+      var start = (invPage - 1) * pageSize;
+      var end = start + pageSize;
+      matched.forEach(function(row, idx) {
+        row.style.display = (idx >= start && idx < end) ? '' : 'none';
+      });
+      renderPagination('inv-page-controls', 'inv-page-info', invPage, totalPages, matched.length, pageSize, function(p) { invPage = p; applyInvFilters(false); });
     }
-    invSearch?.addEventListener('input',  applyInvFilters);
-    invFP?.addEventListener('change', applyInvFilters);
-    invFT?.addEventListener('change', applyInvFilters);
-    invFS?.addEventListener('change', applyInvFilters);
+    invSearch?.addEventListener('input',  function() { applyInvFilters(true); });
+    invFP?.addEventListener('change', function() { applyInvFilters(true); });
+    invFT?.addEventListener('change', function() { applyInvFilters(true); });
+    invFS?.addEventListener('change', function() { applyInvFilters(true); });
+    invDF?.addEventListener('change', function() { applyInvFilters(true); });
+    invDT?.addEventListener('change', function() { applyInvFilters(true); });
+    invPS?.addEventListener('change', function() { applyInvFilters(true); });
+    applyInvFilters(false);
 
     // Invoice Export CSV
     document.getElementById('inv-export-csv')?.addEventListener('click', () => {
@@ -317,33 +394,293 @@ window.Pages.billing = {
       const w = window.open('', '_blank'); w.document.write(html); w.document.close();
     });
 
-    // Purchase Log filters
-    const plSearch = document.getElementById('pl-search');
-    const plFP     = document.getElementById('pl-filter-platform');
-    const plFT     = document.getElementById('pl-filter-type');
-    const plFS     = document.getElementById('pl-filter-status');
-    function applyPLFilters() {
-      const query    = (plSearch?.value || '').toLowerCase();
-      const platform = plFP?.value || '';
-      const type     = plFT?.value || '';
-      const status   = plFS?.value || '';
-      let count = 0;
-      document.querySelectorAll('#pl-table-body tr').forEach(row => {
-        const match =
+    // Invoice Detail Modal (matching Developer Portal template)
+    document.querySelectorAll('.inv-detail-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inv = d.invoices.find(i => i.id === btn.dataset.id);
+        if (!inv) return;
+        const meta = (d.tenantMeta || {})[inv.tenantId] || {};
+        const isPaid = inv.status === 'Paid';
+        const docTitle = isPaid ? 'ใบเสร็จรับเงิน/ใบกำกับภาษี' : 'ใบแจ้งหนี้/ใบกำกับภาษี';
+        const docTitleEn = isPaid ? 'RECEIPT / TAX INVOICE' : 'INVOICE / TAX INVOICE';
+        const statusBadge = isPaid
+          ? '<span class="chip chip-green" style="font-size:11px">ชำระแล้ว</span>'
+          : inv.status === 'Overdue'
+            ? '<span class="chip chip-red" style="font-size:11px">เกินกำหนด</span>'
+            : '<span class="chip chip-yellow" style="font-size:11px">รอชำระ</span>';
+        const fmtAmt = d.formatCurrency(inv.amount);
+        const fmtVat = d.formatCurrency(inv.vat);
+        const fmtTotal = d.formatCurrency(inv.total);
+
+        // Payment info section
+        var paidSection = '';
+        var isBankTransfer = (inv.method || '').toLowerCase().indexOf('bank') >= 0 || (inv.method || '').toLowerCase().indexOf('transfer') >= 0 || (inv.method || '').toLowerCase().indexOf('โอน') >= 0;
+        var isPendingVerify = inv.status === 'Pending Verification';
+        var refCode = 'TRF-' + inv.id.replace(/[^0-9]/g, '').slice(-6) + Math.floor(Math.random() * 900 + 100);
+        var slipFilename = 'slip_' + inv.id.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '.jpg';
+        var slipDate = inv.paidDate || inv.issuedDate || '-';
+
+        // Slip attachment block (for Bank Transfer — both pending and paid)
+        var slipBlock = '';
+        if (isBankTransfer) {
+          slipBlock = ''
+            + '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">'
+            + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;font-weight:600;">หลักฐานการชำระเงิน</div>'
+            + '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);">'
+            + '<div style="width:40px;height:40px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            + '<i class="fa-solid fa-image" style="color:var(--text-muted);"></i></div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div class="text-sm font-600" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + slipFilename + '</div>'
+            + '<div class="text-xs" style="color:var(--text-muted);">245 KB · อัปโหลดเมื่อ ' + slipDate + '</div></div>'
+            + '<button class="btn btn-outline btn-sm inv-modal-view-slip" data-id="' + inv.id + '"><i class="fa-solid fa-eye"></i> ดูสลิป</button>'
+            + '</div></div>';
+        }
+
+        if (isPaid) {
+          paidSection = ''
+            + '<div class="inv-paid-banner"><i class="fa-solid fa-circle-check" style="font-size:18px;"></i><span>ชำระเงินเรียบร้อยแล้ว</span></div>'
+            + '<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">'
+            + '<div class="inv-paid-details" style="margin-bottom:0;border-radius:0;">'
+            + '<div><div class="inv-pd-label">วันที่ชำระ</div><div class="inv-pd-value">' + (inv.paidDate || '-') + '</div></div>'
+            + '<div><div class="inv-pd-label">ช่องทาง</div><div class="inv-pd-value">' + (inv.method || '-') + '</div></div>'
+            + '<div><div class="inv-pd-label">เลข Ref.</div><div class="inv-pd-value mono" style="font-size:12px;">' + refCode + '</div></div>'
+            + '<div><div class="inv-pd-label">ตรวจสอบโดย</div><div class="inv-pd-value">ระบบอัตโนมัติ</div><div class="inv-pd-sub">' + (inv.paidDate || '-') + '</div></div>'
+            + '</div>'
+            + slipBlock
+            + '</div>';
+        } else if (isPendingVerify && isBankTransfer) {
+          paidSection = ''
+            + '<div style="padding:12px 16px;display:flex;align-items:center;gap:8px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:12px;margin-bottom:16px;">'
+            + '<i class="fa-solid fa-clock" style="color:var(--warning);font-size:16px;"></i>'
+            + '<span class="text-sm font-600" style="color:var(--warning);">รอตรวจสอบสลิปการโอนเงิน</span></div>'
+            + '<div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;">'
+            + '<div class="inv-paid-details" style="margin-bottom:0;border-radius:0;">'
+            + '<div><div class="inv-pd-label">ช่องทาง</div><div class="inv-pd-value">' + (inv.method || 'Bank Transfer') + '</div></div>'
+            + '<div><div class="inv-pd-label">เลข Ref.</div><div class="inv-pd-value mono" style="font-size:12px;">' + refCode + '</div></div>'
+            + '<div><div class="inv-pd-label">สถานะ</div><div class="inv-pd-value"><span class="chip chip-yellow">รอตรวจสอบ</span></div></div>'
+            + '<div><div class="inv-pd-label">ครบกำหนด</div><div class="inv-pd-value">' + inv.dueDate + '</div></div>'
+            + '</div>'
+            + slipBlock
+            + '</div>';
+        }
+
+        App.showModal(
+          '<div class="modal" style="max-width:720px;padding:0;overflow:hidden;">'
+          + '<div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">'
+          + '<div style="display:flex;align-items:center;gap:10px;">'
+          + '<div class="font-700" style="font-size:16px;">รายละเอียดใบแจ้งหนี้</div>'
+          + statusBadge
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:8px;">'
+          + '<button class="btn btn-outline btn-sm inv-modal-print-btn"><i class="fa-solid fa-download"></i> ดาวน์โหลด PDF</button>'
+          + '<button class="btn btn-sm" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>'
+          + '</div>'
+          + '</div>'
+          + '<div style="padding:24px;max-height:70vh;overflow-y:auto;">'
+          // Paid section
+          + paidSection
+          // Invoice Card
+          + '<div class="inv-card">'
+          + '<div class="inv-head">'
+          + '<div>'
+          + '<div class="inv-brand-name">REALFACT</div>'
+          + '<div class="inv-brand-sub">บริษัท เรียลแฟกต์ เอไอ จำกัด<br>เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3<br>123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย<br>กรุงเทพฯ 10110<br>โทร: 02-XXX-XXXX</div>'
+          + '</div>'
+          + '<div class="inv-doc-info">'
+          + '<div class="inv-doc-title">' + docTitle + '</div>'
+          + '<div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;">' + docTitleEn + '</div>'
+          + '<div style="font-size:11px;margin-top:8px;color:var(--text-muted);">' + inv.description + '</div>'
+          + '<div class="inv-doc-num">' + inv.id + '</div>'
+          + '<div class="inv-doc-date">วันที่ออก: ' + inv.issuedDate + '</div>'
+          + '<div class="inv-doc-date">' + (isPaid ? 'วันที่ชำระ: ' + (inv.paidDate || '-') : 'ครบกำหนดชำระ: ' + inv.dueDate) + '</div>'
+          + '<div style="margin-top:6px;">' + statusBadge + '</div>'
+          + '</div>'
+          + '</div>'
+          // Parties
+          + '<div class="inv-parties">'
+          + '<div class="inv-party">'
+          + '<div class="inv-party-label">ผู้ขาย / Seller</div>'
+          + '<div class="inv-party-name">บริษัท เรียลแฟกต์ เอไอ จำกัด</div>'
+          + '<div class="inv-party-detail">เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3<br>123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย<br>กรุงเทพฯ 10110<br>โทร: 02-XXX-XXXX</div>'
+          + '</div>'
+          + '<div class="inv-party">'
+          + '<div class="inv-party-label">ผู้ซื้อ / Bill To</div>'
+          + '<div class="inv-party-name">' + inv.tenantName + '</div>'
+          + '<div class="inv-party-detail">'
+          + (meta.taxId ? 'เลขประจำตัวผู้เสียภาษี: ' + meta.taxId + '<br>' : '')
+          + (meta.billingAddress || '-')
+          + (meta.contactPerson ? '<br>ผู้ติดต่อ: ' + meta.contactPerson : '')
+          + '</div>'
+          + '</div>'
+          + '</div>'
+          // Items Table
+          + '<table class="inv-items">'
+          + '<thead><tr><th style="width:40px;">ลำดับ</th><th>รายการ</th><th style="text-align:center;">Sub-Platform</th><th style="text-align:right;width:100px;">จำนวนเงิน</th></tr></thead>'
+          + '<tbody>'
+          + '<tr><td style="text-align:center;">1</td>'
+          + '<td><div class="inv-item-name">' + inv.description + '</div><div class="inv-item-desc">' + inv.type + '</div></td>'
+          + '<td style="text-align:center;font-size:12px;">' + (inv.subPlatform || '-') + '</td>'
+          + '<td style="text-align:right;font-family:var(--font-mono);">' + fmtAmt + '</td></tr>'
+          + '</tbody></table>'
+          // Summary
+          + '<div class="inv-summary">'
+          + '<div class="inv-summary-table">'
+          + '<div class="inv-summary-row"><span class="isl">ยอดรวมก่อนภาษี</span><span class="isv">' + fmtAmt + '</span></div>'
+          + '<div class="inv-summary-row"><span class="isl">ภาษีมูลค่าเพิ่ม 7%</span><span class="isv">' + fmtVat + '</span></div>'
+          + '<div class="inv-summary-total"><span class="isl">ยอดรวมสุทธิ</span><span class="isv">' + fmtTotal + '</span></div>'
+          + '</div></div>'
+          // Footer
+          + '<div class="inv-footer">'
+          + '<div><div class="inv-footer-item">ช่องทางชำระ: <strong>' + (inv.method || 'รอชำระ') + '</strong></div>'
+          + '<div class="inv-footer-item">Sub-Platform: <strong>' + (inv.subPlatform || '-') + '</strong></div></div>'
+          + '<div class="inv-footer-item" style="text-align:right;">ใบกำกับภาษีออกโดยระบบอัตโนมัติ<br>สามารถใช้ได้โดยไม่ต้องลงนาม</div>'
+          + '</div>'
+          + '</div>' // end inv-card
+          + '</div>' // end padding container
+          + '</div>' // end modal
+        );
+
+        // Print handler
+        setTimeout(function() {
+          document.querySelector('.inv-modal-print-btn')?.addEventListener('click', function() {
+            var stampColor = isPaid ? '#059669' : '#f59e0b';
+            var stampText = isPaid ? 'PAID' : 'UNPAID';
+            var fmtT = inv.total.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            var fmtV = inv.vat.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            var fmtA = inv.amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + inv.id + '</title>'
+              + '<style>body{font-family:Sarabun,sans-serif;font-size:13px;padding:30px;max-width:700px;margin:auto;color:#333;}'
+              + '.hdr{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:3px solid #f15b26;margin-bottom:16px;}'
+              + '.brand{font-size:24px;font-weight:700;letter-spacing:3px;color:#f15b26;}'
+              + '.meta{font-size:11px;color:#999;line-height:1.8;}'
+              + '.doc-title{font-size:18px;font-weight:700;letter-spacing:2px;text-align:right;}'
+              + '.parties{display:flex;gap:40px;margin:16px 0;}'
+              + '.party-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:4px;font-weight:600;}'
+              + '.party-name{font-weight:700;font-size:13px;margin-bottom:2px;}'
+              + '.party-detail{font-size:11px;color:#666;line-height:1.7;}'
+              + 'table{width:100%;border-collapse:collapse;margin:16px 0;}'
+              + 'th{background:#f8f8f8;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#999;border-bottom:1px solid #ddd;text-align:left;}'
+              + 'td{padding:10px 12px;border-bottom:1px solid #eee;}'
+              + '.right{text-align:right;}'
+              + '.summary{display:flex;justify-content:flex-end;margin:0 0 16px;}'
+              + '.summary-table{width:260px;}'
+              + '.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}'
+              + '.sum-total{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:8px 0 4px;border-top:2px solid #333;margin-top:6px;}'
+              + '.stamp{display:inline-block;padding:6px 20px;border:3px solid ' + stampColor + ';color:' + stampColor + ';border-radius:4px;font-weight:700;font-size:16px;transform:rotate(-5deg);letter-spacing:2px;}'
+              + '.footer{border-top:1px solid #ddd;padding-top:12px;font-size:11px;color:#999;display:flex;justify-content:space-between;}'
+              + '</style></head><body>'
+              + '<div class="hdr"><div><div class="brand">REALFACT</div><div class="meta">บริษัท เรียลแฟกต์ เอไอ จำกัด<br>Tax ID: 0-1055-68005-12-3<br>123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110</div></div>'
+              + '<div><div class="doc-title">' + (isPaid ? 'ใบเสร็จรับเงิน/ใบกำกับภาษี' : 'ใบแจ้งหนี้/ใบกำกับภาษี') + '</div>'
+              + '<div style="text-align:right;font-size:10px;color:#999;letter-spacing:1px;">' + (isPaid ? 'RECEIPT / TAX INVOICE' : 'INVOICE / TAX INVOICE') + '</div>'
+              + '<div style="text-align:right;margin-top:8px;font-size:12px;color:#f15b26;font-weight:700;">' + inv.id + '</div>'
+              + '<div style="text-align:right;" class="meta">วันที่ออก: ' + inv.issuedDate + '</div>'
+              + '<div style="text-align:right;" class="meta">' + (isPaid ? 'วันที่ชำระ: ' + (inv.paidDate || '-') : 'ครบกำหนด: ' + inv.dueDate) + '</div></div></div>'
+              + '<div class="parties"><div><div class="party-label">ผู้ขาย / Seller</div><div class="party-name">บริษัท เรียลแฟกต์ เอไอ จำกัด</div><div class="party-detail">Tax ID: 0-1055-68005-12-3<br>123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ 10110</div></div>'
+              + '<div><div class="party-label">ผู้ซื้อ / Bill To</div><div class="party-name">' + inv.tenantName + '</div><div class="party-detail">'
+              + (meta.taxId ? 'Tax ID: ' + meta.taxId + '<br>' : '') + (meta.billingAddress || '') + '</div></div></div>'
+              + '<table><thead><tr><th style="width:40px">ลำดับ</th><th>รายการ</th><th>ประเภท</th><th>Sub-Platform</th><th class="right">จำนวนเงิน</th></tr></thead>'
+              + '<tbody><tr><td style="text-align:center">1</td><td>' + inv.description + '</td><td>' + inv.type + '</td><td style="text-align:center">' + (inv.subPlatform || '-') + '</td><td class="right" style="font-weight:600">' + fmtA + ' THB</td></tr></tbody></table>'
+              + '<div class="summary"><div class="summary-table">'
+              + '<div class="sum-row"><span style="color:#999">ยอดรวมก่อนภาษี</span><span>' + fmtA + '</span></div>'
+              + '<div class="sum-row"><span style="color:#999">ภาษีมูลค่าเพิ่ม 7%</span><span>' + fmtV + '</span></div>'
+              + '<div class="sum-total"><span>ยอดรวมสุทธิ</span><span style="color:#f15b26">' + fmtT + ' THB</span></div>'
+              + '</div></div>'
+              + '<div style="text-align:center;margin:20px 0;"><span class="stamp">' + stampText + '</span></div>'
+              + '<div class="footer"><div>ช่องทางชำระ: ' + (inv.method || 'รอชำระ') + ' · Sub-Platform: ' + (inv.subPlatform || '-') + '</div><div style="text-align:right">ใบกำกับภาษีออกโดยระบบอัตโนมัติ<br>สามารถใช้ได้โดยไม่ต้องลงนาม</div></div>'
+              + '<script>window.onload=function(){window.print();}<\/script></body></html>';
+            var w = window.open('', '_blank'); w.document.write(html); w.document.close();
+          });
+          // View Slip handler inside invoice detail modal
+          document.querySelector('.inv-modal-view-slip')?.addEventListener('click', function() {
+            var slipInvId = this.dataset.id;
+            var slipInv = d.invoices.find(function(i) { return i.id === slipInvId; });
+            if (!slipInv) return;
+            var slipMeta = (d.tenantMeta || {})[slipInv.tenantId] || {};
+            var tDate = slipInv.paidDate || slipInv.issuedDate || new Date().toISOString().slice(0, 10);
+            var tTime = '10:' + String(Math.floor(Math.random() * 50 + 10));
+            var tRef = 'TRF-' + slipInv.id.replace(/[^0-9]/g, '').slice(-6) + Math.floor(Math.random() * 900 + 100);
+            App.showModal(
+              '<div class="modal" style="max-width:480px;">'
+              + '<button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>'
+              + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">'
+              + '<div style="width:40px;height:40px;border-radius:10px;background:rgba(234,179,8,0.1);display:flex;align-items:center;justify-content:center;">'
+              + '<i class="fa-solid fa-receipt" style="font-size:18px;color:var(--warning);"></i></div>'
+              + '<div><div class="modal-title" style="margin:0;">สลิปการโอนเงิน</div>'
+              + '<div class="mono text-xs text-muted">' + slipInv.id + '</div></div></div>'
+              + '<div class="divider mb-16"></div>'
+              + '<div class="card p-20 mb-16" style="background:linear-gradient(135deg,var(--surface2),var(--surface));text-align:center;">'
+              + '<div style="width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">'
+              + '<i class="fa-solid fa-building-columns" style="font-size:24px;"></i></div>'
+              + '<div class="font-700 mb-4">' + (slipInv.method || 'Bank Transfer') + '</div>'
+              + '<div class="mono font-700" style="font-size:22px;color:var(--primary);margin:8px 0;">' + d.formatCurrency(slipInv.total) + '</div>'
+              + '<div class="divider mb-12 mt-12"></div>'
+              + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;">'
+              + '<div><div class="text-xs text-muted">จาก (ผู้โอน)</div><div class="text-sm font-600">' + slipInv.tenantName + '</div>'
+              + (slipMeta.contactPerson ? '<div class="text-xs text-muted">' + slipMeta.contactPerson + '</div>' : '') + '</div>'
+              + '<div><div class="text-xs text-muted">ไปยัง (ผู้รับ)</div><div class="text-sm font-600">RealfactAI Platform</div>'
+              + '<div class="text-xs text-muted">บจก.เรียลแฟ็กท์ เอไอ</div></div>'
+              + '<div><div class="text-xs text-muted">วันที่โอน</div><div class="mono text-sm">' + tDate + '</div></div>'
+              + '<div><div class="text-xs text-muted">เวลา</div><div class="mono text-sm">' + tTime + '</div></div>'
+              + '<div style="grid-column:span 2;"><div class="text-xs text-muted">เลขอ้างอิง</div>'
+              + '<div class="mono text-sm font-600">' + tRef + '</div></div></div></div>'
+              + '<div class="text-xs text-muted text-center mb-12">'
+              + '<i class="fa-solid fa-circle-info"></i> สลิปนี้แนบมาโดย Tenant เพื่อยืนยันการชำระเงิน</div>'
+              + '<div class="modal-actions"><button class="btn btn-outline" onclick="App.closeModal()">ปิด</button></div></div>'
+            );
+          });
+        }, 50);
+      });
+    });
+
+    // ─── Purchase Log filters + pagination ───
+    var plPage = 1;
+    var plSearch = document.getElementById('pl-search');
+    var plFP    = document.getElementById('pl-filter-platform');
+    var plFT    = document.getElementById('pl-filter-type');
+    var plFS    = document.getElementById('pl-filter-status');
+    var plDF    = document.getElementById('pl-date-from');
+    var plDT    = document.getElementById('pl-date-to');
+    var plPS    = document.getElementById('pl-page-size');
+
+    function applyPLFilters(resetPage) {
+      if (resetPage) plPage = 1;
+      var query    = (plSearch?.value || '').toLowerCase();
+      var platform = plFP?.value || '';
+      var type     = plFT?.value || '';
+      var status   = plFS?.value || '';
+      var dateFrom = plDF?.value || '';
+      var dateTo   = plDT?.value || '';
+      var pageSize = parseInt(plPS?.value || '25');
+      var allRows = document.querySelectorAll('#pl-table-body tr');
+      var matched = [];
+      allRows.forEach(function(row) {
+        var rowDate = row.dataset.date || '';
+        var match =
           (!query    || (row.dataset.search || '').includes(query)) &&
           (!platform || row.dataset.platform === platform)          &&
           (!type     || row.dataset.type     === type)              &&
-          (!status   || row.dataset.status   === status);
-        row.style.display = match ? '' : 'none';
-        if (match) count++;
+          (!status   || row.dataset.status   === status)            &&
+          (!dateFrom || rowDate >= dateFrom)                         &&
+          (!dateTo   || rowDate <= dateTo);
+        if (match) matched.push(row); else row.style.display = 'none';
       });
-      const countEl = document.getElementById('pl-count');
-      if (countEl) countEl.textContent = `${count} รายการ`;
+      var totalPages = Math.max(1, Math.ceil(matched.length / pageSize));
+      if (plPage > totalPages) plPage = totalPages;
+      var start = (plPage - 1) * pageSize;
+      var end = start + pageSize;
+      matched.forEach(function(row, idx) {
+        row.style.display = (idx >= start && idx < end) ? '' : 'none';
+      });
+      renderPagination('pl-page-controls', 'pl-page-info', plPage, totalPages, matched.length, pageSize, function(p) { plPage = p; applyPLFilters(false); });
     }
-    plSearch?.addEventListener('input',  applyPLFilters);
-    if (plFP) plFP.addEventListener('change', applyPLFilters);
-    if (plFT) plFT.addEventListener('change', applyPLFilters);
-    if (plFS) plFS.addEventListener('change', applyPLFilters);
+    plSearch?.addEventListener('input',  function() { applyPLFilters(true); });
+    if (plFP) plFP.addEventListener('change', function() { applyPLFilters(true); });
+    if (plFT) plFT.addEventListener('change', function() { applyPLFilters(true); });
+    if (plFS) plFS.addEventListener('change', function() { applyPLFilters(true); });
+    if (plDF) plDF.addEventListener('change', function() { applyPLFilters(true); });
+    if (plDT) plDT.addEventListener('change', function() { applyPLFilters(true); });
+    if (plPS) plPS.addEventListener('change', function() { applyPLFilters(true); });
+    applyPLFilters(false);
 
     // Export CSV
     document.getElementById('pl-export-csv')?.addEventListener('click', () => {
@@ -435,7 +772,7 @@ window.Pages.billingVerify = {
                     <td class="text-sm">${inv.method || 'Bank Transfer'}</td>
                     <td class="mono text-sm text-muted">${inv.dueDate}</td>
                     <td>
-                      <span class="chip chip-yellow" style="cursor:pointer;" title="ดูสลิป">
+                      <span class="chip chip-yellow slip-view-btn" style="cursor:pointer;" title="ดูสลิป" data-id="${inv.id}">
                         <i class="fa-solid fa-receipt"></i> ดูสลิป
                       </span>
                     </td>
@@ -525,6 +862,79 @@ window.Pages.billingVerify = {
     const vlogStatus = document.getElementById('vlog-status-filter');
     if (vlogSearch) vlogSearch.addEventListener('input', () => self._renderVerificationLog());
     if (vlogStatus) vlogStatus.addEventListener('change', () => self._renderVerificationLog());
+
+    // Slip/Receipt View Modal
+    document.querySelectorAll('.slip-view-btn').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const invId = chip.dataset.id;
+        const inv = d.invoices.find(i => i.id === invId);
+        if (!inv) return;
+        const meta = (d.tenantMeta || {})[inv.tenantId] || {};
+        const transferDate = inv.paidDate || new Date().toISOString().slice(0, 10);
+        const transferTime = '10:' + String(Math.floor(Math.random() * 50 + 10));
+        const refCode = 'TRF-' + inv.id.replace(/[^0-9]/g, '').slice(-6) + Math.floor(Math.random() * 900 + 100);
+
+        App.showModal(`
+          <div class="modal" style="max-width:480px;">
+            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+              <div style="width:40px;height:40px;border-radius:10px;background:var(--warning-bg,#fff3e0);display:flex;align-items:center;justify-content:center;">
+                <i class="fa-solid fa-receipt" style="font-size:18px;color:var(--warning);"></i>
+              </div>
+              <div>
+                <div class="modal-title" style="margin:0;">สลิปการโอนเงิน</div>
+                <div class="mono text-xs text-muted">${inv.id}</div>
+              </div>
+            </div>
+
+            <div class="divider mb-16"></div>
+
+            <!-- Mock Slip Content -->
+            <div class="card p-20 mb-16" style="background:linear-gradient(135deg,#f8f9fa,#e9ecef);text-align:center;">
+              <div style="width:64px;height:64px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                <i class="fa-solid fa-building-columns" style="font-size:24px;"></i>
+              </div>
+              <div class="font-700 mb-4">${inv.method || 'Bank Transfer'}</div>
+              <div class="mono text-xl font-700" style="color:var(--primary);margin:8px 0;">${d.formatCurrency(inv.total)}</div>
+
+              <div class="divider mb-12 mt-12"></div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;">
+                <div>
+                  <div class="text-xs text-muted">จาก (ผู้โอน)</div>
+                  <div class="text-sm font-600">${inv.tenantName}</div>
+                  ${meta.contactPerson ? '<div class="text-xs text-muted">' + meta.contactPerson + '</div>' : ''}
+                </div>
+                <div>
+                  <div class="text-xs text-muted">ไปยัง (ผู้รับ)</div>
+                  <div class="text-sm font-600">RealfactAI Platform</div>
+                  <div class="text-xs text-muted">บจก.เรียลแฟ็กท์ เอไอ</div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted">วันที่โอน</div>
+                  <div class="mono text-sm">${transferDate}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted">เวลา</div>
+                  <div class="mono text-sm">${transferTime}</div>
+                </div>
+                <div style="grid-column:span 2;">
+                  <div class="text-xs text-muted">เลขอ้างอิง</div>
+                  <div class="mono text-sm font-600">${refCode}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-xs text-muted text-center mb-12">
+              <i class="fa-solid fa-circle-info"></i> สลิปนี้แนบมาโดย Tenant เพื่อยืนยันการชำระเงิน
+            </div>
+
+            <div class="modal-actions">
+              <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+            </div>
+          </div>`);
+      });
+    });
 
     document.querySelectorAll('.verify-approve-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -662,20 +1072,22 @@ window.Pages.billingCredit = {
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>ID</th><th>TENANT</th><th>วงเงินที่ขอ</th><th>เอกสาร</th><th>วันที่ขอ</th><th>สถานะ</th><th>แก้ไขล่าสุด</th><th>จัดการ</th></tr></thead>
+                <thead><tr><th>ID</th><th>TENANT</th><th>วงเงินที่ขอ</th><th>วันที่ขอ</th><th>สถานะ</th><th>แก้ไขล่าสุด</th><th>จัดการ</th></tr></thead>
                 <tbody>
                   ${creditLineRequests.map(req => `
                     <tr>
                       <td class="mono text-sm">${req.id}</td>
                       <td><a href="#" class="font-600 text-primary tenant-peek-link" data-id="${req.tenantId}">${req.tenantName}</a></td>
                       <td class="mono font-600">${d.formatCurrency(req.requestedLimit)}</td>
-                      <td class="text-sm">${req.documents} ไฟล์</td>
                       <td class="text-sm text-muted">${req.requestDate}</td>
                       <td>${d.statusChip(req.status)}</td>
                       <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${req.modifiedDate || '-'}</div>${req.modifiedBy ? `<div class="text-xs text-dim">${req.modifiedBy.split('@')[0]}</div>` : ''}</td>
-                      <td>
-                        ${(!window.Auth || Auth.hasPermission('canApprove')) ? `<button class="btn btn-success btn-sm cl-approve-req-btn" data-id="${req.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>
-                        <button class="btn btn-danger btn-sm cl-reject-req-btn ml-4" data-id="${req.id}"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>` : ''}
+                      <td style="white-space:nowrap;">
+                        <div class="flex items-center gap-6">
+                          <button class="btn btn-outline btn-sm cl-view-docs-btn" data-id="${req.id}"><i class="fa-solid fa-file-lines"></i> เอกสาร (${req.documents})</button>
+                          ${(!window.Auth || Auth.hasPermission('canApprove')) ? `<button class="btn btn-success btn-sm cl-approve-req-btn" data-id="${req.id}"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+                          <button class="btn btn-danger btn-sm cl-reject-req-btn ml-4" data-id="${req.id}"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>` : ''}
+                        </div>
                       </td>
                     </tr>`).join('')}
                 </tbody>
@@ -700,8 +1112,8 @@ window.Pages.billingCredit = {
           </select>
           <select id="cl-filter-status" class="form-input" style="width:auto;min-width:130px;">
             <option value="">สถานะ: ทั้งหมด</option>
-            <option value="Active">Active</option>
-            <option value="Suspended">Suspended</option>
+            <option value="Active">ใช้งาน</option>
+            <option value="Suspended">ระงับ</option>
           </select>
         </div>
 
@@ -951,6 +1363,49 @@ window.Pages.billingCredit = {
       });
     });
 
+    // Credit Line: View Documents
+    document.querySelectorAll('.cl-view-docs-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const req = (d.creditLineRequests || []).find(r => r.id === btn.dataset.id);
+        if (!req) return;
+        const files = req.documentFiles || [];
+        const fileIcon = (type) => {
+          if (type === 'pdf') return 'fa-file-pdf text-error';
+          if (type === 'image' || type === 'jpg' || type === 'png') return 'fa-file-image text-primary';
+          return 'fa-file text-muted';
+        };
+        App.showModal(`
+          <div class="modal" style="max-width:520px;">
+            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title mb-4">เอกสารประกอบคำขอวงเงินเครดิต</div>
+            <div class="text-sm text-muted mb-16">${req.tenantName} · ${req.id} · ขอวงเงิน ${d.formatCurrency(req.requestedLimit)}</div>
+            ${files.length === 0 ? `<div class="text-sm text-muted p-20 text-center">ไม่มีเอกสารแนบ</div>` : `
+              <div class="flex-col gap-8">
+                ${files.map((f, i) => `
+                  <div class="flex items-center justify-between p-12" style="background:var(--surface2);border-radius:8px;">
+                    <div class="flex items-center gap-10">
+                      <i class="fa-solid ${fileIcon(f.type)}" style="font-size:20px;width:24px;text-align:center;"></i>
+                      <div>
+                        <div class="font-600 text-sm">${f.name}</div>
+                        <div class="text-xs text-muted">${f.size} · อัปโหลด ${f.uploadedAt}</div>
+                      </div>
+                    </div>
+                    <div class="flex gap-6">
+                      <button class="btn btn-outline btn-sm" onclick="App.toast('เปิดดูเอกสาร: ${f.name}','info')"><i class="fa-solid fa-eye"></i> ดู</button>
+                      <button class="btn btn-outline btn-sm" onclick="App.toast('ดาวน์โหลด: ${f.name}','info')"><i class="fa-solid fa-download"></i></button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="text-xs text-muted mt-12" style="text-align:right;">ทั้งหมด ${files.length} ไฟล์</div>
+            `}
+            <div class="modal-actions mt-16">
+              <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+            </div>
+          </div>`);
+      });
+    });
+
     // Credit Line: Approve (pre-fill from Billing Terms Config)
     document.querySelectorAll('.cl-approve-req-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1023,26 +1478,58 @@ window.Pages.billingCredit = {
       });
     });
 
-    // Credit Line: Reject
+    // Credit Line: Reject (with reason)
     document.querySelectorAll('.cl-reject-req-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const req = (d.creditLineRequests || []).find(r => r.id === btn.dataset.id);
         if (!req) return;
-        App.confirm(`ยืนยันการปฏิเสธคำขอวงเงินของ ${req.tenantName}?`, {
-          title: 'ปฏิเสธคำขอวงเงิน', confirmText: 'ปฏิเสธ', cancelText: 'ยกเลิก', type: 'danger',
-        }).then(ok => {
-          if (!ok) return;
-          const now = new Date();
-          d.creditLineApprovalLog = d.creditLineApprovalLog || [];
-          d.creditLineApprovalLog.unshift({
-            id: 'CLOG-' + Date.now(), creditLineId: '-', tenantId: req.tenantId, tenantName: req.tenantName,
-            action: 'Rejected', detail: 'ปฏิเสธคำขอวงเงิน ' + d.formatCurrency(req.requestedLimit),
-            actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
+        App.showModal(`
+          <div class="modal" style="max-width:480px;">
+            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title mb-4" style="color:var(--error);">ปฏิเสธคำขอวงเงิน</div>
+            <div class="text-sm text-muted mb-16">Tenant: <strong>${req.tenantName}</strong> · ขอวงเงิน ${d.formatCurrency(req.requestedLimit)}</div>
+            <div class="form-group">
+              <label class="form-label">เหตุผลในการปฏิเสธ <span class="text-error">*</span></label>
+              <select id="cl-reject-reason-select" class="form-input mb-8">
+                <option value="">— เลือกเหตุผล —</option>
+                <option value="เอกสารไม่ครบถ้วน">เอกสารไม่ครบถ้วน</option>
+                <option value="วงเงินที่ขอสูงเกินไป">วงเงินที่ขอสูงเกินไป</option>
+                <option value="ประวัติการชำระเงินไม่ผ่านเกณฑ์">ประวัติการชำระเงินไม่ผ่านเกณฑ์</option>
+                <option value="ข้อมูลบริษัทไม่ตรงกับเอกสาร">ข้อมูลบริษัทไม่ตรงกับเอกสาร</option>
+                <option value="other">อื่นๆ (ระบุ)</option>
+              </select>
+              <textarea id="cl-reject-reason-text" class="form-input" rows="3" placeholder="รายละเอียดเพิ่มเติม..." style="display:none;"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+              <button class="btn btn-danger" id="cl-reject-confirm"><i class="fa-solid fa-xmark"></i> ยืนยันปฏิเสธ</button>
+            </div>
+          </div>`);
+        setTimeout(() => {
+          const selEl = document.getElementById('cl-reject-reason-select');
+          const txtEl = document.getElementById('cl-reject-reason-text');
+          selEl?.addEventListener('change', () => {
+            txtEl.style.display = selEl.value === 'other' ? '' : 'none';
+            if (selEl.value !== 'other') txtEl.value = '';
           });
-          d.creditLineRequests = (d.creditLineRequests || []).filter(r => r.id !== req.id);
-          App.toast('ปฏิเสธคำขอวงเงินแล้ว','error');
-          self._rerender('credit');
-        });
+          document.getElementById('cl-reject-confirm')?.addEventListener('click', () => {
+            const selVal = selEl.value;
+            const txtVal = txtEl.value.trim();
+            const reason = selVal === 'other' ? txtVal : selVal;
+            if (!reason) { App.toast('กรุณาระบุเหตุผลในการปฏิเสธ','error'); return; }
+            const now = new Date();
+            d.creditLineApprovalLog = d.creditLineApprovalLog || [];
+            d.creditLineApprovalLog.unshift({
+              id: 'CLOG-' + Date.now(), creditLineId: '-', tenantId: req.tenantId, tenantName: req.tenantName,
+              action: 'Rejected', detail: 'ปฏิเสธคำขอวงเงิน ' + d.formatCurrency(req.requestedLimit) + ' — เหตุผล: ' + reason,
+              actionBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'), actionDate: now.toISOString().slice(0,10), actionTime: now.toTimeString().slice(0,5),
+            });
+            d.creditLineRequests = (d.creditLineRequests || []).filter(r => r.id !== req.id);
+            App.closeModal();
+            App.toast('ปฏิเสธคำขอวงเงินแล้ว','error');
+            self._rerender('credit');
+          });
+        }, 50);
       });
     });
 
@@ -1130,8 +1617,8 @@ window.Pages.billingCredit = {
             <div class="form-group">
               <label class="form-label">สถานะ</label>
               <select id="cl-edit-status" class="form-input">
-                <option value="Active" ${cl.status==='Active'?'selected':''}>Active</option>
-                <option value="Suspended" ${cl.status==='Suspended'?'selected':''}>Suspended</option>
+                <option value="Active" ${cl.status==='Active'?'selected':''}>ใช้งาน</option>
+                <option value="Suspended" ${cl.status==='Suspended'?'selected':''}>ระงับ</option>
               </select>
             </div>
             <div class="modal-actions">
@@ -1226,62 +1713,49 @@ window.Pages.billingOverdue = {
           <div class="table-wrap mb-20">
             <table>
               <thead>
-                <tr><th>TENANT</th><th>ยอดค้างชำระ</th><th>จำนวนวัน</th><th>จำนวนใบแจ้งหนี้</th><th>แจ้งเตือนล่าสุด</th><th>สถานะเครดิต</th><th>แก้ไขล่าสุด</th><th>จัดการ</th></tr>
+                <tr><th>TENANT</th><th>ยอดค้างชำระ</th><th>จำนวนวัน</th><th>Invoice ที่ค้าง</th><th>แจ้งเตือนล่าสุด</th><th>สถานะเครดิต</th><th>แก้ไขล่าสุด</th><th>จัดการ</th></tr>
               </thead>
               <tbody>
-                ${agingReport.map(row => {
-                  const notice = collectionNotices.find(n => n.tenantId === row.tenantId);
-                  let cooldownDays = 0, inCooldown = false;
-                  if (notice && notice.cooldownUntil) {
-                    const diff = Math.ceil((new Date(notice.cooldownUntil) - new Date('2026-03-03')) / 86400000);
-                    if (diff > 0) { inCooldown = true; cooldownDays = diff; }
-                  }
-                  return `<tr>
+                ${agingReport.map(row => `<tr>
                     <td class="font-600">${row.tenantName}</td>
                     <td class="mono font-600 text-error">${d.formatCurrency(row.totalOverdue)}</td>
                     <td><span class="chip ${row.daysOverdue > 30 ? 'chip-red' : row.daysOverdue > 14 ? 'chip-orange' : 'chip-yellow'}">${row.daysOverdue} วัน</span></td>
-                    <td class="mono text-center">${row.invoiceCount}</td>
+                    <td class="mono text-sm">${(row.invoiceIds || []).map(id => `<a href="#" class="text-primary invoice-link" data-id="${id}" style="text-decoration:underline;">${id}</a>`).join(', ') || row.invoiceCount + ' รายการ'}</td>
                     <td class="text-sm text-muted">${row.lastNotice || '-'}</td>
                     <td>${d.statusChip(row.creditStatus)}</td>
                     <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${row.modifiedDate || '-'}</div>${row.modifiedBy ? `<div class="text-xs text-dim">${row.modifiedBy.split('@')[0]}</div>` : ''}</td>
-                    <td>
-                      ${inCooldown
-                        ? `<button class="btn btn-outline btn-sm" disabled title="Cooldown อีก ${cooldownDays} วัน"><i class="fa-solid fa-clock"></i> อีก ${cooldownDays} วัน</button>`
-                        : ((!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary btn-sm send-notice-btn" data-id="${row.tenantId}"><i class="fa-solid fa-envelope"></i> ส่งใบทวงหนี้</button>` : '')}
+                    <td style="white-space:nowrap;">
+                      <div class="flex items-center gap-6">
+                        ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-primary btn-sm send-notice-btn" data-id="${row.tenantId}"><i class="fa-solid fa-envelope"></i> ติดตามหนี้</button>` : ''}
+                        ${row.creditStatus !== 'Suspended' && (!window.Auth || Auth.hasPermission('canEdit'))
+                          ? `<button class="btn btn-danger btn-sm suspend-tenant-btn" data-id="${row.tenantId}"><i class="fa-solid fa-ban"></i> ระงับ</button>`
+                          : ''}
+                      </div>
                     </td>
-                  </tr>`;
-                }).join('')}
+                  </tr>`).join('')}
               </tbody>
             </table>
           </div>
 
           <div class="divider mb-16"></div>
-          <div class="section-title mb-12"><i class="fa-solid fa-envelope"></i> ประวัติใบทวงหนี้</div>
+          <div class="section-title mb-12"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการติดตามหนี้</div>
           ${collectionNotices.length === 0
-            ? '<div class="text-sm text-muted">ยังไม่มีประวัติใบทวงหนี้</div>'
+            ? '<div class="text-sm text-muted">ยังไม่มีประวัติการติดตาม</div>'
             : `<div class="table-wrap">
                 <table>
-                  <thead><tr><th>ID</th><th>TENANT</th><th>ใบแจ้งหนี้</th><th>จำนวน</th><th>วันที่ส่ง</th><th>ช่องทาง</th><th>Cooldown</th><th>สถานะ</th></tr></thead>
+                  <thead><tr><th>ID</th><th>TENANT</th><th>Invoice</th><th>จำนวน</th><th>วันที่ส่ง</th><th>ช่องทาง</th><th>รายละเอียด</th><th>ผู้ดำเนินการ</th><th>สถานะ</th></tr></thead>
                   <tbody>
-                    ${collectionNotices.map(cn => {
-                      let cooldownLabel = '-';
-                      if (cn.cooldownUntil) {
-                        const diff = Math.ceil((new Date(cn.cooldownUntil) - new Date('2026-03-03')) / 86400000);
-                        cooldownLabel = diff > 0
-                          ? `<span class="chip chip-yellow">อีก ${diff} วัน</span>`
-                          : '<span class="chip chip-green">พร้อมส่ง</span>';
-                      }
-                      return `<tr>
+                    ${collectionNotices.map(cn => `<tr>
                         <td class="mono text-sm">${cn.id}</td>
                         <td class="font-600">${cn.tenantName}</td>
                         <td class="mono text-sm">${cn.invoiceId || '-'}</td>
                         <td class="mono font-600">${d.formatCurrency(cn.amount)}</td>
-                        <td class="text-sm text-muted">${cn.sentDate}</td>
+                        <td class="text-sm text-muted" style="white-space:nowrap;">${cn.sentDate}<br><span class="text-xs">${cn.sentTime || ''}</span></td>
                         <td class="text-sm">${cn.channel}</td>
-                        <td>${cooldownLabel}</td>
+                        <td class="text-sm">${cn.detail || '-'}</td>
+                        <td class="text-sm text-muted">${cn.modifiedBy ? cn.modifiedBy.split('@')[0] : '-'}</td>
                         <td>${d.statusChip(cn.status)}</td>
-                      </tr>`;
-                    }).join('')}
+                      </tr>`).join('')}
                   </tbody>
                 </table>
               </div>`}
@@ -1293,55 +1767,162 @@ window.Pages.billingOverdue = {
     const d    = window.MockData;
     const self = window.Pages.billingOverdue;
 
+    // Invoice link — navigate to billing tab and highlight
+    document.querySelectorAll('.invoice-link').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        location.hash = 'billing';
+        setTimeout(() => {
+          const search = document.getElementById('inv-filter-search');
+          if (search) { search.value = a.dataset.id; search.dispatchEvent(new Event('input')); }
+        }, 150);
+      });
+    });
+
     document.querySelectorAll('.send-notice-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tenantId = btn.dataset.id;
         const row      = (d.agingReport || []).find(r => r.tenantId === tenantId);
         if (!row) return;
+        const meta = d.tenantMeta?.[tenantId] || {};
+        const tenant = (d.tenants || []).find(t => t.id === tenantId);
+        const tEmail = tenant?.email || '-';
+        const tPhone = tenant?.phone || '-';
         App.showModal(`
-          <div class="modal">
+          <div class="modal" style="max-width:520px;">
             <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title mb-8">ส่งใบทวงหนี้</div>
-            <div class="text-sm text-muted mb-16">
+            <div class="modal-title mb-8">ติดตามหนี้ / ส่งใบทวงหนี้</div>
+            <div class="text-sm text-muted mb-12">
               Tenant: <strong>${row.tenantName}</strong><br>
               ยอดค้างชำระ: <strong class="text-error">${d.formatCurrency(row.totalOverdue)}</strong> (ค้างมา ${row.daysOverdue} วัน)
+              ${row.creditStatus === 'Suspended' ? '<br><span class="chip chip-red" style="font-size:10px;margin-top:4px;"><i class="fa-solid fa-ban"></i> Tenant ถูกระงับแล้ว</span>' : ''}
             </div>
-            <div class="card p-16 mb-16">
-              <div class="text-sm text-muted">หลังส่งใบทวงหนี้จะมี Cooldown 7 วัน ก่อนส่งได้อีกครั้ง</div>
+            <div class="card p-12 mb-12" style="background:var(--surface2);border-radius:8px;">
+              <div class="text-xs text-muted uppercase mb-6">ข้อมูลติดต่อ Tenant</div>
+              <div class="flex-col gap-4 text-sm">
+                <div><i class="fa-solid fa-user" style="width:16px;text-align:center;"></i> ${meta.contactPerson || '-'}</div>
+                <div><i class="fa-solid fa-envelope" style="width:16px;text-align:center;"></i> ${tEmail}</div>
+                <div><i class="fa-solid fa-phone" style="width:16px;text-align:center;"></i> ${tPhone}</div>
+              </div>
+            </div>
+            <div class="form-group mb-12">
+              <label class="form-label">ช่องทางการติดตาม <span class="text-error">*</span></label>
+              <div class="flex-col gap-6" id="notice-channels">
+                <label class="flex items-center gap-8" style="cursor:pointer;"><input type="checkbox" value="Email (${tEmail})" ${tEmail !== '-' ? 'checked' : 'disabled'}> <i class="fa-solid fa-envelope text-primary" style="width:16px;text-align:center;"></i> Email <span class="text-xs text-muted">${tEmail}</span></label>
+                <label class="flex items-center gap-8" style="cursor:pointer;"><input type="checkbox" value="โทรศัพท์ (${tPhone})" ${tPhone !== '-' ? '' : 'disabled'}> <i class="fa-solid fa-phone text-success" style="width:16px;text-align:center;"></i> โทรศัพท์ <span class="text-xs text-muted">${tPhone}</span></label>
+                <label class="flex items-center gap-8" style="cursor:pointer;"><input type="checkbox" value="จดหมายทางการ"> <i class="fa-solid fa-file-signature text-warning" style="width:16px;text-align:center;"></i> จดหมายทางการ</label>
+              </div>
+            </div>
+            <div class="form-group mb-12">
+              <label class="form-label">รายละเอียดการติดตาม</label>
+              <textarea id="notice-detail" class="form-input" rows="3" placeholder="เช่น นัดชำระภายในวันที่..., ขอผ่อนชำระ, ติดต่อไม่ได้..."></textarea>
             </div>
             <div class="modal-actions">
               <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-              <button class="btn btn-primary" id="notice-confirm-btn"><i class="fa-solid fa-envelope"></i> ยืนยันส่งใบทวงหนี้</button>
+              <button class="btn btn-primary" id="notice-confirm-btn"><i class="fa-solid fa-paper-plane"></i> ยืนยันส่ง</button>
             </div>
           </div>`);
         setTimeout(() => {
           document.getElementById('notice-confirm-btn')?.addEventListener('click', () => {
-            const today       = new Date('2026-03-03');
-            const cooldownDate = new Date(today);
-            cooldownDate.setDate(cooldownDate.getDate() + 7);
-            const cooldownStr = cooldownDate.toISOString().slice(0,10);
-            d.collectionNotices = d.collectionNotices || [];
-            const existing = d.collectionNotices.find(n => n.tenantId === tenantId);
+            const checks = document.querySelectorAll('#notice-channels input[type=checkbox]:checked');
+            if (checks.length === 0) { App.toast('กรุณาเลือกช่องทางการติดตามอย่างน้อย 1 ช่องทาง','error'); return; }
+            const channels = [...checks].map(c => c.value).join(' + ');
+            const detail = document.getElementById('notice-detail')?.value.trim() || '';
+            const today = new Date('2026-03-03');
             const todayStr = today.toISOString().slice(0,10);
-            if (existing) {
-              existing.sentDate = todayStr;
-              existing.cooldownUntil = cooldownStr;
-              existing.status = 'Sent';
-              existing.modifiedDate = todayStr;
-              existing.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
-            } else {
-              d.collectionNotices.push({
-                id: 'CN-' + Date.now(), tenantId, tenantName: row.tenantName,
-                sentDate: todayStr, channel: 'Email + Telegram',
-                cooldownUntil: cooldownStr, status: 'Sent',
-                modifiedDate: todayStr, modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
-              });
-            }
+            const actor = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+            d.collectionNotices = d.collectionNotices || [];
+            // Always append new record (history log, not upsert)
+            d.collectionNotices.push({
+              id: 'CN-' + Date.now(), tenantId, tenantName: row.tenantName,
+              invoiceId: (row.invoiceIds || [])[0] || '-', amount: row.totalOverdue,
+              sentDate: todayStr, sentTime: today.toTimeString().slice(0,5), channel: channels, detail,
+              status: 'Sent', modifiedDate: todayStr, modifiedBy: actor,
+            });
             row.lastNotice = todayStr;
             row.modifiedDate = todayStr;
-            row.modifiedBy = ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system');
+            row.modifiedBy = actor;
             App.closeModal();
-            App.toast(`ส่งใบทวงหนี้ให้ ${row.tenantName} สำเร็จ`, 'success');
+            App.toast(`ส่งใบทวงหนี้ให้ ${row.tenantName} ผ่าน ${channels} สำเร็จ`, 'success');
+            self._rerender();
+          });
+        }, 50);
+      });
+    });
+
+    // Suspend tenant from overdue report
+    document.querySelectorAll('.suspend-tenant-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tenantId = btn.dataset.id;
+        const row = (d.agingReport || []).find(r => r.tenantId === tenantId);
+        if (!row) return;
+        App.showModal(`
+          <div class="modal" style="max-width:480px;">
+            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-title mb-4" style="color:var(--error);"><i class="fa-solid fa-ban"></i> ระงับการใช้งาน Tenant</div>
+            <div class="text-sm text-muted mb-16">
+              Tenant: <strong>${row.tenantName}</strong><br>
+              ยอดค้างชำระ: <strong class="text-error">${d.formatCurrency(row.totalOverdue)}</strong> (ค้างมา ${row.daysOverdue} วัน)
+            </div>
+            <div class="card p-16 mb-16" style="border-left:3px solid var(--error);background:rgba(239,68,68,0.06);">
+              <div class="text-sm"><i class="fa-solid fa-triangle-exclamation text-error"></i> การระงับจะทำให้ Tenant ไม่สามารถใช้บริการได้จนกว่าจะชำระยอดค้าง</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">เหตุผลในการระงับ <span class="text-error">*</span></label>
+              <select id="suspend-reason-select" class="form-input mb-8">
+                <option value="">— เลือกเหตุผล —</option>
+                <option value="ค้างชำระเกินกำหนด">ค้างชำระเกินกำหนด</option>
+                <option value="ไม่ตอบสนองใบทวงหนี้">ไม่ตอบสนองใบทวงหนี้</option>
+                <option value="ละเมิดเงื่อนไขการใช้งาน">ละเมิดเงื่อนไขการใช้งาน</option>
+                <option value="other">อื่นๆ (ระบุ)</option>
+              </select>
+              <textarea id="suspend-reason-text" class="form-input" rows="2" placeholder="รายละเอียดเพิ่มเติม..." style="display:none;"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+              <button class="btn btn-danger" id="suspend-confirm-btn"><i class="fa-solid fa-ban"></i> ยืนยันระงับ</button>
+            </div>
+          </div>`);
+        setTimeout(() => {
+          const selEl = document.getElementById('suspend-reason-select');
+          const txtEl = document.getElementById('suspend-reason-text');
+          selEl?.addEventListener('change', () => {
+            txtEl.style.display = selEl.value === 'other' ? '' : 'none';
+            if (selEl.value !== 'other') txtEl.value = '';
+          });
+          document.getElementById('suspend-confirm-btn')?.addEventListener('click', () => {
+            const selVal = selEl.value;
+            const txtVal = txtEl.value.trim();
+            const reason = selVal === 'other' ? txtVal : selVal;
+            if (!reason) { App.toast('กรุณาระบุเหตุผลในการระงับ','error'); return; }
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0,10);
+            const timeStr = now.toTimeString().slice(0,5);
+            const actor = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+
+            // Update aging report
+            row.creditStatus = 'Suspended';
+            row.modifiedDate = dateStr;
+            row.modifiedBy = actor;
+
+            // Update tenant status
+            const tenant = (d.tenants || []).find(t => t.id === tenantId);
+            if (tenant) { tenant.status = 'Suspended'; }
+
+            // Update credit line status
+            const cl = (d.creditLines || []).find(c => c.tenantId === tenantId);
+            if (cl) { cl.status = 'Suspended'; }
+
+            // Log to approval log
+            d.creditLineApprovalLog = d.creditLineApprovalLog || [];
+            d.creditLineApprovalLog.unshift({
+              id: 'CLOG-' + Date.now(), creditLineId: cl ? cl.id : '-', tenantId, tenantName: row.tenantName,
+              action: 'Suspended', detail: 'ระงับ Tenant เนื่องจากค้างชำระ — ' + reason,
+              actionBy: actor, actionDate: dateStr, actionTime: timeStr,
+            });
+
+            App.closeModal();
+            App.toast(`ระงับ ${row.tenantName} สำเร็จ`, 'error');
             self._rerender();
           });
         }, 50);

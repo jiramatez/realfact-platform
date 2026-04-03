@@ -253,7 +253,6 @@
   .avatar-name{font-weight:600;font-size:14px;margin-bottom:4px}
   .avatar-meta{font-size:12px;color:var(--text-muted);display:flex;flex-direction:column;gap:3px}
   .avatar-rate{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-  .rate-val{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:700}
   .preview-btn{font-size:12px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
   .preview-btn:hover{border-color:var(--primary);color:var(--primary)}
   .avatar-meta > div{display:flex;align-items:center;gap:5px}
@@ -665,7 +664,21 @@
             </div>
             <div style="text-align:center;padding:16px 0">
               <div style="font-family:var(--font-heading);font-size:60px;color:var(--primary);letter-spacing:4px;line-height:1">2,450</div>
-              <div class="text-muted text-sm" style="margin:8px 0">tokens คงเหลือ ≈ 8.2 นาที</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:10px 0 6px;">
+                <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:2px 7px;border-radius:5px;background:#22c55e12;border:1px solid #22c55e25;">
+                  <span style="width:5px;height:5px;border-radius:2px;background:#22c55e;"></span>
+                  <span style="color:#22c55e;font-weight:600;">ซื้อเพิ่ม</span><span style="font-weight:700">950</span>
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:2px 7px;border-radius:5px;background:#f59e0b12;border:1px solid #f59e0b25;">
+                  <span style="width:5px;height:5px;border-radius:2px;background:#f59e0b;"></span>
+                  <span style="color:#f59e0b;font-weight:600;">โบนัส</span><span style="font-weight:700">500</span>
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:2px 7px;border-radius:5px;background:#f15b2612;border:1px solid #f15b2625;">
+                  <span style="width:5px;height:5px;border-radius:2px;background:#f15b26;"></span>
+                  <span style="color:#f15b26;font-weight:600;">Avatar Pro</span><span style="font-weight:700">1,000</span>
+                </span>
+              </div>
+              <div class="text-muted text-sm" style="margin:0 0 8px">≈ 8.2 นาที</div>
               <div class="timer-track" style="margin:14px 0"><div class="timer-fill" style="width:24%"></div></div>
               <div class="flex gap-8" style="justify-content:center">
                 <button class="btn btn-primary" onclick="showPage('wallet',null)">+ เติม Token</button>
@@ -747,7 +760,6 @@
                 <div class="timer-track"><div class="timer-fill" id="sessionBar" style="width:16%"></div></div>
                 <div class="flex gap-16 mb-16">
                   <div class="session-meta-row" style="flex:1;margin:0"><span>Token หักแล้ว:</span><span class="val" id="tokConsumed">48</span></div>
-                  <div class="session-meta-row" style="flex:1;margin:0"><span>Rate:</span><span class="val">15 tok/min</span></div>
                 </div>
                 <button class="session-trigger stop" onclick="endSession()">⏹ Stop Session (จาก Web App)</button>
               </div>
@@ -758,7 +770,6 @@
                 <div class="standby-box">
                   <div class="standby-row"><span class="sl">Avatar</span><span class="sv" id="idleAvatarName">Nova</span></div>
                   <div class="standby-row"><span class="sl">KB</span><span class="sv" id="idleKb">Company FAQ</span></div>
-                  <div class="standby-row"><span class="sl">Rate</span><span class="sv">15 tok/min</span></div>
                   <div class="standby-row"><span class="sl">Pre-check</span><span class="sv" style="color:var(--success)">✅ Token พอสำหรับ 20 นาที</span></div>
                 </div>
                 <p class="text-muted text-sm mb-16" style="line-height:1.7">
@@ -813,7 +824,6 @@
                 <div class="font-600" id="panelAvatarName">Aria</div>
                 <div class="text-muted text-sm" id="panelAvatarRole">Product Expert</div>
                 <div class="text-muted text-sm" id="panelAvatarKb">KB: Product Catalog 2024</div>
-                <div class="text-muted text-sm" id="panelAvatarRate" style="margin-top:2px">Rate: 15 tokens/min</div>
                 <div style="margin-top:6px"><span class="chip chip-orange" style="font-size:12px">⭐ Suggested</span></div>
               </div>
               <div style="margin-left:auto;text-align:right">
@@ -845,7 +855,6 @@
                     <th>Agent Role</th>
                     <th>สถานะ</th>
                     <th>Token หัก</th>
-                    <th>Token Rate</th>
                   </tr>
                 </thead>
                 <tbody id="detailLogBody"></tbody>
@@ -887,7 +896,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: Female TH</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: Sales Assist</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><button class="preview-btn">Preview</button></div>
+              <div class="avatar-rate"><button class="preview-btn">Preview</button></div>
             </div>
           </div>
           <div class="avatar-card" onclick="selectAvatar(this,'Nova')">
@@ -899,7 +908,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: Female TH</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: Receptionist</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><button class="preview-btn">Preview</button></div>
+              <div class="avatar-rate"><button class="preview-btn">Preview</button></div>
             </div>
           </div>
           <div class="avatar-card" onclick="selectAvatar(this,'Max')">
@@ -911,7 +920,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: Male TH</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: Tech Support</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><button class="preview-btn">Preview</button></div>
+              <div class="avatar-rate"><button class="preview-btn">Preview</button></div>
             </div>
           </div>
           <div class="avatar-card" onclick="selectAvatar(this,'Kana')">
@@ -923,7 +932,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: Female TH</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: Health Advisor</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><button class="preview-btn">Preview</button></div>
+              <div class="avatar-rate"><button class="preview-btn">Preview</button></div>
             </div>
           </div>
           <div class="avatar-card" onclick="selectAvatar(this,'Leo')">
@@ -935,7 +944,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: Male TH</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: Trainer</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><button class="preview-btn">Preview</button></div>
+              <div class="avatar-rate"><button class="preview-btn">Preview</button></div>
             </div>
           </div>
           <div class="avatar-card" onclick="selectAvatar(this,'System Default')">
@@ -947,7 +956,7 @@
                 <div><i class="fa-solid fa-microphone"></i> Voice: TH Neutral</div>
                 <div><i class="fa-solid fa-robot"></i> Agent: General</div>
               </div>
-              <div class="avatar-rate"><div class="rate-val"><i class="fa-solid fa-bolt"></i> 15 tokens/min</div><span class="chip chip-green" style="font-size:12px"><i class="fa-solid fa-star" style="font-size:10px"></i> Demo Ready</span></div>
+              <div class="avatar-rate"><span class="chip chip-green" style="font-size:12px"><i class="fa-solid fa-star" style="font-size:10px"></i> Demo Ready</span></div>
               <div style="font-size:11px;color:var(--text-muted);margin-top:6px">ไม่ต้องตั้งค่า · เริ่มใช้งานได้ทันที</div>
             </div>
           </div>
@@ -1183,72 +1192,87 @@
             <div class="section-sub">ยอดคงเหลือ · ใช้ร่วมกันทุก Device</div>
           </div>
         </div>
-        <!-- Section 1: ยอดคงเหลือ -->
-        <div class="grid-2 mb-8">
+        <!-- Section 1: ยอดคงเหลือ — 3 cards in a row -->
+        <div class="grid-3 mb-8" style="gap:14px;">
 
-          <!-- LEFT: Token Balance -->
-          <div class="card-accent">
-            <div class="flex items-center gap-8 mb-4">
-              <i class="fa-solid fa-wallet" style="font-size:18px;color:var(--primary)"></i>
+          <!-- Card 1: Token คงเหลือ -->
+          <div class="card-accent" style="padding:20px;">
+            <div class="flex items-center gap-8 mb-8">
+              <i class="fa-solid fa-wallet" style="font-size:16px;color:var(--primary)"></i>
               <span class="text-muted text-sm">Token คงเหลือ</span>
             </div>
-            <div id="walletBalance" style="font-family:var(--font-heading);font-size:60px;color:var(--primary);letter-spacing:4px;line-height:1">2,450</div>
-            <div class="text-muted text-sm" style="margin:8px 0 12px">
-              <i class="fa-solid fa-triangle-exclamation" style="color:var(--warning)"></i>
-              ≈ 8.2 นาที · ไม่พอ Pre-check Session ใหม่ (ต้องการ 300)
+            <div class="flex items-baseline gap-8">
+              <div id="walletBalance" style="font-family:var(--font-heading);font-size:42px;color:var(--primary);letter-spacing:2px;line-height:1">2,450</div>
+              <span class="text-muted" style="font-size:11px;opacity:.7;">≈ 8.2 นาที · ต้องการ 300/session</span>
             </div>
-            <div class="timer-track"><div class="timer-fill" style="width:24%"></div></div>
+            <!-- Universal Wallet -->
+            <div style="margin-top:10px;margin-bottom:6px;">
+              <div class="text-muted" style="font-size:9px;text-transform:uppercase;font-weight:600;margin-bottom:4px;"><i class="fa-solid fa-wallet" style="margin-right:3px;"></i>Universal Wallet</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:5px;background:#22c55e12;border:1px solid #22c55e25;">
+                  <span style="width:6px;height:6px;border-radius:2px;background:#22c55e;"></span>
+                  <span style="color:#22c55e;font-weight:600;">ซื้อเพิ่ม</span><span style="font-weight:700">950</span>
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:5px;background:#f59e0b12;border:1px solid #f59e0b25;">
+                  <span style="width:6px;height:6px;border-radius:2px;background:#f59e0b;"></span>
+                  <span style="color:#f59e0b;font-weight:600;">โบนัส</span><span style="font-weight:700">500</span>
+                  <span class="text-muted" style="font-size:9px;"><i class="fa-regular fa-clock" style="margin-right:1px;"></i>1 พ.ค. 69</span>
+                </span>
+              </div>
+            </div>
+            <!-- Subscription Alloc -->
+            <div>
+              <div class="text-muted" style="font-size:9px;text-transform:uppercase;font-weight:600;margin-bottom:4px;"><i class="fa-solid fa-calendar-check" style="margin-right:3px;"></i>รายเดือน</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:5px;background:#f15b2612;border:1px solid #f15b2625;">
+                  <span style="width:6px;height:6px;border-radius:2px;background:#f15b26;"></span>
+                  <span style="color:#f15b26;font-weight:600;">Avatar Pro</span><span style="font-weight:700">1,000</span>
+                  <span class="text-muted" style="font-size:9px;"><i class="fa-regular fa-clock" style="margin-right:1px;"></i>30 เม.ย. 69</span>
+                </span>
+              </div>
+            </div>
           </div>
 
-          <!-- RIGHT: Two separated cards -->
-          <div style="display:flex;flex-direction:column;gap:14px">
-
-            <!-- Card A: Token Accounting (ยอดเข้า-ออก) -->
-            <div class="card">
-              <div class="font-600 mb-14 flex items-center gap-8">
-                <i class="fa-solid fa-scale-balanced" style="color:var(--primary)"></i>
-                ยอดสะสม Token เดือนนี้
-              </div>
-              <div class="flex justify-between text-sm mb-10">
-                <span class="text-muted"><i class="fa-solid fa-circle-plus" style="color:var(--success);width:14px"></i> Top-up เดือนนี้</span>
-                <span class="text-mono text-success">+10,000 tokens</span>
-              </div>
-              <div class="flex justify-between text-sm mb-10">
-                <span class="text-muted"><i class="fa-solid fa-gift" style="color:var(--warning);width:14px"></i> Demo Credit</span>
-                <span class="text-mono" style="color:var(--warning)">+500 tokens</span>
-              </div>
-              <div class="flex justify-between text-sm mb-10">
-                <span class="text-muted"><i class="fa-solid fa-fire-flame-curved" style="color:var(--error);width:14px"></i> Token ใช้ไปแล้ว</span>
-                <span class="text-mono" style="color:var(--error)">-680 tokens</span>
-              </div>
-              <div class="divider"></div>
-              <div class="flex justify-between text-sm">
-                <span class="text-muted"><i class="fa-solid fa-bolt" style="color:var(--primary);width:14px"></i> Rate (ทุก Avatar)</span>
-                <span class="text-mono">15 tokens/min</span>
-              </div>
+          <!-- Card 2: ยอดสะสม Token เดือนนี้ -->
+          <div class="card" style="padding:20px;">
+            <div class="font-600 mb-14 flex items-center gap-8" style="font-size:13px;">
+              <i class="fa-solid fa-scale-balanced" style="color:var(--primary)"></i>
+              ยอดสะสม Token เดือนนี้
             </div>
-
-            <!-- Card B: Today Session Usage (การใช้งาน) -->
-            <div class="card">
-              <div class="font-600 mb-14 flex items-center gap-8">
-                <i class="fa-solid fa-calendar-day" style="color:var(--primary)"></i>
-                การใช้งานวันนี้
-              </div>
-              <div class="flex justify-between text-sm mb-10">
-                <span class="text-muted"><i class="fa-solid fa-tv" style="color:var(--primary);width:14px"></i> Sessions ทุกตู้</span>
-                <span class="text-mono text-primary">17 sessions</span>
-              </div>
-              <div class="flex justify-between text-sm mb-10">
-                <span class="text-muted"><i class="fa-solid fa-coins" style="color:var(--error);width:14px"></i> Token หักวันนี้</span>
-                <span class="text-mono" style="color:var(--error)">-680 tokens</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-muted"><i class="fa-solid fa-chart-simple" style="color:var(--primary);width:14px"></i> เฉลี่ย / Session</span>
-                <span class="text-mono">~40 tokens</span>
-              </div>
+            <div class="flex justify-between text-sm mb-10">
+              <span class="text-muted"><i class="fa-solid fa-circle-plus" style="color:var(--success);width:14px"></i> Top-up</span>
+              <span class="text-mono text-success">+10,000</span>
             </div>
-
+            <div class="flex justify-between text-sm mb-10">
+              <span class="text-muted"><i class="fa-solid fa-gift" style="color:var(--warning);width:14px"></i> Demo Credit</span>
+              <span class="text-mono" style="color:var(--warning)">+500</span>
+            </div>
+            <div class="flex justify-between text-sm mb-10">
+              <span class="text-muted"><i class="fa-solid fa-fire-flame-curved" style="color:var(--error);width:14px"></i> ใช้ไปแล้ว</span>
+              <span class="text-mono" style="color:var(--error)">-680</span>
+            </div>
           </div>
+
+          <!-- Card 3: การใช้งานวันนี้ -->
+          <div class="card" style="padding:20px;">
+            <div class="font-600 mb-14 flex items-center gap-8" style="font-size:13px;">
+              <i class="fa-solid fa-calendar-day" style="color:var(--primary)"></i>
+              การใช้งานวันนี้
+            </div>
+            <div class="flex justify-between text-sm mb-10">
+              <span class="text-muted"><i class="fa-solid fa-tv" style="color:var(--primary);width:14px"></i> Sessions ทุกตู้</span>
+              <span class="text-mono text-primary">17</span>
+            </div>
+            <div class="flex justify-between text-sm mb-10">
+              <span class="text-muted"><i class="fa-solid fa-coins" style="color:var(--error);width:14px"></i> Token หักวันนี้</span>
+              <span class="text-mono" style="color:var(--error)">-680</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-muted"><i class="fa-solid fa-chart-simple" style="color:var(--primary);width:14px"></i> เฉลี่ย / Session</span>
+              <span class="text-mono">~40 tok</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- Section Separator -->
@@ -1756,7 +1780,7 @@
 /* ===== DATA ===== */
 const DEV = {
   'Box-A': {
-    loc:'Lobby 1F', avatar:'Aria', emoji:'🤖', role:'Product Expert', kb:'Product Catalog 2024', rate:15,
+    loc:'Lobby 1F', avatar:'Aria', emoji:'🤖', role:'Product Expert', kb:'Product Catalog 2024',
     sessions:12, totalMin:84, totalTok:480, hasActive:true,
     log:[
       {id:'S-0217',start:'14:32',end:'—',     dur:'03:12',tok:48, avatar:'Aria',role:'Sales Assist',kb:'Product Catalog 2024',status:'active'},
@@ -1769,7 +1793,7 @@ const DEV = {
     ]
   },
   'Box-B': {
-    loc:'Meeting Room 3F', avatar:'Nova', emoji:'👩‍💼', role:'Receptionist', kb:'Company FAQ', rate:15,
+    loc:'Meeting Room 3F', avatar:'Nova', emoji:'👩‍💼', role:'Receptionist', kb:'Company FAQ',
     sessions:5, totalMin:46, totalTok:200, hasActive:false,
     log:[
       {id:'S-0216',start:'14:15',end:'14:35', dur:'20:00',tok:300,avatar:'Nova',role:'Receptionist',kb:'Company FAQ',status:'done'},
@@ -1855,7 +1879,6 @@ function selectDevice(el, name, hasActive) {
   document.getElementById('panelAvatarEmoji').textContent = d.emoji;
   document.getElementById('panelAvatarRole').textContent = d.role;
   document.getElementById('panelAvatarKb').textContent = 'KB: ' + d.kb;
-  document.getElementById('panelAvatarRate').textContent = 'Rate: ' + d.rate + ' tokens/min';
   document.getElementById('logDeviceName').textContent = name;
   document.getElementById('detailLogBody').innerHTML = d.log.map(s => {
     const statusHtml = s.status === 'active'
@@ -1871,7 +1894,6 @@ function selectDevice(el, name, hasActive) {
       <td class="text-muted">${s.role}</td>
       <td>${statusHtml}</td>
       <td class="amount-neg">-${s.tok}</td>
-      <td class="text-mono text-muted">${s.tok && s.dur ? (s.dur.split(':')[0]*60+parseInt(s.dur.split(':')[1]) > 0 ? Math.round(s.tok/((s.dur.split(':')[0]*60+parseInt(s.dur.split(':')[1]))/60)) : 15) : 15} tok/min</td>
     </tr>`;
   }).join('');
   if (d.hasActive) {
@@ -1934,15 +1956,11 @@ function openLoadModal() {
   const name  = card.querySelector('.avatar-name').textContent;
   const emoji = card.querySelector('.avatar-thumb').childNodes[0].textContent.trim();
   const metas = [...card.querySelectorAll('.avatar-meta > div')].map(d => d.innerHTML).join('');
-  const rate  = card.querySelector('.rate-val').textContent.trim();
   document.getElementById('lmAvatarSummary').innerHTML =
     `<div class="lm-avatar-emoji">${emoji}</div>
      <div style="flex:1">
        <div class="lm-avatar-name">${name}</div>
        <div class="lm-avatar-attrs">${metas}</div>
-       <div style="font-size:12px;color:var(--primary);font-family:var(--font-mono);margin-top:6px">
-         <i class="fa-solid fa-bolt"></i> ${rate}
-       </div>
      </div>`;
   selectedLoadBox = 'Box-A';
   document.querySelectorAll('.lm-box-row').forEach((r,i) => r.classList.toggle('selected', i===0));

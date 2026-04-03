@@ -36,6 +36,92 @@ window.Pages.plansPackages = {
     };
   },
 
+  // ─── Feature display (for plan cards) ───
+  _renderFeatureList(sp, feats) {
+    var catalog = ((window.MockData || {}).featureCatalog || {})[sp] || [];
+    if (!catalog.length || !feats) return '<span class="text-xs text-muted">—</span>';
+    return catalog.map(function(f) {
+      var v = feats[f.key];
+      if (f.type === 'number') {
+        var display = v === -1 ? 'Unlimited' : (v || 0);
+        var icon = (v && v !== 0) ? 'fa-check text-success' : 'fa-minus text-dim';
+        return '<div class="flex items-center gap-8"><i class="fa-solid ' + icon + ' text-xs"></i><span class="text-sm">' + f.label + ': <strong>' + display + '</strong>' + (v !== -1 && f.unit ? ' ' + f.unit : '') + '</span></div>';
+      }
+      if (f.type === 'toggle') {
+        var icon = v ? 'fa-check text-success' : 'fa-xmark text-dim';
+        return '<div class="flex items-center gap-8"><i class="fa-solid ' + icon + ' text-xs"></i><span class="text-sm">' + f.label + '</span></div>';
+      }
+      if (f.type === 'select') {
+        return '<div class="flex items-center gap-8"><i class="fa-solid fa-check text-success text-xs"></i><span class="text-sm">' + f.label + ': <strong>' + (v || '—') + '</strong></span></div>';
+      }
+      return '';
+    }).join('');
+  },
+
+  // ─── Feature form (for modals) ───
+  _renderFeatureForm(sp, feats, prefix) {
+    var catalog = ((window.MockData || {}).featureCatalog || {})[sp] || [];
+    if (!catalog.length) return '<div class="text-xs text-muted">ไม่มี Feature Catalog สำหรับ Sub-Platform นี้</div>';
+    feats = feats || {};
+    return '<div class="flex-col gap-10">' + catalog.map(function(f) {
+      var v = feats[f.key];
+      if (f.type === 'number') {
+        var isUnlimited = v === -1;
+        var numVal = isUnlimited ? '' : (v || 0);
+        return '<div class="flex items-center gap-8">' +
+          '<label class="text-sm" style="min-width:130px;">' + f.label + '</label>' +
+          '<input type="number" class="form-input feat-inp" data-key="' + f.key + '" data-type="number"' +
+          ' value="' + numVal + '" min="0" style="width:70px;padding:4px 8px;"' + (isUnlimited ? ' disabled' : '') + '>' +
+          (f.unit ? '<span class="text-xs text-muted">' + f.unit + '</span>' : '') +
+          (f.unlimited ? '<label style="display:inline-flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;margin-left:6px;">' +
+            '<input type="checkbox" class="feat-unlim" data-key="' + f.key + '"' + (isUnlimited ? ' checked' : '') + ' style="accent-color:var(--primary);"> Unlimited</label>' : '') +
+        '</div>';
+      }
+      if (f.type === 'toggle') {
+        return '<div class="flex items-center gap-8">' +
+          '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">' +
+          '<input type="checkbox" class="feat-inp" data-key="' + f.key + '" data-type="toggle"' + (v ? ' checked' : '') + ' style="accent-color:var(--primary);">' +
+          f.label + '</label></div>';
+      }
+      if (f.type === 'select') {
+        return '<div class="flex items-center gap-8">' +
+          '<label class="text-sm" style="min-width:130px;">' + f.label + '</label>' +
+          '<select class="form-input feat-inp" data-key="' + f.key + '" data-type="select" style="width:auto;padding:4px 8px;">' +
+          (f.options || []).map(function(o) { return '<option value="' + o + '"' + (v === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+          '</select></div>';
+      }
+      return '';
+    }).join('') + '</div>';
+  },
+
+  // ─── Read feature values from form ───
+  _readFeatureForm(container) {
+    var feats = {};
+    container.querySelectorAll('.feat-inp').forEach(function(inp) {
+      var key = inp.dataset.key;
+      var type = inp.dataset.type;
+      if (type === 'number') {
+        var unlimCb = container.querySelector('.feat-unlim[data-key="' + key + '"]');
+        feats[key] = (unlimCb && unlimCb.checked) ? -1 : (parseInt(inp.value) || 0);
+      } else if (type === 'toggle') {
+        feats[key] = inp.checked;
+      } else if (type === 'select') {
+        feats[key] = inp.value;
+      }
+    });
+    return feats;
+  },
+
+  // ─── Bind unlimited checkbox toggle ───
+  _bindUnlimitedToggle(container) {
+    container.querySelectorAll('.feat-unlim').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var inp = container.querySelector('.feat-inp[data-key="' + cb.dataset.key + '"]');
+        if (inp) { inp.disabled = cb.checked; if (cb.checked) inp.value = ''; }
+      });
+    });
+  },
+
   // ─── SP section header HTML ───
   _spHeader(sp, count, countLabel, unit) {
     const meta = window.Pages.plansPackages._getSpMeta(sp.code);
@@ -60,7 +146,7 @@ window.Pages.plansPackages = {
           <i class="fa-solid fa-plus"></i> เพิ่ม
         </button>
       </div>
-      <div class="divider mb-16"></div>`;
+      <div class="divider mb-12"></div>`;
   },
 
   render() {
@@ -146,19 +232,16 @@ window.Pages.plansPackages = {
       <!-- ══════════════════════════════════════════
            Subscription Plans (grouped by SP)
       ══════════════════════════════════════════ -->
-      ${d.subPlatforms.map(sp => {
+      ${d.subPlatforms.filter(sp => sp.code !== 'devportal').map(sp => {
         const spPlans = plansBySP[sp.code] || [];
         return `
-        <div class="sp-section mb-32" data-sp-section="${sp.code}">
+        <div class="sp-section mb-20" data-sp-section="${sp.code}">
           ${self._spHeader(sp, spPlans.length, 'btn-add-plan-sp', 'Plans')}
 
           ${spPlans.length === 0 ? `
-            <div class="p-24 text-center mb-8"
-              style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
-              <i class="fa-solid fa-circle-plus mb-8"
-                style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
-              <div class="text-sm text-muted">ยังไม่มี Plan สำหรับ ${sp.name}</div>
-              <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Plan แรก</div>
+            <div class="p-16 text-center"
+              style="background:var(--surface2);border-radius:10px;border:1px dashed var(--border);">
+              <div class="text-sm text-muted"><i class="fa-solid fa-circle-plus" style="opacity:.4;margin-right:4px;"></i> ยังไม่มี Plan — กด <strong>เพิ่ม</strong> เพื่อสร้าง</div>
             </div>
           ` : `
             <div class="grid-3 gap-16">
@@ -197,22 +280,19 @@ window.Pages.plansPackages = {
                     ${plan.price > 0 ? '<span class="text-sm text-muted"> THB/เดือน</span>' : ''}
                   </div>
 
-                  <div class="flex items-center gap-8 p-10 mb-12"
-                    style="background:var(--surface2);border-radius:8px;">
-                    <i class="fa-solid fa-coins text-warning"></i>
-                    <span class="text-sm">Subscription Tokens:</span>
-                    <span class="mono font-700">${d.formatNumber(plan.bonusTokens)}</span>
+                  <div class="p-10 mb-12" style="background:var(--surface2);border-radius:8px;">
+                    <div class="flex items-center gap-6">
+                      <i class="fa-solid fa-coins text-warning"></i>
+                      <span class="mono font-700">${d.formatNumber((plan.monthlyTokens || 0) + (plan.bonusTokens || 0))}</span>
+                      <span class="text-sm text-muted">tokens/เดือน</span>
+                    </div>
+                    ${plan.bonusTokens ? `<div class="text-xs text-muted mt-4" style="padding-left:22px;">${d.formatNumber(plan.monthlyTokens || 0)} + <span class="text-success font-600">Bonus ${d.formatNumber(plan.bonusTokens)}</span></div>` : ''}
                   </div>
 
                   <div class="divider mb-12"></div>
                   <div class="text-xs text-muted uppercase font-600 mb-8">Features</div>
                   <div class="flex-col gap-6">
-                    ${plan.features.map(f => `
-                      <div class="flex items-center gap-8">
-                        <i class="fa-solid fa-check text-success text-xs"></i>
-                        <span class="text-sm">${f}</span>
-                      </div>
-                    `).join('')}
+                    ${self._renderFeatureList(plan.subPlatform, plan.features)}
                   </div>
                 </div>`;
               }).join('')}
@@ -222,7 +302,7 @@ window.Pages.plansPackages = {
       }).join('')}
 
       <!-- Developer Portal Info Banner -->
-      <div class="card p-20 mb-32" style="border-left:4px solid #8b5cf6;background:rgba(139,92,246,.04);">
+      <div class="card p-20 mb-20" style="border-left:4px solid #8b5cf6;background:rgba(139,92,246,.04);">
         <div class="flex items-center gap-12 mb-12">
           <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:8px;
             background:rgba(139,92,246,.15);color:#8b5cf6;border:1px solid #8b5cf6;
@@ -286,17 +366,31 @@ window.Pages.plansPackages = {
             <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title"><i class="fa-solid fa-pen text-primary"></i> แก้ไข Plan: ${plan.name}</div>
             <div class="modal-subtitle">Sub-Platform: <strong>${plan.subPlatform}</strong></div>
-            <div class="form-group">
-              <label class="form-label">ชื่อ Plan</label>
-              <input class="form-input" id="edit-plan-name" value="${plan.name}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">ราคา (THB/เดือน)</label>
-              <input type="number" class="form-input" id="edit-plan-price" value="${plan.price}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Subscription Tokens / เดือน</label>
-              <input type="number" class="form-input" id="edit-plan-tokens" value="${plan.bonusTokens}" min="0">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div class="form-group">
+                <label class="form-label">ชื่อ Plan</label>
+                <input class="form-input" id="edit-plan-name" value="${plan.name}">
+              </div>
+              <div class="form-group">
+                <label class="form-label">ราคา (THB/เดือน)</label>
+                <input type="number" class="form-input" id="edit-plan-price" value="${plan.price}" min="0">
+              </div>
+              <div class="form-row" style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Token รายเดือน</label>
+                  <input type="number" class="form-input" id="edit-plan-tokens" value="${plan.monthlyTokens || 0}" min="0">
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Bonus Token / เดือน</label>
+                  <input type="number" class="form-input" id="edit-plan-bonus" value="${plan.bonusTokens || 0}" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Features</label>
+                <div id="edit-features-form">
+                  ${self._renderFeatureForm(plan.subPlatform, plan.features, 'edit')}
+                </div>
+              </div>
             </div>
             <div class="modal-actions">
               <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
@@ -304,10 +398,13 @@ window.Pages.plansPackages = {
             </div>
           </div>
         `);
+        self._bindUnlimitedToggle(document.getElementById('edit-features-form'));
         document.getElementById('save-plan-btn').addEventListener('click', () => {
-          plan.name        = document.getElementById('edit-plan-name').value.trim() || plan.name;
-          plan.price       = parseFloat(document.getElementById('edit-plan-price').value) || 0;
-          plan.bonusTokens = parseInt(document.getElementById('edit-plan-tokens').value) || 0;
+          plan.name          = document.getElementById('edit-plan-name').value.trim() || plan.name;
+          plan.price         = parseFloat(document.getElementById('edit-plan-price').value) || 0;
+          plan.monthlyTokens = parseInt(document.getElementById('edit-plan-tokens').value) || 0;
+          plan.bonusTokens   = parseInt(document.getElementById('edit-plan-bonus').value) || 0;
+          plan.features      = self._readFeatureForm(document.getElementById('edit-features-form'));
           plan.modifiedDate = new Date().toISOString().split('T')[0];
           plan.modifiedBy   = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
           App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
@@ -353,25 +450,37 @@ window.Pages.plansPackages = {
           <div class="modal">
             <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title"><i class="fa-solid fa-plus text-primary"></i> เพิ่ม Plan ใหม่</div>
-            <div class="form-group">
-              <label class="form-label">ชื่อ Plan <span style="color:var(--error)">*</span></label>
-              <input class="form-input" id="new-plan-name" placeholder="เช่น Business">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Sub-Platform <span style="color:var(--error)">*</span></label>
-              <select class="form-input" id="new-plan-sp">
-                ${d.subPlatforms.map(sp =>
-                  `<option value="${sp.code}" ${sp.code === preselectedSP ? 'selected' : ''}>${sp.name}</option>`
-                ).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">ราคา (THB/เดือน)</label>
-              <input type="number" class="form-input" id="new-plan-price" value="0" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Subscription Tokens / เดือน</label>
-              <input type="number" class="form-input" id="new-plan-tokens" value="0" min="0">
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div class="form-group">
+                <label class="form-label">ชื่อ Plan <span style="color:var(--error)">*</span></label>
+                <input class="form-input" id="new-plan-name" placeholder="เช่น Business">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Sub-Platform <span style="color:var(--error)">*</span></label>
+                <select class="form-input" id="new-plan-sp">
+                  ${d.subPlatforms.filter(sp => sp.code !== 'devportal').map(sp =>
+                    `<option value="${sp.code}" ${sp.code === preselectedSP ? 'selected' : ''}>${sp.name}</option>`
+                  ).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ราคา (THB/เดือน)</label>
+                <input type="number" class="form-input" id="new-plan-price" value="0" min="0">
+              </div>
+              <div class="form-row" style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Token รายเดือน</label>
+                  <input type="number" class="form-input" id="new-plan-tokens" value="0" min="0">
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Bonus Token / เดือน</label>
+                  <input type="number" class="form-input" id="new-plan-bonus" value="0" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Features</label>
+                <div id="new-features-form"></div>
+              </div>
             </div>
             <div class="modal-actions">
               <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
@@ -379,6 +488,17 @@ window.Pages.plansPackages = {
             </div>
           </div>
         `);
+        // Render feature form based on selected SP
+        function renderNewFeatForm() {
+          var sp = document.getElementById('new-plan-sp').value;
+          var container = document.getElementById('new-features-form');
+          if (!container) return;
+          container.innerHTML = self._renderFeatureForm(sp, {}, 'new');
+          self._bindUnlimitedToggle(container);
+        }
+        renderNewFeatForm();
+        document.getElementById('new-plan-sp').addEventListener('change', renderNewFeatForm);
+
         document.getElementById('create-plan-btn').addEventListener('click', () => {
           const name = document.getElementById('new-plan-name').value.trim();
           if (!name) { App.toast('กรุณากรอกชื่อ Plan', 'error'); return; }
@@ -387,8 +507,9 @@ window.Pages.plansPackages = {
             name,
             subPlatform: document.getElementById('new-plan-sp').value,
             price: parseFloat(document.getElementById('new-plan-price').value) || 0,
-            bonusTokens: parseInt(document.getElementById('new-plan-tokens').value) || 0,
-            features: [],
+            monthlyTokens: parseInt(document.getElementById('new-plan-tokens').value) || 0,
+            bonusTokens: parseInt(document.getElementById('new-plan-bonus').value) || 0,
+            features: self._readFeatureForm(document.getElementById('new-features-form')),
             status: 'Active',
             modifiedDate: new Date().toISOString().split('T')[0],
             modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
@@ -403,7 +524,7 @@ window.Pages.plansPackages = {
 };
 
 /* ════════════════════════════════════════════════════════════════
-   MODULE 2 — Token Packages
+   MODULE 2 — Universal Token Packages
    ════════════════════════════════════════════════════════════════ */
 window.Pages.plansTokens = {
 
@@ -413,141 +534,103 @@ window.Pages.plansTokens = {
     window.Pages.plansTokens.init();
   },
 
+  // ─── Compute avgCostPerToken from settlements (same as cost-pricing) ───
+  _avgCost() {
+    const d = window.MockData;
+    const stls = d.settlements || [];
+    const totalCost = stls.reduce((s, stl) => s + stl.summary.totalCost, 0);
+    const totalTok  = stls.reduce((s, stl) => s + stl.summary.tokensToDeduct, 0);
+    return totalTok > 0 ? totalCost / totalTok : 0;
+  },
+
   render() {
     const d    = window.MockData;
     const pkgs = d.tokenPackages || [];
-    const self = window.Pages.plansPackages; // shared helpers
-
-    // Group packages by sub-platform
-    const pkgsBySP = {};
-    d.subPlatforms.forEach(sp => { pkgsBySP[sp.code] = []; });
-    pkgs.forEach(p => { (pkgsBySP[p.subPlatform] = pkgsBySP[p.subPlatform] || []).push(p); });
+    const avgCost = window.Pages.plansTokens._avgCost();
+    const basePkg = pkgs.find(p => p.status === 'Active') || pkgs[0];
+    const baseRate = basePkg ? basePkg.price / basePkg.tokens : 1;
 
     return `
       <!-- Page Header -->
       <div class="page-header">
         <div>
-          <h1 class="heading">TOKEN PACKAGES</h1>
-          <div class="text-sm text-muted mt-2">จัดการ Token Packages ทั้งหมดตาม Sub-Platform</div>
+          <h1 class="heading">UNIVERSAL TOKEN PACKAGES</h1>
+          <div class="text-sm text-muted mt-2">Token ที่ซื้อใช้ได้ข้ามทุก Sub-Platform · ราคาเทียบกับ Avg Cost จาก Settlement</div>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn btn-outline btn-sm" onclick="App.navigate('cost-pricing')"><i class="fa-solid fa-calculator"></i> Cost & Pricing</button>
+          <button class="btn btn-primary btn-sm" id="btn-add-pkg"><i class="fa-solid fa-plus"></i> เพิ่ม Package</button>
         </div>
       </div>
 
-      <!-- Token Packages (grouped by SP) -->
-      ${d.subPlatforms.map(sp => {
-        const spPkgs = pkgsBySP[sp.code] || [];
-        return `
-        <div class="sp-section mb-32" data-sp-pkg-section="${sp.code}">
-          ${self._spHeader(sp, spPkgs.length, 'btn-add-pkg-sp', 'Packages')}
+      <!-- Cost Reference -->
+      <div class="card-accent p-16 mb-20">
+        <div class="flex items-center gap-16 flex-wrap">
+          <div>
+            <div class="text-xs text-muted uppercase mb-4">Avg Cost / Token</div>
+            <div class="mono font-700" style="font-size:22px;color:var(--error);">${avgCost > 0 ? avgCost.toFixed(4) : '—'} <span class="text-sm font-400">THB</span></div>
+            <div class="text-xs text-muted mt-2">จาก Settlement (Cost & Pricing)</div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);"></div>
+          <div>
+            <div class="text-xs text-muted uppercase mb-4">Base Rate (${basePkg ? basePkg.name : '—'})</div>
+            <div class="mono font-700" style="font-size:22px;color:var(--primary);">${baseRate.toFixed(2)} <span class="text-sm font-400">THB/token</span></div>
+          </div>
+          <div style="width:1px;height:40px;background:var(--border);"></div>
+          <div>
+            <div class="text-xs text-muted uppercase mb-4">Base Margin</div>
+            <div class="mono font-700" style="font-size:22px;color:var(--success);">${avgCost > 0 ? ((1 - avgCost / baseRate) * 100).toFixed(1) : '—'}%</div>
+          </div>
+        </div>
+      </div>
 
-          ${spPkgs.length === 0 ? `
-            <div class="p-24 text-center mb-8"
-              style="background:var(--surface2);border-radius:12px;border:1px dashed var(--border);">
-              <i class="fa-solid fa-coins mb-8"
-                style="font-size:28px;display:block;color:var(--text-dim);opacity:.5;"></i>
-              <div class="text-sm text-muted">ยังไม่มี Token Package สำหรับ ${sp.name}</div>
-              <div class="text-xs text-dim mt-6">กด <strong>เพิ่ม</strong> เพื่อสร้าง Package แรก</div>
-            </div>
-          ` : `
-            <div class="table-wrap mb-8">
-              <table>
-                <thead>
-                  <tr>
-                    <th>PACKAGE</th>
-                    <th>TOKENS</th>
-                    <th>BONUS TOKENS</th>
-                    <th>TOTAL ที่ได้รับ</th>
-                    <th>ราคา (THB)</th>
-                    <th>ราคา/Token</th>
-                    <th>POPULAR</th>
-                    <th>สถานะ</th>
-                    <th>แก้ไขล่าสุด</th>
-                    <th>จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${spPkgs.map(pkg => `
-                    <tr>
-                      <td class="font-600">${pkg.name}</td>
-                      <td class="mono">${d.formatNumber(pkg.tokens)}</td>
-                      <td class="mono ${pkg.bonus > 0 ? 'text-success' : 'text-muted'}">
-                        ${pkg.bonus > 0 ? `+${d.formatNumber(pkg.bonus)}` : '—'}
-                      </td>
-                      <td class="mono font-700">
-                        ${d.formatNumber(pkg.tokens + pkg.bonus)}
-                        ${pkg.bonus > 0
-                          ? `<span class="chip chip-green" style="font-size:9px;margin-left:4px;">+Bonus</span>`
-                          : ''}
-                      </td>
-                      <td class="mono font-700">${d.formatCurrency(pkg.price)}</td>
-                      <td class="mono text-muted text-sm">${pkg.pricePerToken.toFixed(2)} THB</td>
-                      <td>
-                        ${pkg.popular
-                          ? `<span class="chip chip-orange"><i class="fa-solid fa-fire"></i> Popular</span>`
-                          : '<span class="text-muted text-sm">—</span>'}
-                      </td>
-                      <td>${d.statusChip(pkg.status)}</td>
-                      <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pkg.modifiedDate || '-'}</div>${pkg.modifiedBy ? `<div class="text-xs text-dim">${pkg.modifiedBy.split('@')[0]}</div>` : ''}</td>
-                      <td>
-                        <div class="flex gap-4">
-                          ${(!window.Auth || Auth.hasPermission('canEdit')) ? `<button class="btn btn-sm btn-outline pkg-edit-btn"
-                            data-id="${pkg.id}" title="แก้ไข">
-                            <i class="fa-solid fa-pen"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline pkg-toggle-btn"
-                            data-id="${pkg.id}"
-                            title="${pkg.status === 'Active' ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}">
-                            <i class="fa-solid ${pkg.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i>
-                          </button>` : ''}
-                        </div>
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          `}
-        </div>`;
-      }).join('')}
-
-      <!-- Price Calculator -->
-      <div class="card p-20 mt-8">
-        <div class="flex items-center gap-8 mb-16">
-          <i class="fa-solid fa-calculator text-primary"></i>
-          <span class="font-700">Token Price Calculator</span>
-        </div>
-        <div class="flex gap-16 items-end flex-wrap">
-          <div class="form-group" style="margin:0;min-width:140px;">
-            <label class="form-label text-xs">จำนวน Tokens</label>
-            <input type="number" class="form-input" id="calc-tokens" placeholder="เช่น 5000" min="0">
-          </div>
-          <div class="form-group" style="margin:0;min-width:140px;">
-            <label class="form-label text-xs">ราคา (THB)</label>
-            <input type="number" class="form-input" id="calc-price" placeholder="เช่น 2000" min="0">
-          </div>
-          <div class="form-group" style="margin:0;min-width:140px;">
-            <label class="form-label text-xs">Bonus Tokens</label>
-            <input type="number" class="form-input" id="calc-bonus" placeholder="เช่น 250" min="0" value="0">
-          </div>
-          <button class="btn btn-primary" id="calc-btn" style="margin-bottom:0;">
-            <i class="fa-solid fa-calculator"></i> คำนวณ
-          </button>
-        </div>
-        <div id="calc-result" class="hidden mt-16 p-16" style="background:var(--surface2);border-radius:10px;">
-          <div class="grid-3 gap-16">
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">ราคาต่อ Token</div>
-              <div class="mono font-700 text-primary" id="res-per-token">—</div>
-            </div>
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">Tokens รวม (+ Bonus)</div>
-              <div class="mono font-700 text-success" id="res-total-tokens">—</div>
-            </div>
-            <div>
-              <div class="text-xs text-muted uppercase mb-4">ส่วนลดเทียบกับ 1,000 pack</div>
-              <div class="mono font-700 text-warning" id="res-discount">—</div>
-            </div>
-          </div>
-        </div>
+      <!-- Packages Table -->
+      <div class="table-wrap mb-20">
+        <table>
+          <thead>
+            <tr>
+              <th>PACKAGE</th>
+              <th>TOKENS</th>
+              <th>BONUS</th>
+              <th>TOTAL</th>
+              <th>ราคา (THB)</th>
+              <th>ราคา/Token</th>
+              <th>Margin vs Cost</th>
+              <th>ส่วนลด vs Base</th>
+              <th>POPULAR</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pkgs.map(pkg => {
+              const perToken = pkg.price / pkg.tokens;
+              const total = pkg.tokens + pkg.bonus;
+              const margin = avgCost > 0 ? ((1 - avgCost / perToken) * 100) : 0;
+              const discount = Math.round((1 - perToken / baseRate) * 100);
+              const isSafe = avgCost > 0 ? perToken >= avgCost : true;
+              return `
+              <tr>
+                <td class="font-600">${pkg.name}</td>
+                <td class="mono">${d.formatNumber(pkg.tokens)}</td>
+                <td class="mono ${pkg.bonus > 0 ? 'text-success' : 'text-muted'}">${pkg.bonus > 0 ? '+' + d.formatNumber(pkg.bonus) : '—'}</td>
+                <td class="mono font-700">${d.formatNumber(total)}${pkg.bonus > 0 ? ' <span class="chip chip-green" style="font-size:9px;">+Bonus</span>' : ''}</td>
+                <td class="mono font-700">${d.formatCurrency(pkg.price)}</td>
+                <td class="mono">${perToken.toFixed(2)}</td>
+                <td><span class="chip ${isSafe ? 'chip-green' : 'chip-red'} mono" style="font-size:11px;">${avgCost > 0 ? margin.toFixed(1) + '%' : '—'}</span></td>
+                <td class="mono text-muted">${discount > 0 ? '-' + discount + '%' : discount === 0 ? 'Base' : '+' + Math.abs(discount) + '%'}</td>
+                <td>${pkg.popular ? '<span class="chip chip-orange"><i class="fa-solid fa-fire"></i> Popular</span>' : '<span class="text-muted">—</span>'}</td>
+                <td>${d.statusChip(pkg.status)}</td>
+                <td>
+                  <div class="flex gap-4">
+                    <button class="btn btn-sm btn-outline pkg-edit-btn" data-id="${pkg.id}" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-outline pkg-toggle-btn" data-id="${pkg.id}" title="${pkg.status === 'Active' ? 'ปิด' : 'เปิด'}"><i class="fa-solid ${pkg.status === 'Active' ? 'fa-eye-slash' : 'fa-eye'}"></i></button>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
       </div>
     `;
   },
@@ -556,7 +639,7 @@ window.Pages.plansTokens = {
     const d    = window.MockData;
     const self = window.Pages.plansTokens;
 
-    // ─── Token Package Toggle ───
+    // ─── Toggle Status ───
     document.querySelectorAll('.pkg-toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const pkg = d.tokenPackages.find(p => p.id === btn.dataset.id);
@@ -569,7 +652,7 @@ window.Pages.plansTokens = {
       });
     });
 
-    // ─── Token Package Edit Modal ───
+    // ─── Edit Package ───
     document.querySelectorAll('.pkg-edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const pkg = d.tokenPackages.find(p => p.id === btn.dataset.id);
@@ -578,28 +661,32 @@ window.Pages.plansTokens = {
           <div class="modal">
             <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
             <div class="modal-title"><i class="fa-solid fa-pen text-primary"></i> แก้ไข Package: ${pkg.name}</div>
-            <div class="form-group">
-              <label class="form-label">ชื่อ Package</label>
-              <input class="form-input" id="edit-pkg-name" value="${pkg.name}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">จำนวน Tokens</label>
-              <input type="number" class="form-input" id="edit-pkg-tokens" value="${pkg.tokens}" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Bonus Tokens</label>
-              <input type="number" class="form-input" id="edit-pkg-bonus" value="${pkg.bonus}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">ราคา (THB)</label>
-              <input type="number" class="form-input" id="edit-pkg-price" value="${pkg.price}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">แสดงป้าย "Popular"</label>
-              <select class="form-input" id="edit-pkg-popular">
-                <option value="true"  ${pkg.popular ? 'selected' : ''}>ใช่</option>
-                <option value="false" ${!pkg.popular ? 'selected' : ''}>ไม่</option>
-              </select>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div class="form-group">
+                <label class="form-label">ชื่อ Package</label>
+                <input class="form-input" id="edit-pkg-name" value="${pkg.name}">
+              </div>
+              <div class="form-row" style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">จำนวน Tokens</label>
+                  <input type="number" class="form-input" id="edit-pkg-tokens" value="${pkg.tokens}" min="1">
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Bonus Tokens</label>
+                  <input type="number" class="form-input" id="edit-pkg-bonus" value="${pkg.bonus}" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">ราคา (THB)</label>
+                <input type="number" class="form-input" id="edit-pkg-price" value="${pkg.price}" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">แสดงป้าย "Popular"</label>
+                <select class="form-input" id="edit-pkg-popular">
+                  <option value="true"  ${pkg.popular ? 'selected' : ''}>ใช่</option>
+                  <option value="false" ${!pkg.popular ? 'selected' : ''}>ไม่</option>
+                </select>
+              </div>
             </div>
             <div class="modal-actions">
               <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
@@ -608,100 +695,73 @@ window.Pages.plansTokens = {
           </div>
         `);
         document.getElementById('save-pkg-btn').addEventListener('click', () => {
-          const tokens = parseInt(document.getElementById('edit-pkg-tokens').value) || pkg.tokens;
-          const price  = parseFloat(document.getElementById('edit-pkg-price').value) || pkg.price;
-          pkg.name          = document.getElementById('edit-pkg-name').value.trim() || pkg.name;
-          pkg.tokens        = tokens;
-          pkg.bonus         = parseInt(document.getElementById('edit-pkg-bonus').value) || 0;
-          pkg.price         = price;
-          pkg.pricePerToken = price / tokens;
-          pkg.popular       = document.getElementById('edit-pkg-popular').value === 'true';
-          pkg.modifiedDate  = new Date().toISOString().split('T')[0];
-          pkg.modifiedBy    = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
-          App.toast('บันทึกการเปลี่ยนแปลงแล้ว', 'success');
+          pkg.name         = document.getElementById('edit-pkg-name').value.trim() || pkg.name;
+          pkg.tokens       = parseInt(document.getElementById('edit-pkg-tokens').value) || pkg.tokens;
+          pkg.bonus        = parseInt(document.getElementById('edit-pkg-bonus').value) || 0;
+          pkg.price        = parseFloat(document.getElementById('edit-pkg-price').value) || pkg.price;
+          pkg.popular      = document.getElementById('edit-pkg-popular').value === 'true';
+          pkg.modifiedDate = new Date().toISOString().split('T')[0];
+          pkg.modifiedBy   = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+          App.toast('บันทึกแล้ว', 'success');
           App.closeModal();
           self._rerender();
         });
       });
     });
 
-    // ─── Add Package (per-SP buttons) ───
-    document.querySelectorAll('.btn-add-pkg-sp').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const preselectedSP = btn.dataset.sp || '';
-        window.App.showModal(`
-          <div class="modal">
-            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title"><i class="fa-solid fa-plus text-primary"></i> เพิ่ม Token Package</div>
+    // ─── Add Package ───
+    var addBtn = document.getElementById('btn-add-pkg');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      window.App.showModal(`
+        <div class="modal">
+          <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+          <div class="modal-title"><i class="fa-solid fa-plus text-primary"></i> เพิ่ม Token Package</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="form-group">
               <label class="form-label">ชื่อ Package <span style="color:var(--error)">*</span></label>
               <input class="form-input" id="new-pkg-name" placeholder="เช่น 20,000 Tokens">
             </div>
-            <div class="form-group">
-              <label class="form-label">Sub-Platform</label>
-              <select class="form-input" id="new-pkg-sp">
-                ${d.subPlatforms.map(sp =>
-                  `<option value="${sp.code}" ${sp.code === preselectedSP ? 'selected' : ''}>${sp.name}</option>`
-                ).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">จำนวน Tokens <span style="color:var(--error)">*</span></label>
-              <input type="number" class="form-input" id="new-pkg-tokens" placeholder="เช่น 20000" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Bonus Tokens</label>
-              <input type="number" class="form-input" id="new-pkg-bonus" value="0" min="0">
+            <div class="form-row" style="display:flex;gap:12px;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">จำนวน Tokens <span style="color:var(--error)">*</span></label>
+                <input type="number" class="form-input" id="new-pkg-tokens" placeholder="เช่น 20000" min="1">
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Bonus Tokens</label>
+                <input type="number" class="form-input" id="new-pkg-bonus" value="0" min="0">
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">ราคา (THB) <span style="color:var(--error)">*</span></label>
               <input type="number" class="form-input" id="new-pkg-price" placeholder="เช่น 7000" min="0">
             </div>
-            <div class="modal-actions">
-              <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-              <button class="btn btn-primary" id="create-pkg-btn"><i class="fa-solid fa-plus"></i> สร้าง Package</button>
-            </div>
           </div>
-        `);
-        document.getElementById('create-pkg-btn').addEventListener('click', () => {
-          const name   = document.getElementById('new-pkg-name').value.trim();
-          const tokens = parseInt(document.getElementById('new-pkg-tokens').value) || 0;
-          const price  = parseFloat(document.getElementById('new-pkg-price').value) || 0;
-          if (!name || !tokens || !price) { App.toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
-          d.tokenPackages.push({
-            id: 'TP-' + Date.now(),
-            name,
-            tokens,
-            price,
-            pricePerToken: price / tokens,
-            bonus: parseInt(document.getElementById('new-pkg-bonus').value) || 0,
-            subPlatform: document.getElementById('new-pkg-sp').value,
-            popular: false,
-            status: 'Active',
-            modifiedDate: new Date().toISOString().split('T')[0],
-            modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
-          });
-          App.toast('เพิ่ม Token Package แล้ว', 'success');
-          App.closeModal();
-          self._rerender();
+          <div class="modal-actions">
+            <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+            <button class="btn btn-primary" id="create-pkg-btn"><i class="fa-solid fa-plus"></i> สร้าง Package</button>
+          </div>
+        </div>
+      `);
+      document.getElementById('create-pkg-btn').addEventListener('click', () => {
+        const name   = document.getElementById('new-pkg-name').value.trim();
+        const tokens = parseInt(document.getElementById('new-pkg-tokens').value) || 0;
+        const price  = parseFloat(document.getElementById('new-pkg-price').value) || 0;
+        if (!name || !tokens || !price) { App.toast('กรุณากรอกข้อมูลให้ครบ', 'error'); return; }
+        d.tokenPackages.push({
+          id: 'TP-' + Date.now(),
+          name,
+          tokens,
+          price,
+          bonus: parseInt(document.getElementById('new-pkg-bonus').value) || 0,
+          popular: false,
+          status: 'Active',
+          modifiedDate: new Date().toISOString().split('T')[0],
+          modifiedBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
         });
+        App.toast('เพิ่ม Token Package แล้ว', 'success');
+        App.closeModal();
+        self._rerender();
       });
-    });
-
-    // ─── Calculator ───
-    document.getElementById('calc-btn')?.addEventListener('click', () => {
-      const tokens = parseFloat(document.getElementById('calc-tokens').value) || 0;
-      const price  = parseFloat(document.getElementById('calc-price').value) || 0;
-      const bonus  = parseFloat(document.getElementById('calc-bonus').value) || 0;
-      if (!tokens || !price) { App.toast('กรุณากรอก Tokens และราคา', 'warning'); return; }
-      const baseRate = 0.50; // TP-001 rate
-      const perToken = price / tokens;
-      const total    = tokens + bonus;
-      const discount = Math.round((1 - perToken / baseRate) * 100);
-      document.getElementById('res-per-token').textContent    = perToken.toFixed(2) + ' THB';
-      document.getElementById('res-total-tokens').textContent = total.toLocaleString('th-TH') + ' tokens';
-      document.getElementById('res-discount').textContent     = discount > 0 ? `-${discount}% vs Base` : 'เท่ากับ Base Rate';
-      document.getElementById('calc-result').classList.remove('hidden');
     });
   },
 };
@@ -830,7 +890,7 @@ window.Pages.plansBonus = {
     // ─── Welcome Bonus Edit ───
     document.getElementById('btn-edit-welcome-bonus')?.addEventListener('click', () => {
       const current       = d.avatarDefaults.welcomeBonusTokens;
-      const maxPlanTk     = d.plans.reduce((mx, p) => Math.max(mx, p.bonusTokens), 0);
+      const maxPlanTk     = d.plans.reduce((mx, p) => Math.max(mx, p.monthlyTokens || 0), 0);
       const warnThreshold = maxPlanTk * 10;
       window.App.showModal(`
         <div class="modal">

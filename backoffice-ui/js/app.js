@@ -36,6 +36,7 @@
     'dp-tenants':         { title: 'Developer Portal Tenants',   module: 'dpTenants',         ctx: 'devportal' },
     'dp-api-presets':     { title: 'API Presets',                module: 'dpApiPresets',      ctx: 'devportal' },
     'dp-assign-endpoint': { title: 'Assign Endpoint',           module: 'dpAssignEndpoint',  ctx: 'devportal' },
+    'dp-app-approval':    { title: 'App Approval',             module: 'dpAppApproval',     ctx: 'devportal' },
   };
 
   const contextMeta = {
@@ -99,6 +100,7 @@
       if (mod.init) mod.init();
       App.updateBillingBadges();
       App.updateCostBadges();
+      App.updateDpBadges();
     } else {
       content.innerHTML = `
         <div class="empty-state">
@@ -353,6 +355,20 @@
       }
     },
 
+    // ─── Developer Portal Badge Updater ───
+    updateDpBadges() {
+      const d = window.MockData;
+      if (!d) return;
+      var count = (d.dpApps || []).filter(function (a) {
+        return a.status === 'pending_approval';
+      }).length;
+      var badge = document.getElementById('badge-dp-app-approval');
+      if (badge) {
+        badge.textContent = count;
+        badge.classList.toggle('hidden', count === 0);
+      }
+    },
+
     // ─── Toast Notification (replaces alert) ───
     _toastCounter: 0,
     toast(message, type) {
@@ -462,6 +478,7 @@
       onHashChange();
       App.updateBillingBadges();
       App.updateCostBadges();
+      App.updateDpBadges();
     }
   } else {
     applyContext(currentCtx, false);

@@ -24,10 +24,10 @@ window.HubPages.hubBilling = (function () {
   }
 
   var statusMap = {
-    'Paid': '<span class="chip chip-green" style="font-size:10px;">Paid</span>',
-    'Issued': '<span class="chip chip-yellow" style="font-size:10px;">Issued</span>',
+    'Paid': '<span class="chip chip-green" style="font-size:10px;">ชำระแล้ว</span>',
+    'Issued': '<span class="chip chip-yellow" style="font-size:10px;">รอชำระ</span>',
     'Pending Verification': '<span class="chip chip-blue" style="font-size:10px;">รอตรวจสอบ</span>',
-    'Overdue': '<span class="chip chip-red" style="font-size:10px;">Overdue</span>',
+    'Overdue': '<span class="chip chip-red" style="font-size:10px;">ค้างชำระ</span>',
   };
 
   function render() {
@@ -92,20 +92,25 @@ window.HubPages.hubBilling = (function () {
       rows = '<tr><td colspan="8" class="text-center text-muted" style="padding:24px;">ยังไม่มี Invoice</td></tr>';
     }
 
-    return '<div style="max-width:1200px;margin:0 auto;">' +
+    return '<div>' +
+      // Page header with back button
+      '<div class="flex items-center gap-12 mb-20">' +
+        '<a href="#hub-dashboard" class="btn btn-outline btn-sm" style="padding:6px 10px;"><i class="fa-solid fa-arrow-left"></i></a>' +
+        '<div class="font-700" style="font-size:18px;">Billing & Invoice</div>' +
+      '</div>' +
       // Summary cards
-      '<div class="flex gap-16 mb-20" style="flex-wrap:wrap;">' +
-        '<div class="card" style="padding:20px;flex:1;min-width:200px;">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;" class="mb-20">' +
+        '<div class="card" style="padding:20px;">' +
           '<div class="text-xs text-muted uppercase font-600 mb-6">ชำระแล้ว</div>' +
           '<div class="font-700 text-success" style="font-size:24px;">฿' + _fmt(totalPaid) + '</div>' +
           '<div class="text-xs text-muted mt-4">' + paid.length + ' รายการ</div>' +
         '</div>' +
-        '<div class="card" style="padding:20px;flex:1;min-width:200px;">' +
+        '<div class="card" style="padding:20px;">' +
           '<div class="text-xs text-muted uppercase font-600 mb-6">ค้างชำระ</div>' +
           '<div class="font-700" style="font-size:24px;color:#f59e0b;">฿' + _fmt(totalPending) + '</div>' +
           '<div class="text-xs text-muted mt-4">' + pending.length + ' รายการ</div>' +
         '</div>' +
-        '<div class="card" style="padding:20px;flex:1;min-width:200px;">' +
+        '<div class="card" style="padding:20px;">' +
           '<div class="text-xs text-muted uppercase font-600 mb-6">รวมทั้งหมด</div>' +
           '<div class="font-700" style="font-size:24px;">฿' + _fmt(totalPaid + totalPending) + '</div>' +
           '<div class="text-xs text-muted mt-4">' + filtered.length + ' รายการ</div>' +
@@ -140,7 +145,8 @@ window.HubPages.hubBilling = (function () {
   function _renderRow(inv) {
     var spIcon = _spIconMap[inv.subPlatform] || 'fa-cubes';
     var spColor = _spColorMap[inv.subPlatform] || 'var(--primary)';
-    return '<tr>' +
+    var rowStyle = inv.status === 'Overdue' ? ' style="background:rgba(239,68,68,0.08);border-left:3px solid var(--error);"' : '';
+    return '<tr' + rowStyle + '>' +
       '<td class="mono text-sm" style="white-space:nowrap;">' + inv.id + '</td>' +
       '<td>' + inv.description + '</td>' +
       '<td style="white-space:nowrap;"><i class="fa-solid ' + spIcon + '" style="color:' + spColor + ';font-size:11px;margin-right:4px;"></i>' + inv.subPlatform + '</td>' +

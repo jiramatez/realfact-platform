@@ -15,10 +15,12 @@ window.Pages.platformMembers = {
 
   // ─── Role meta ───
   _roleMeta: {
-    super_admin:       { label: 'Owner',        chip: 'chip-orange', icon: 'fa-crown' },
-    tenant_admin:      { label: 'Tenant Admin', chip: 'chip-blue',   icon: 'fa-building' },
-    subplatform_admin: { label: 'SP Admin',     chip: 'chip-green',  icon: 'fa-cubes' },
-    subplatform_member:{ label: 'Member',       chip: 'chip-gray',   icon: 'fa-user' },
+    super_admin:       { label: 'Owner',           chip: 'chip-orange', icon: 'fa-crown' },
+    bo_admin:          { label: 'BO Admin',        chip: 'chip-purple', icon: 'fa-shield-halved' },
+    bo_member:         { label: 'BO Staff',        chip: 'chip-gray',   icon: 'fa-user-shield' },
+    tenant_admin:      { label: 'Tenant Admin',    chip: 'chip-blue',   icon: 'fa-building' },
+    subplatform_admin: { label: 'SP Admin',        chip: 'chip-green',  icon: 'fa-cubes' },
+    subplatform_member:{ label: 'Member',          chip: 'chip-gray',   icon: 'fa-user' },
   },
 
   _roleChip(role) {
@@ -27,17 +29,19 @@ window.Pages.platformMembers = {
   },
 
   // ─── Role hierarchy rank (higher = more privileged) ───
-  _roleRank: { super_admin: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 },
+  _roleRank: { super_admin: 6, bo_admin: 5, bo_member: 4, tenant_admin: 3, subplatform_admin: 2, subplatform_member: 1 },
 
   // ─── Roles visible to each role level ───
   _visibleRoles: {
-    super_admin:       ['super_admin', 'tenant_admin', 'subplatform_admin', 'subplatform_member'],
+    super_admin:       ['super_admin', 'bo_admin', 'bo_member', 'tenant_admin', 'subplatform_admin', 'subplatform_member'],
+    bo_admin:          ['bo_admin', 'bo_member', 'tenant_admin', 'subplatform_admin', 'subplatform_member'],
+    bo_member:         ['bo_member', 'tenant_admin', 'subplatform_admin', 'subplatform_member'],
     tenant_admin:      ['tenant_admin', 'subplatform_admin', 'subplatform_member'],
     subplatform_admin: ['subplatform_admin', 'subplatform_member'],
     subplatform_member: ['subplatform_member'],
   },
 
-  // ─── Build member list — scoped by current user's role + scope ───
+  // ─── Build member list — grouped by user, with all memberships ───
   _getMembers() {
     const d = window.MockData;
     const users = d.users || [];
@@ -50,49 +54,70 @@ window.Pages.platformMembers = {
     const currentRole = ctx ? ctx.role : null;
     const allowedRoles = this._visibleRoles[currentRole] || [];
 
-    return memberships.map(mb => {
+    // Collect visible memberships
+    const visibleMbs = memberships.filter(mb => {
       const user = users.find(u => u.id === mb.userId);
-      if (!user) return null;
-
-      // ── RBAC Scope Filter ──
-      // Only show members whose role is within allowed visibility
-      if (currentRole && allowedRoles.indexOf(mb.role) === -1) return null;
-
-      // Scope filter: non-owner roles only see members in their own scope
+      if (!user) return false;
+      if (currentRole && allowedRoles.indexOf(mb.role) === -1) return false;
       if (currentRole === 'tenant_admin') {
-        // Tenant Admin sees: own tenant's members + self
-        if (mb.role !== 'super_admin' && mb.tenantId && mb.tenantId !== ctx.tenantId) return null;
+        if (mb.role !== 'super_admin' && mb.tenantId && mb.tenantId !== ctx.tenantId) return false;
       } else if (currentRole === 'subplatform_admin') {
-        // SP Admin sees: own SP's members + self (same tenant + same SP or no SP)
-        if (mb.tenantId && mb.tenantId !== ctx.tenantId) return null;
-        if (mb.subPlatformId && mb.subPlatformId !== ctx.subPlatformId) return null;
+        if (mb.tenantId && mb.tenantId !== ctx.tenantId) return false;
+        if (mb.subPlatformId && mb.subPlatformId !== ctx.subPlatformId) return false;
       } else if (currentRole === 'subplatform_member') {
-        // Member sees only self
         const currentUserId = window.Auth && Auth.currentUser() ? Auth.currentUser().id : null;
-        if (mb.userId !== currentUserId) return null;
+        if (mb.userId !== currentUserId) return false;
       }
+      return true;
+    });
 
+    // Group by userId
+    const grouped = {};
+    visibleMbs.forEach(mb => {
+      if (!grouped[mb.userId]) grouped[mb.userId] = [];
       const tenant = mb.tenantId ? tenants.find(t => t.id === mb.tenantId) : null;
       const sp = mb.subPlatformId ? subPlatforms.find(s => s.id === mb.subPlatformId) : null;
       const cr = mb.customRoleId ? customRoles.find(r => r.id === mb.customRoleId) : null;
-      const inviter = mb.invitedBy ? users.find(u => u.id === mb.invitedBy) : null;
+      grouped[mb.userId].push({
+        ...mb,
+        tenantName: tenant ? tenant.name : null,
+        subPlatformName: sp ? sp.name : null,
+        customRoleName: cr ? cr.name : null,
+      });
+    });
+
+    return Object.keys(grouped).map(userId => {
+      const user = users.find(u => u.id === userId);
+      if (!user) return null;
+      const mbs = grouped[userId];
+      // Highest role for this user
+      const self = this;
+      const highestRole = mbs.reduce((best, mb) => (self._roleRank[mb.role] || 0) > (self._roleRank[best] || 0) ? mb.role : best, mbs[0].role);
+      // Collect unique tenants, SPs, roles, custom roles
+      const tenantIds = [...new Set(mbs.map(m => m.tenantId).filter(Boolean))];
+      const spIds = [...new Set(mbs.map(m => m.subPlatformId).filter(Boolean))];
+      const roles = [...new Set(mbs.map(m => m.role))];
+      const crNames = [...new Set(mbs.map(m => m.customRoleName).filter(Boolean))];
+      const hasActive = mbs.some(m => m.status === 'Active');
+      const hasSuspended = mbs.some(m => m.status === 'Suspended');
+      const hasInvited = mbs.some(m => m.status === 'Invited');
 
       return {
-        membershipId: mb.id,
         userId: user.id,
         email: user.email,
         name: user.name,
         initials: user.initials,
-        role: mb.role,
-        customRoleName: cr ? cr.name : null,
-        tenantId: mb.tenantId,
-        tenantName: tenant ? tenant.name : null,
-        subPlatformId: mb.subPlatformId,
-        subPlatformName: sp ? sp.name : null,
-        status: mb.status === 'Active' && user.status !== 'Active' ? user.status : mb.status,
         lastLogin: user.lastLogin,
-        createdDate: mb.createdDate,
-        invitedByEmail: inviter ? inviter.email : null,
+        memberships: mbs,
+        highestRole,
+        roles,
+        crNames,
+        tenantIds,
+        tenantNames: tenantIds.map(id => (tenants.find(t => t.id === id) || {}).name || id),
+        spIds,
+        spNames: spIds.map(id => (subPlatforms.find(s => s.id === id) || {}).name || id),
+        status: hasSuspended ? 'Suspended' : hasInvited && !hasActive ? 'Invited' : 'Active',
+        hasActive, hasSuspended, hasInvited,
       };
     }).filter(Boolean);
   },
@@ -117,6 +142,8 @@ window.Pages.platformMembers = {
     const visibleRoles = self._visibleRoles[currentRole] || ['super_admin', 'tenant_admin', 'subplatform_admin', 'subplatform_member'];
     const roleFilterOptions = [
       { value: 'super_admin', label: 'Owner' },
+      { value: 'bo_admin', label: 'BO Admin' },
+      { value: 'bo_member', label: 'BO Staff' },
       { value: 'tenant_admin', label: 'Tenant Admin' },
       { value: 'subplatform_admin', label: 'SP Admin' },
       { value: 'subplatform_member', label: 'Member' },
@@ -127,120 +154,204 @@ window.Pages.platformMembers = {
       <div class="page-header">
         <h1 class="heading">PLATFORM MEMBERS</h1>
         <div class="page-header-actions">
-          <button class="btn btn-outline" id="btn-view-roles">
-            <i class="fa-solid fa-table-cells"></i> Custom Roles
-          </button>
-          ${canManage ? `<button class="btn btn-primary" id="btn-invite-member">
+          ${canManage ? `<button class="btn btn-primary btn-sm" id="btn-invite-member">
             <i class="fa-solid fa-user-plus"></i> เชิญสมาชิก
           </button>` : ''}
         </div>
       </div>
 
-      <!-- Stats Cards -->
-      <div class="grid-4 gap-16 mb-24">
-        <div class="card p-20 text-center">
-          <div class="text-xs text-muted uppercase mb-4">ทั้งหมด</div>
-          <div class="heading" style="font-size:28px;">${total}</div>
-        </div>
-        <div class="card p-20 text-center">
-          <div class="text-xs text-muted uppercase mb-4">Active</div>
-          <div class="heading" style="font-size:28px;color:var(--success);">${active}</div>
-        </div>
-        <div class="card p-20 text-center">
-          <div class="text-xs text-muted uppercase mb-4">Suspended</div>
-          <div class="heading" style="font-size:28px;color:var(--error);">${suspended}</div>
-        </div>
-        <div class="card p-20 text-center">
-          <div class="text-xs text-muted uppercase mb-4">Invited</div>
-          <div class="heading" style="font-size:28px;color:#3b82f6;">${invited}</div>
-        </div>
+      <!-- Inline Summary -->
+      <div class="flex items-center gap-16 mb-16">
+        <span class="text-sm">ทั้งหมด <strong>${total}</strong></span>
+        <span class="text-sm" style="color:var(--success);">Active <strong>${active}</strong></span>
+        ${suspended > 0 ? `<span class="text-sm" style="color:var(--error);">Suspended <strong>${suspended}</strong></span>` : ''}
+        ${invited > 0 ? `<span class="text-sm" style="color:#3b82f6;">Invited <strong>${invited}</strong></span>` : ''}
       </div>
 
-      <!-- Filter Bar -->
-      <div class="flex items-center gap-10 mb-16" style="flex-wrap:wrap;">
-        <div class="search-bar flex-1" style="min-width:200px;">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="member-search" placeholder="ค้นหาชื่อ / email...">
-        </div>
-        <select id="member-filter-role" class="form-input" style="width:auto;min-width:140px;">
-          <option value="">ทุก Role</option>
-          ${roleFilterOptions}
-        </select>
-        <select id="member-filter-status" class="form-input" style="width:auto;min-width:120px;">
-          <option value="">ทุกสถานะ</option>
-          <option value="Active">Active</option>
-          <option value="Suspended">Suspended</option>
-          <option value="Invited">Invited</option>
-        </select>
+      <!-- Tabs -->
+      ${(() => {
+        const boRoles = ['super_admin', 'bo_admin', 'bo_member'];
+        const boMembers = members.filter(m => m.roles.some(r => boRoles.includes(r)));
+        const pfMembers = members.filter(m => !m.roles.some(r => boRoles.includes(r)));
+        return `
+      <div class="tab-bar mb-16">
+        <div class="tab-item active" data-tab="backoffice"><i class="fa-solid fa-shield-halved"></i> Backoffice <span class="text-xs text-muted">(${boMembers.length})</span></div>
+        <div class="tab-item" data-tab="platform"><i class="fa-solid fa-layer-group"></i> Sub-Platform <span class="text-xs text-muted">(${pfMembers.length})</span></div>
+        <div class="tab-item" data-tab="audit-log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติ <span class="text-xs text-muted">(${(d.memberAuditLog || []).length})</span></div>
       </div>
 
-      <!-- Member Table -->
-      <div class="card">
+      <!-- Tab: Backoffice -->
+      <div id="pm-tab-backoffice">
+        <div class="flex items-center justify-between mb-12">
+          <div class="text-sm text-muted">สมาชิกระดับ Backoffice — Owner และ Admin ที่จัดการทั้งระบบ</div>
+          <button class="btn btn-outline btn-sm btn-view-roles" data-scope="global"><i class="fa-solid fa-table-cells"></i> Custom Roles (Backoffice)</button>
+        </div>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th style="width:44px;"></th>
-                <th>ชื่อ</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Scope</th>
-                <th>สถานะ</th>
-                <th>Login ล่าสุด</th>
-                ${canManage ? '<th>Actions</th>' : ''}
-              </tr>
-            </thead>
-            <tbody id="member-table-body">
-              ${members.map(m => {
+            <thead><tr><th>สมาชิก</th><th>Role</th><th>สถานะ</th><th>Login ล่าสุด</th><th>แก้ไขล่าสุด</th>${canManage ? '<th>จัดการ</th>' : ''}</tr></thead>
+            <tbody>
+              ${boMembers.length === 0 ? '<tr><td colspan="' + (canManage ? 6 : 5) + '" class="text-center text-muted p-20">ไม่มีสมาชิก Backoffice</td></tr>' : boMembers.map(m => {
                 const currentUserEmail = window.Auth && Auth.currentUser() ? Auth.currentUser().email : '';
                 const myRank = self._roleRank[currentRole] || 0;
-                const theirRank = self._roleRank[m.role] || 0;
+                const theirRank = self._roleRank[m.highestRole] || 0;
                 const canEditThis = canManage && myRank > theirRank;
-                const canRemoveThis = canManage && myRank > theirRank && m.email !== currentUserEmail;
-
-                // Scope display
-                let scopeHtml = '-';
-                if (m.role === 'super_admin') {
-                  scopeHtml = '<span class="text-xs text-muted">All Tenants</span>';
-                } else if (m.tenantName) {
-                  scopeHtml = '<span class="text-xs">' + m.tenantName + '</span>';
-                  if (m.subPlatformName) {
-                    scopeHtml += '<br><span class="text-xs text-muted">' + m.subPlatformName + '</span>';
-                  }
-                }
-
-                // Custom role badge
-                const crBadge = m.customRoleName
-                  ? ` <span class="chip chip-blue" style="font-size:9px;">${m.customRoleName}</span>`
-                  : '';
-
-                return `
-                  <tr data-id="${m.membershipId}" data-role="${m.role}" data-status="${m.status}" data-search="${(m.name + ' ' + m.email).toLowerCase()}">
-                    <td>
-                      <div class="user-avatar" style="width:34px;height:34px;font-size:12px;" title="${m.name}">${m.initials}</div>
-                    </td>
-                    <td>
-                      <div class="font-600">${m.name}</div>
-                      ${m.email === currentUserEmail ? '<span class="chip chip-blue" style="font-size:9px;">คุณ</span>' : ''}
-                    </td>
-                    <td class="mono text-sm">${m.email}</td>
-                    <td>${self._roleChip(m.role)}${crBadge}</td>
-                    <td>${scopeHtml}</td>
-                    <td>${d.statusChip(m.status)}</td>
-                    <td class="text-sm text-muted mono">${m.lastLogin || '-'}</td>
-                    ${canManage ? `<td>
-                      <div class="flex gap-4">
-                        ${canEditThis ? `<button class="btn btn-sm btn-outline member-edit-btn" data-id="${m.membershipId}" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>` : ''}
-                        ${canEditThis && m.status === 'Active' ? `<button class="btn btn-sm btn-outline member-suspend-btn" data-id="${m.membershipId}" title="ระงับ"><i class="fa-solid fa-ban"></i></button>` : ''}
-                        ${canEditThis && m.status === 'Suspended' ? `<button class="btn btn-sm btn-outline member-reactivate-btn" data-id="${m.membershipId}" title="เปิดใช้งาน" style="color:var(--success);"><i class="fa-solid fa-rotate-right"></i></button>` : ''}
-                        ${canRemoveThis ? `<button class="btn btn-sm btn-outline member-remove-btn" data-id="${m.membershipId}" title="ลบ" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>` : ''}
-                      </div>
-                    </td>` : ''}
-                  </tr>`;
+                return '<tr data-user-id="' + m.userId + '" data-roles="' + m.roles.join(',') + '" data-status="' + m.status + '" data-search="' + (m.name + ' ' + m.email).toLowerCase() + '">' +
+                  '<td><div class="flex items-center gap-10"><div class="user-avatar" style="width:32px;height:32px;font-size:11px;">' + m.initials + '</div><div><div class="font-600 member-detail-link" data-user-id="' + m.userId + '" style="cursor:pointer;color:var(--primary);">' + m.name + (m.email === currentUserEmail ? ' <span class="chip chip-blue" style="font-size:9px;">คุณ</span>' : '') + '</div><div class="text-xs text-muted mono">' + m.email + '</div></div></div></td>' +
+                  '<td class="text-sm">' + (self._roleMeta[m.highestRole]?.label || m.highestRole) + '</td>' +
+                  '<td>' + d.statusChip(m.status) + '</td>' +
+                  '<td class="text-sm text-muted mono" style="white-space:nowrap;">' + (m.lastLogin || '—') + '</td>' +
+                  '<td style="white-space:nowrap;">' + (() => { const log = (d.memberAuditLog || []).find(e => e.userId === m.userId); if (!log) return '<span class="text-xs text-muted">—</span>'; return '<div class="text-xs text-muted mono">' + log.actionDate + '</div><div class="text-xs text-dim">' + (log.actionBy ? log.actionBy.split('@')[0] : '') + '</div>'; })() + '</td>' +
+                  (canManage ? '<td><div class="flex gap-4"><button class="btn btn-sm btn-outline member-detail-link" data-user-id="' + m.userId + '" title="จัดการ"><i class="fa-solid fa-pen"></i></button>' + (canEditThis ? '<button class="btn btn-sm btn-outline member-remove-user" data-user-id="' + m.userId + '" title="ลบ" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>' : '') + '</div></td>' : '') +
+                '</tr>';
               }).join('')}
             </tbody>
           </table>
         </div>
+      </div>`;
+      })()}
+
+      <!-- Tab: Platform -->
+      <div id="pm-tab-platform" class="hidden">
+        <div class="flex items-center justify-between mb-12">
+          <div class="text-sm text-muted">สมาชิกระดับ Tenant และ Sub-Platform</div>
+          <button class="btn btn-outline btn-sm btn-view-roles" data-scope="platform"><i class="fa-solid fa-table-cells"></i> Custom Roles (Platform)</button>
+        </div>
+        <!-- Filter Bar -->
+        ${(() => {
+          const allTenantNames = [...new Set(members.flatMap(m => m.tenantNames))].sort();
+          const allSpNames = [...new Set(members.flatMap(m => m.spNames))].sort();
+          const allCrNames = [...new Set(members.flatMap(m => m.crNames))].sort();
+          return `
+        <div class="flex items-center gap-8 mb-12" style="flex-wrap:wrap;">
+          <div class="search-bar flex-1" style="min-width:160px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="member-search" placeholder="ค้นหาชื่อ / email...">
+          </div>
+          <select id="member-filter-role" class="form-input" style="width:auto;min-width:120px;">
+            <option value="">ทุก Role</option>
+            ${roleFilterOptions}
+          </select>
+          <select id="member-filter-tenant" class="form-input" style="width:auto;min-width:130px;">
+            <option value="">ทุก Tenant</option>
+            ${allTenantNames.map(t => '<option value="' + t + '">' + t + '</option>').join('')}
+          </select>
+          <select id="member-filter-sp" class="form-input" style="width:auto;min-width:130px;">
+            <option value="">ทุก Sub-Platform</option>
+            ${allSpNames.map(s => '<option value="' + s + '">' + s + '</option>').join('')}
+          </select>
+          <select id="member-filter-cr" class="form-input" style="width:auto;min-width:120px;">
+            <option value="">ทุก Custom Role</option>
+            ${allCrNames.map(c => '<option value="' + c + '">' + c + '</option>').join('')}
+          </select>
+          <select id="member-filter-status" class="form-input" style="width:auto;min-width:100px;">
+            <option value="">ทุกสถานะ</option>
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+            <option value="Invited">Invited</option>
+          </select>
+        </div>`;
+        })()}
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>สมาชิก</th>
+                <th>Roles</th>
+                <th>Sub-Platforms</th>
+                <th>สถานะ</th>
+                <th>Login ล่าสุด</th>
+                <th>แก้ไขล่าสุด</th>
+                ${canManage ? '<th>จัดการ</th>' : ''}
+              </tr>
+            </thead>
+            <tbody id="member-table-body">
+              ${members.filter(m => !m.roles.some(r => ['super_admin','bo_admin','bo_member'].includes(r))).map(m => {
+                const currentUserEmail = window.Auth && Auth.currentUser() ? Auth.currentUser().email : '';
+                const myRank = self._roleRank[currentRole] || 0;
+                const theirRank = self._roleRank[m.highestRole] || 0;
+                const canEditThis = canManage && myRank > theirRank;
+                const hasMulti = m.memberships.length > 1;
+                const uid = m.userId;
+
+                // Expandable sub-rows — all memberships detail
+                const subRows = m.memberships.map((mb, idx) => {
+                  const isLast = idx === m.memberships.length - 1;
+                  const branch = isLast ? '└' : '├';
+                  const tenant = mb.tenantName || '—';
+                  const sp = mb.subPlatformName && mb.subPlatformName !== '-' ? mb.subPlatformName : '';
+                  const cr = mb.customRoleName || '';
+                  return `
+                  <tr class="member-sub-row member-sub-${uid}" style="display:none;">
+                    <td style="padding-left:70px;" colspan="${canManage ? 6 : 5}">
+                      <div class="flex items-center gap-12" style="flex-wrap:wrap;">
+                        <span class="text-muted mono" style="font-size:12px;">${branch}</span>
+                        <span class="text-xs"><span class="text-dim">Role:</span> <strong>${self._roleMeta[mb.role]?.label || mb.role}</strong></span>
+                        <span class="text-xs"><span class="text-dim">Tenant:</span> ${tenant}</span>
+                        ${sp ? '<span class="text-xs"><span class="text-dim">SP:</span> ' + sp + '</span>' : ''}
+                        ${cr ? '<span class="text-xs"><span class="text-dim">สิทธิ์:</span> ' + cr + '</span>' : ''}
+                        ${d.statusChip(mb.status)}
+                      </div>
+                    </td>
+                    ${canManage ? '<td></td>' : ''}
+                  </tr>`;
+                }).join('');
+
+                return `
+                  <tr data-user-id="${uid}" data-roles="${m.roles.join(',')}" data-status="${m.status}" data-tenants="${m.tenantNames.join(',').toLowerCase()}" data-sps="${m.spNames.join(',').toLowerCase()}" data-crs="${m.crNames.join(',').toLowerCase()}" data-search="${(m.name + ' ' + m.email).toLowerCase()}">
+                    <td>
+                      <div class="flex items-center gap-10">
+                        <button class="btn btn-sm btn-outline member-expand-btn" data-uid="${uid}" style="padding:2px 5px;min-width:auto;"><i class="fa-solid fa-chevron-right" style="font-size:10px;transition:transform 0.15s;"></i></button>
+                        <div class="user-avatar" style="width:32px;height:32px;font-size:11px;">${m.initials}</div>
+                        <div>
+                          <div class="font-600 member-detail-link" data-user-id="${uid}" style="cursor:pointer;color:var(--primary);">${m.name}${m.email === currentUserEmail ? ' <span class="chip chip-blue" style="font-size:9px;">คุณ</span>' : ''}${hasMulti ? ' <span class="text-xs text-muted ml-4">[' + m.memberships.length + ']</span>' : ''}</div>
+                          <div class="text-xs text-muted mono">${m.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-sm mono">${m.roles.length} <span class="text-xs text-muted">Role${m.roles.length > 1 ? 's' : ''}</span></td>
+                    <td class="text-sm mono">${m.spNames.length} <span class="text-xs text-muted">SP${m.spNames.length > 1 ? 's' : ''}</span></td>
+                    <td>${d.statusChip(m.status)}</td>
+                    <td class="text-sm text-muted mono" style="white-space:nowrap;">${m.lastLogin || '—'}</td>
+                    <td style="white-space:nowrap;">${(() => {
+                      const log = (d.memberAuditLog || []).find(e => e.userId === uid);
+                      if (!log) return '<span class="text-xs text-muted">—</span>';
+                      return '<div class="text-xs text-muted mono">' + log.actionDate + '</div><div class="text-xs text-dim">' + (log.actionBy ? log.actionBy.split('@')[0] : '') + '</div>';
+                    })()}</td>
+                    ${canManage ? `<td style="white-space:nowrap;">
+                      <div class="flex gap-4">
+                        <button class="btn btn-sm btn-outline member-detail-link" data-user-id="${uid}" title="จัดการ"><i class="fa-solid fa-pen"></i></button>
+                        ${canEditThis && m.hasActive ? `<button class="btn btn-sm btn-outline member-suspend-user" data-user-id="${uid}" title="ระงับ"><i class="fa-solid fa-ban"></i></button>` : ''}
+                        ${canEditThis && m.hasSuspended && !m.hasActive ? `<button class="btn btn-sm btn-outline member-reactivate-user" data-user-id="${uid}" title="เปิดใช้งาน" style="color:var(--success);"><i class="fa-solid fa-rotate-right"></i></button>` : ''}
+                        ${canEditThis ? `<button class="btn btn-sm btn-outline member-remove-user" data-user-id="${uid}" title="ลบ" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>` : ''}
+                      </div>
+                    </td>` : ''}
+                  </tr>${subRows}`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Audit Log -->
+      <div id="pm-tab-audit-log" class="hidden">
+        ${(() => {
+          const log = (d.memberAuditLog || []).slice(0, 30);
+          if (log.length === 0) return '<div class="text-sm text-muted p-20 text-center">ยังไม่มีประวัติ</div>';
+          return '<div class="table-wrap"><table><thead><tr><th>สมาชิก</th><th>Email</th><th>การดำเนินการ</th><th>รายละเอียด</th><th>โดย</th><th>วันที่</th></tr></thead><tbody>' +
+            log.map(e => {
+              const chipMap = { Invited: 'chip-blue', Edited: 'chip-gray', Suspended: 'chip-orange', Reactivated: 'chip-green', Removed: 'chip-red' };
+              return '<tr>' +
+                '<td class="font-600 text-sm">' + e.userName + '</td>' +
+                '<td class="mono text-sm text-muted">' + (e.userEmail || '-') + '</td>' +
+                '<td><span class="chip ' + (chipMap[e.action] || 'chip-gray') + '">' + e.action + '</span></td>' +
+                '<td class="text-sm">' + (e.detail || '-') + '</td>' +
+                '<td class="text-sm text-muted">' + (e.actionBy ? e.actionBy.split('@')[0] : '-') + '</td>' +
+                '<td class="text-sm text-muted mono" style="white-space:nowrap;">' + e.actionDate + ' ' + (e.actionTime || '') + '</td>' +
+              '</tr>';
+            }).join('') +
+            '</tbody></table></div>';
+        })()}
       </div>
     `;
   },
@@ -251,29 +362,53 @@ window.Pages.platformMembers = {
     const d = window.MockData;
 
     // ─── Filter logic ───
-    const searchInput = document.getElementById('member-search');
-    const roleFilter  = document.getElementById('member-filter-role');
+    const searchInput  = document.getElementById('member-search');
+    const roleFilter   = document.getElementById('member-filter-role');
+    const tenantFilter = document.getElementById('member-filter-tenant');
+    const spFilter     = document.getElementById('member-filter-sp');
+    const crFilter     = document.getElementById('member-filter-cr');
     const statusFilter = document.getElementById('member-filter-status');
 
     function applyFilters() {
-      const q = (searchInput.value || '').toLowerCase();
-      const role = roleFilter.value;
-      const status = statusFilter.value;
+      const q      = (searchInput?.value || '').toLowerCase();
+      const role   = roleFilter?.value || '';
+      const tenant = (tenantFilter?.value || '').toLowerCase();
+      const sp     = (spFilter?.value || '').toLowerCase();
+      const cr     = (crFilter?.value || '').toLowerCase();
+      const status = statusFilter?.value || '';
       document.querySelectorAll('#member-table-body tr').forEach(tr => {
-        const matchSearch = !q || (tr.dataset.search || '').indexOf(q) !== -1;
-        const matchRole   = !role || tr.dataset.role === role;
+        const matchSearch = !q      || (tr.dataset.search || '').includes(q);
+        const matchRole   = !role   || (tr.dataset.roles || '').includes(role);
+        const matchTenant = !tenant || (tr.dataset.tenants || '').includes(tenant);
+        const matchSp     = !sp     || (tr.dataset.sps || '').includes(sp);
+        const matchCr     = !cr     || (tr.dataset.crs || '').includes(cr);
         const matchStatus = !status || tr.dataset.status === status;
-        tr.style.display = (matchSearch && matchRole && matchStatus) ? '' : 'none';
+        tr.style.display = (matchSearch && matchRole && matchTenant && matchSp && matchCr && matchStatus) ? '' : 'none';
       });
     }
 
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
-    if (roleFilter)  roleFilter.addEventListener('change', applyFilters);
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    // ─── Tab switching ───
+    document.querySelectorAll('.tab-bar .tab-item').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab-bar .tab-item').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const key = tab.dataset.tab;
+        ['backoffice', 'platform', 'audit-log'].forEach(k => {
+          const el = document.getElementById('pm-tab-' + k);
+          if (el) el.classList.toggle('hidden', key !== k);
+        });
+      });
+    });
 
-    // ─── View Custom Roles ───
-    document.getElementById('btn-view-roles')?.addEventListener('click', () => {
-      self._showCustomRolesModal();
+    [searchInput, roleFilter, tenantFilter, spFilter, crFilter, statusFilter].forEach(el => {
+      if (el) el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', applyFilters);
+    });
+
+    // ─── View Custom Roles (scoped) ───
+    document.querySelectorAll('.btn-view-roles').forEach(btn => {
+      btn.addEventListener('click', () => {
+        self._showCustomRolesModal(btn.dataset.scope);
+      });
     });
 
     // ─── Invite Member ───
@@ -281,53 +416,54 @@ window.Pages.platformMembers = {
       self._showInviteModal();
     });
 
-    // ─── Edit Member ───
-    document.querySelectorAll('.member-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => self._showEditModal(btn.dataset.id));
-    });
-
-    // ─── Suspend Member ───
-    document.querySelectorAll('.member-suspend-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
-        if (!mb) return;
-        const user = d.users.find(u => u.id === mb.userId);
-        const name = user ? user.name : mb.userId;
-        const ok = await App.confirm(`ต้องการระงับบัญชี "${name}" ในบทบาทนี้?`, { type: 'danger', title: 'ระงับสมาชิก', confirmText: 'ระงับ' });
-        if (!ok) return;
-        mb.status = 'Suspended';
-        App.toast('ระงับบัญชี ' + name + ' สำเร็จ', 'success');
-        self._rerender();
+    // ─── Expand/Collapse sub-rows ───
+    document.querySelectorAll('.member-expand-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const icon = btn.querySelector('i');
+        const rows = document.querySelectorAll('.member-sub-' + uid);
+        const isOpen = rows[0]?.style.display !== 'none';
+        rows.forEach(r => { r.style.display = isOpen ? 'none' : ''; });
+        if (icon) icon.style.transform = isOpen ? '' : 'rotate(90deg)';
       });
     });
 
-    // ─── Reactivate Member ───
-    document.querySelectorAll('.member-reactivate-btn').forEach(btn => {
+    // ─── Member Detail ───
+    document.querySelectorAll('.member-detail-link').forEach(el => {
+      el.addEventListener('click', () => self._showMemberDetailModal(el.dataset.userId));
+    });
+
+    // ─── Suspend all memberships for user ───
+    document.querySelectorAll('.member-suspend-user').forEach(btn => {
       btn.addEventListener('click', () => {
-        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
-        if (!mb) return;
-        mb.status = 'Active';
-        const user = d.users.find(u => u.id === mb.userId);
+        const userId = btn.dataset.userId;
+        const mbs = (d.userMemberships || []).filter(x => x.userId === userId && x.status === 'Active');
+        if (!mbs.length) return;
+        // Use first membership to open suspend modal — will suspend all
+        self._showSuspendAllModal(userId);
+      });
+    });
+
+    // ─── Reactivate all memberships for user ───
+    document.querySelectorAll('.member-reactivate-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const userId = btn.dataset.userId;
+        const user = (d.users || []).find(u => u.id === userId);
+        const mbs = (d.userMemberships || []).filter(x => x.userId === userId && x.status === 'Suspended');
+        mbs.forEach(mb => { mb.status = 'Active'; });
+        self._pushAuditLog(userId, user ? user.name : '', user ? user.email : '', 'Reactivated', 'เปิดใช้งานทุก membership (' + mbs.length + ' รายการ)');
         App.toast('เปิดใช้งาน ' + (user ? user.name : '') + ' สำเร็จ', 'success');
         self._rerender();
       });
     });
 
-    // ─── Remove Member ───
-    document.querySelectorAll('.member-remove-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
-        if (!mb) return;
-        const user = d.users.find(u => u.id === mb.userId);
-        const name = user ? user.name : mb.userId;
-        const ok = await App.confirm(`ต้องการลบ "${name}" ออกจากบทบาทนี้?\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`, { type: 'danger', title: 'ลบสมาชิก', confirmText: 'ลบ' });
-        if (!ok) return;
-        const idx = d.userMemberships.indexOf(mb);
-        if (idx !== -1) d.userMemberships.splice(idx, 1);
-        App.toast('ลบ ' + name + ' ออกจากบทบาทนี้แล้ว', 'success');
-        self._rerender();
+    // ─── Remove all memberships for user ───
+    document.querySelectorAll('.member-remove-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        self._showRemoveAllModal(btn.dataset.userId);
       });
     });
+
   },
 
   // ─── Determine what roles current user can assign ───
@@ -355,8 +491,8 @@ window.Pages.platformMembers = {
     });
   },
 
-  // ─── Invite Modal ───
-  _showInviteModal() {
+  // ─── Invite Modal (existingUser = optional, for adding membership to existing user) ───
+  _showInviteModal(existingUser) {
     const self = this;
     const d = window.MockData;
     const ctx = window.Auth ? Auth.activeContext() : null;
@@ -395,8 +531,16 @@ window.Pages.platformMembers = {
     App.showModal(
       `<div class="modal" style="max-width:480px;">
         <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-title"><i class="fa-solid fa-user-plus text-primary"></i> เชิญสมาชิกใหม่</div>
+        <div class="modal-title"><i class="fa-solid fa-user-plus text-primary"></i> ${existingUser ? 'เพิ่ม Membership — ' + existingUser.name : 'เชิญสมาชิกใหม่'}</div>
         <div class="flex-col gap-14 mt-16">
+          ${existingUser ? `
+          <div class="flex items-center gap-10 p-10" style="background:var(--surface2);border-radius:8px;">
+            <div class="user-avatar" style="width:32px;height:32px;font-size:11px;">${existingUser.initials}</div>
+            <div><div class="font-600 text-sm">${existingUser.name}</div><div class="text-xs text-muted mono">${existingUser.email}</div></div>
+          </div>
+          <input type="hidden" id="invite-name" value="${existingUser.name}">
+          <input type="hidden" id="invite-email" value="${existingUser.email}">
+          ` : `
           <div class="form-group">
             <label class="form-label">ชื่อ</label>
             <input class="form-input" id="invite-name" placeholder="ชื่อ-นามสกุล">
@@ -404,7 +548,7 @@ window.Pages.platformMembers = {
           <div class="form-group">
             <label class="form-label">Email</label>
             <input type="email" class="form-input" id="invite-email" placeholder="email@company.com">
-          </div>
+          </div>`}
           <div class="form-group">
             <label class="form-label">Role</label>
             <select class="form-input" id="invite-role">
@@ -481,6 +625,13 @@ window.Pages.platformMembers = {
           createdDate: new Date().toISOString().slice(0, 10),
         });
 
+        const roleMeta = self._roleMeta[role] || {};
+        const tenantObj = tenantId ? (d.tenants || []).find(t => t.id === tenantId) : null;
+        const spObj = subPlatformId ? (d.subPlatforms || []).find(s => s.id === subPlatformId) : null;
+        let invDetail = 'เชิญเป็น ' + (roleMeta.label || role);
+        if (tenantObj) invDetail += ' ของ ' + tenantObj.name;
+        if (spObj) invDetail += ' / ' + spObj.name;
+        self._pushAuditLog(user.id, name, email, 'Invited', invDetail);
         App.closeModal();
         App.toast('ส่งคำเชิญไปยัง ' + email + ' สำเร็จ', 'success');
         self._rerender();
@@ -488,8 +639,296 @@ window.Pages.platformMembers = {
     }, 50);
   },
 
-  // ─── Edit Modal ───
-  _showEditModal(membershipId) {
+
+  // ─── Audit Log Helper ───
+  _pushAuditLog(userId, userName, userEmail, action, detail) {
+    const d = window.MockData;
+    d.memberAuditLog = d.memberAuditLog || [];
+    const now = new Date();
+    d.memberAuditLog.unshift({
+      id: 'MAL-' + Date.now(), userId, userName, userEmail, action, detail,
+      actionBy: (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system',
+      actionDate: now.toISOString().slice(0, 10),
+      actionTime: now.toTimeString().slice(0, 5),
+    });
+  },
+
+  // ─── Member Detail + Edit Modal (unified) ───
+  _showMemberDetailModal(userId) {
+    const self = this;
+    const d = window.MockData;
+    const user = (d.users || []).find(u => u.id === userId);
+    if (!user) return;
+
+    const ctx = window.Auth ? Auth.activeContext() : null;
+    const currentRole = ctx ? ctx.role : null;
+    const myRank = self._roleRank[currentRole] || 0;
+    const canManage = !window.Auth || Auth.hasPermission('canManageMembers');
+    const assignableRoles = self._getAssignableRoles();
+
+    const memberships = (d.userMemberships || []).filter(mb => mb.userId === userId).map(mb => {
+      const tenant = (d.tenants || []).find(t => t.id === mb.tenantId);
+      const sp = (d.subPlatforms || []).find(s => s.id === mb.subPlatformId);
+      const theirRank = self._roleRank[mb.role] || 0;
+      const editable = canManage && myRank > theirRank;
+      return { ...mb, tenantName: tenant ? tenant.name : '-', subPlatformName: sp ? sp.name : '-', editable };
+    });
+
+    const allRoles = [
+      { value: 'super_admin', label: 'Owner' },
+      { value: 'tenant_admin', label: 'Tenant Admin' },
+      { value: 'subplatform_admin', label: 'SP Admin' },
+      { value: 'subplatform_member', label: 'Member' },
+    ];
+    const tenants = d.tenants || [];
+    const sps = d.subPlatforms || [];
+
+    App.showModal(`
+      <div class="modal" style="max-width:700px;width:95vw;">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title mb-12">จัดการสมาชิก</div>
+
+        <!-- User Header -->
+        <div class="flex items-center gap-16 mb-20" style="padding:16px;background:var(--surface2);border-radius:10px;">
+          <div class="user-avatar" style="width:48px;height:48px;font-size:16px;">${user.initials}</div>
+          <div class="flex-1">
+            <div class="form-group" style="margin:0 0 6px 0;">
+              <label class="form-label" style="margin-bottom:2px;">ชื่อ</label>
+              <input id="md-name" class="form-input font-600" value="${user.name}" style="font-size:14px;">
+            </div>
+            <div class="mono text-sm text-muted">${user.email}</div>
+          </div>
+          <div class="flex-col items-end gap-6">
+            ${d.statusChip(user.status)}
+            <div class="text-xs text-muted">สมัคร: ${user.createdDate || '-'}</div>
+          </div>
+        </div>
+
+        <!-- Memberships -->
+        <div class="flex items-center justify-between mb-12">
+          <div class="text-sm font-600">Memberships (${memberships.length})</div>
+          ${canManage && assignableRoles.length > 0 ? `<button class="btn btn-outline btn-sm" id="md-add-membership"><i class="fa-solid fa-plus"></i> เพิ่ม Membership</button>` : ''}
+        </div>
+        <div id="md-memberships" class="flex-col gap-10">
+        ${memberships.map(mb => {
+          const customRoles = self._getCustomRolesForLevel(mb.role);
+          const borderColor = mb.status === 'Suspended' ? 'var(--error)' : mb.status === 'Invited' ? 'var(--primary)' : 'var(--border)';
+          return `
+          <div style="padding:16px 20px;background:var(--surface2);border-radius:10px;border-left:3px solid ${borderColor};">
+            <div class="flex items-center gap-8 mb-12">
+              ${d.statusChip(mb.status)}
+              <span class="text-sm text-muted flex-1">${mb.tenantName || '—'}${mb.subPlatformName !== '-' ? ' / ' + mb.subPlatformName : ''}</span>
+              ${mb.editable ? `<div class="flex gap-6">
+                ${mb.status === 'Active' ? `<button class="btn btn-sm btn-outline md-suspend-mb" data-id="${mb.id}" title="ระงับ"><i class="fa-solid fa-ban"></i></button>` : ''}
+                ${mb.status === 'Suspended' ? `<button class="btn btn-sm btn-outline md-reactivate-mb" data-id="${mb.id}" title="เปิดใช้งาน" style="color:var(--success);"><i class="fa-solid fa-rotate-right"></i></button>` : ''}
+                <button class="btn btn-sm btn-outline md-remove-mb" data-id="${mb.id}" title="ลบ membership นี้" style="color:var(--error);"><i class="fa-solid fa-trash"></i></button>
+              </div>` : ''}
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div>
+                <label class="text-xs text-muted" style="display:block;margin-bottom:3px;">Role</label>
+                <select class="form-input md-role" data-mb-id="${mb.id}" ${!mb.editable ? 'disabled' : ''}>
+                  ${allRoles.map(r => '<option value="' + r.value + '"' + (r.value === mb.role ? ' selected' : '') + '>' + r.label + '</option>').join('')}
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-muted" style="display:block;margin-bottom:3px;">Tenant</label>
+                <select class="form-input md-tenant" data-mb-id="${mb.id}" ${!mb.editable ? 'disabled' : ''}>
+                  <option value="">—</option>
+                  ${tenants.map(t => '<option value="' + t.id + '"' + (t.id === mb.tenantId ? ' selected' : '') + '>' + t.name + '</option>').join('')}
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-muted" style="display:block;margin-bottom:3px;">Sub-Platform</label>
+                <select class="form-input md-sp" data-mb-id="${mb.id}" ${!mb.editable ? 'disabled' : ''}>
+                  <option value="">—</option>
+                  ${sps.map(s => '<option value="' + s.id + '"' + (s.id === mb.subPlatformId ? ' selected' : '') + '>' + s.name + '</option>').join('')}
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-muted" style="display:block;margin-bottom:3px;">Custom Role</label>
+                <select class="form-input md-custom-role" data-mb-id="${mb.id}" ${!mb.editable ? 'disabled' : ''}>
+                  <option value="">สิทธิ์พื้นฐาน</option>
+                  ${customRoles.map(cr => '<option value="' + cr.id + '"' + (cr.id === mb.customRoleId ? ' selected' : '') + '>' + cr.name + '</option>').join('')}
+                </select>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+        </div>
+
+        <div class="modal-actions mt-20">
+          <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+          <button class="btn btn-primary" id="md-save"><i class="fa-solid fa-save"></i> บันทึก</button>
+        </div>
+      </div>`);
+
+    setTimeout(() => {
+      // Save all changes
+      document.getElementById('md-save')?.addEventListener('click', () => {
+        const newName = document.getElementById('md-name').value.trim();
+        if (!newName) { App.toast('กรุณากรอกชื่อ', 'error'); return; }
+
+        const oldName = user.name;
+        user.name = newName;
+        const parts = newName.split(' ');
+        user.initials = parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : newName.slice(0, 2).toUpperCase();
+
+        const changes = [];
+        document.querySelectorAll('#md-memberships .p-12').forEach(card => {
+          const mbId = card.querySelector('.md-role')?.dataset.mbId;
+          const mb = d.userMemberships.find(x => x.id === mbId);
+          if (!mb) return;
+          const newRole = card.querySelector('.md-role')?.value;
+          const newCrId = card.querySelector('.md-custom-role')?.value || null;
+          const newTenant = card.querySelector('.md-tenant')?.value || null;
+          const newSp = card.querySelector('.md-sp')?.value || null;
+          if (newRole && newRole !== mb.role) { changes.push('Role → ' + (self._roleMeta[newRole]?.label || newRole)); mb.role = newRole; }
+          if (newCrId !== mb.customRoleId) { const crN = newCrId ? ((d.customRoles || []).find(c => c.id === newCrId) || {}).name : 'พื้นฐาน'; changes.push('Custom Role → ' + crN); mb.customRoleId = newCrId; }
+          if (newTenant !== mb.tenantId) { const tN = newTenant ? (tenants.find(t => t.id === newTenant) || {}).name : '-'; changes.push('Tenant → ' + tN); mb.tenantId = newTenant; }
+          if (newSp !== mb.subPlatformId) { const sN = newSp ? (sps.find(s => s.id === newSp) || {}).name : '-'; changes.push('SP → ' + sN); mb.subPlatformId = newSp; }
+        });
+
+        let detail = oldName !== newName ? 'เปลี่ยนชื่อ → ' + newName : '';
+        if (changes.length) detail += (detail ? ' / ' : '') + changes.join(', ');
+        if (!detail) detail = 'ไม่มีการเปลี่ยนแปลง';
+        if (detail !== 'ไม่มีการเปลี่ยนแปลง') {
+          self._pushAuditLog(user.id, user.name, user.email, 'Edited', detail);
+        }
+        App.closeModal();
+        App.toast('อัปเดต ' + user.name + ' สำเร็จ', 'success');
+        self._rerender();
+      });
+
+      // Suspend per membership
+      document.querySelectorAll('.md-suspend-mb').forEach(btn => {
+        btn.addEventListener('click', () => { App.closeModal(); self._showSuspendReasonModal(btn.dataset.id); });
+      });
+
+      // Reactivate per membership
+      document.querySelectorAll('.md-reactivate-mb').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mb = d.userMemberships.find(x => x.id === btn.dataset.id);
+          if (!mb) return;
+          mb.status = 'Active';
+          self._pushAuditLog(userId, user.name, user.email, 'Reactivated', 'เปิดใช้งานอีกครั้ง');
+          App.closeModal();
+          App.toast('เปิดใช้งานสำเร็จ', 'success');
+          self._rerender();
+        });
+      });
+
+      // Remove per membership
+      document.querySelectorAll('.md-remove-mb').forEach(btn => {
+        btn.addEventListener('click', () => { App.closeModal(); self._showRemoveReasonModal(btn.dataset.id); });
+      });
+
+      // Add new membership
+      document.getElementById('md-add-membership')?.addEventListener('click', () => {
+        App.closeModal();
+        self._showInviteModal(user);
+      });
+    }, 50);
+  },
+
+  // ─── Suspend ALL memberships for user ───
+  _showSuspendAllModal(userId) {
+    const self = this;
+    const d = window.MockData;
+    const user = (d.users || []).find(u => u.id === userId);
+    if (!user) return;
+    const mbs = (d.userMemberships || []).filter(x => x.userId === userId && x.status === 'Active');
+
+    App.showModal(`
+      <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title mb-8" style="color:var(--error);"><i class="fa-solid fa-ban"></i> ระงับสมาชิก</div>
+        <div class="text-sm text-muted mb-12">${user.name} · <span class="mono">${user.email}</span> · จะระงับ <strong>${mbs.length}</strong> membership</div>
+        <div class="form-group mb-12">
+          <label class="form-label">เหตุผล <span class="text-error">*</span></label>
+          <select id="suspend-all-sel" class="form-input mb-8">
+            <option value="">— เลือกเหตุผล —</option>
+            <option value="ละเมิดนโยบาย">ละเมิดนโยบาย</option>
+            <option value="ร้องขอจากผู้จัดการ">ร้องขอจากผู้จัดการ</option>
+            <option value="ไม่ได้ใช้งาน">ไม่ได้ใช้งาน</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
+          </select>
+          <textarea id="suspend-all-txt" class="form-input" rows="2" placeholder="ระบุเหตุผล..." style="display:none;"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+          <button class="btn btn-danger" id="suspend-all-confirm"><i class="fa-solid fa-ban"></i> ยืนยันระงับ</button>
+        </div>
+      </div>`);
+    setTimeout(() => {
+      const selEl = document.getElementById('suspend-all-sel');
+      const txtEl = document.getElementById('suspend-all-txt');
+      selEl?.addEventListener('change', () => { txtEl.style.display = selEl.value === 'other' ? '' : 'none'; });
+      document.getElementById('suspend-all-confirm')?.addEventListener('click', () => {
+        const reason = selEl.value === 'other' ? txtEl.value.trim() : selEl.value;
+        if (!reason) { App.toast('กรุณาระบุเหตุผล', 'error'); return; }
+        mbs.forEach(mb => { mb.status = 'Suspended'; });
+        self._pushAuditLog(userId, user.name, user.email, 'Suspended', 'ระงับทุก membership (' + mbs.length + ' รายการ) — เหตุผล: ' + reason);
+        App.closeModal();
+        App.toast('ระงับ ' + user.name + ' สำเร็จ', 'success');
+        self._rerender();
+      });
+    }, 50);
+  },
+
+  // ─── Remove ALL memberships for user ───
+  _showRemoveAllModal(userId) {
+    const self = this;
+    const d = window.MockData;
+    const user = (d.users || []).find(u => u.id === userId);
+    if (!user) return;
+    const mbs = (d.userMemberships || []).filter(x => x.userId === userId);
+
+    App.showModal(`
+      <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title mb-8" style="color:var(--error);"><i class="fa-solid fa-trash"></i> ลบสมาชิก</div>
+        <div class="text-sm text-muted mb-8">${user.name} · <span class="mono">${user.email}</span> · จะลบ <strong>${mbs.length}</strong> membership</div>
+        <div class="card p-10 mb-12" style="border-left:3px solid var(--error);background:rgba(239,68,68,0.06);">
+          <div class="text-xs"><i class="fa-solid fa-triangle-exclamation text-error"></i> การลบไม่สามารถย้อนกลับได้</div>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">เหตุผล <span class="text-error">*</span></label>
+          <select id="remove-all-sel" class="form-input mb-8">
+            <option value="">— เลือกเหตุผล —</option>
+            <option value="ลาออก">ลาออก</option>
+            <option value="สิ้นสุดสัญญา">สิ้นสุดสัญญา</option>
+            <option value="ละเมิดนโยบายร้ายแรง">ละเมิดนโยบายร้ายแรง</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
+          </select>
+          <textarea id="remove-all-txt" class="form-input" rows="2" placeholder="ระบุเหตุผล..." style="display:none;"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+          <button class="btn btn-danger" id="remove-all-confirm"><i class="fa-solid fa-trash"></i> ยืนยันลบ</button>
+        </div>
+      </div>`);
+    setTimeout(() => {
+      const selEl = document.getElementById('remove-all-sel');
+      const txtEl = document.getElementById('remove-all-txt');
+      selEl?.addEventListener('change', () => { txtEl.style.display = selEl.value === 'other' ? '' : 'none'; });
+      document.getElementById('remove-all-confirm')?.addEventListener('click', () => {
+        const reason = selEl.value === 'other' ? txtEl.value.trim() : selEl.value;
+        if (!reason) { App.toast('กรุณาระบุเหตุผล', 'error'); return; }
+        self._pushAuditLog(userId, user.name, user.email, 'Removed', 'ลบทุก membership (' + mbs.length + ' รายการ) — เหตุผล: ' + reason);
+        mbs.forEach(mb => {
+          const idx = d.userMemberships.indexOf(mb);
+          if (idx !== -1) d.userMemberships.splice(idx, 1);
+        });
+        App.closeModal();
+        App.toast('ลบ ' + user.name + ' สำเร็จ', 'success');
+        self._rerender();
+      });
+    }, 50);
+  },
+
+  // ─── Suspend with Reason Modal (per membership, from detail modal) ───
+  _showSuspendReasonModal(membershipId) {
     const self = this;
     const d = window.MockData;
     const mb = d.userMemberships.find(x => x.id === membershipId);
@@ -497,56 +936,102 @@ window.Pages.platformMembers = {
     const user = d.users.find(u => u.id === mb.userId);
     if (!user) return;
 
-    const customRoles = self._getCustomRolesForLevel(mb.role);
-
-    App.showModal(
-      `<div class="modal" style="max-width:480px;">
+    App.showModal(`
+      <div class="modal" style="max-width:480px;">
         <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-title"><i class="fa-solid fa-user-pen text-primary"></i> แก้ไขสมาชิก</div>
-        <div class="flex items-center gap-12 mt-12 mb-16" style="background:var(--surface2);padding:12px;border-radius:10px;">
-          <div class="user-avatar" style="width:40px;height:40px;font-size:14px;">${user.initials}</div>
+        <div class="modal-title mb-4" style="color:var(--error);"><i class="fa-solid fa-ban"></i> ระงับสมาชิก</div>
+        <div class="flex items-center gap-10 mb-16" style="background:var(--surface2);padding:10px;border-radius:8px;">
+          <div class="user-avatar" style="width:34px;height:34px;font-size:12px;">${user.initials}</div>
           <div>
-            <div class="font-600">${user.name}</div>
-            <div class="mono text-sm text-muted">${user.email}</div>
-            <div style="margin-top:4px;">${self._roleChip(mb.role)}</div>
+            <div class="font-600 text-sm">${user.name}</div>
+            <div class="text-xs text-muted">${user.email} · ${self._roleChip(mb.role)}</div>
           </div>
         </div>
-        <div class="flex-col gap-14">
-          <div class="form-group">
-            <label class="form-label">ชื่อ</label>
-            <input class="form-input" id="edit-member-name" value="${user.name}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Custom Role (สิทธิ์)</label>
-            <select class="form-input" id="edit-member-custom-role">
-              <option value="">(ใช้สิทธิ์พื้นฐานของ Role)</option>
-              ${customRoles.map(cr => `<option value="${cr.id}" ${cr.id === mb.customRoleId ? 'selected' : ''}>${cr.name}</option>`).join('')}
-            </select>
-          </div>
+        <div class="form-group mb-12">
+          <label class="form-label">เหตุผลในการระงับ <span class="text-error">*</span></label>
+          <select id="suspend-m-reason-sel" class="form-input mb-8">
+            <option value="">— เลือกเหตุผล —</option>
+            <option value="ละเมิดนโยบาย">ละเมิดนโยบาย</option>
+            <option value="ร้องขอจากผู้จัดการ">ร้องขอจากผู้จัดการ</option>
+            <option value="ไม่ได้ใช้งาน">ไม่ได้ใช้งาน</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
+          </select>
+          <textarea id="suspend-m-reason-txt" class="form-input" rows="2" placeholder="ระบุเหตุผล..." style="display:none;"></textarea>
         </div>
         <div class="modal-actions">
           <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-          <button class="btn btn-primary" id="edit-member-save"><i class="fa-solid fa-save"></i> บันทึก</button>
+          <button class="btn btn-danger" id="suspend-m-confirm"><i class="fa-solid fa-ban"></i> ยืนยันระงับ</button>
         </div>
-      </div>`
-    );
-
+      </div>`);
     setTimeout(() => {
-      document.getElementById('edit-member-save')?.addEventListener('click', () => {
-        const newName = document.getElementById('edit-member-name').value.trim();
-        const newCustomRoleId = document.getElementById('edit-member-custom-role').value || null;
-
-        if (!newName) { document.getElementById('edit-member-name').classList.add('is-invalid'); return; }
-
-        user.name = newName;
-        const parts = newName.split(' ');
-        user.initials = parts.length >= 2
-          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-          : newName.slice(0, 2).toUpperCase();
-        mb.customRoleId = newCustomRoleId;
-
+      const selEl = document.getElementById('suspend-m-reason-sel');
+      const txtEl = document.getElementById('suspend-m-reason-txt');
+      selEl?.addEventListener('change', () => { txtEl.style.display = selEl.value === 'other' ? '' : 'none'; });
+      document.getElementById('suspend-m-confirm')?.addEventListener('click', () => {
+        const reason = selEl.value === 'other' ? txtEl.value.trim() : selEl.value;
+        if (!reason) { App.toast('กรุณาระบุเหตุผล', 'error'); return; }
+        mb.status = 'Suspended';
+        const roleMeta = self._roleMeta[mb.role] || {};
+        self._pushAuditLog(mb.userId, user.name, user.email, 'Suspended', 'ระงับ ' + (roleMeta.label || mb.role) + ' — เหตุผล: ' + reason);
         App.closeModal();
-        App.toast('อัปเดต ' + user.name + ' สำเร็จ', 'success');
+        App.toast('ระงับบัญชี ' + user.name + ' สำเร็จ', 'success');
+        self._rerender();
+      });
+    }, 50);
+  },
+
+  // ─── Remove with Reason Modal ───
+  _showRemoveReasonModal(membershipId) {
+    const self = this;
+    const d = window.MockData;
+    const mb = d.userMemberships.find(x => x.id === membershipId);
+    if (!mb) return;
+    const user = d.users.find(u => u.id === mb.userId);
+    if (!user) return;
+
+    App.showModal(`
+      <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title mb-4" style="color:var(--error);"><i class="fa-solid fa-trash"></i> ลบสมาชิก</div>
+        <div class="flex items-center gap-10 mb-12" style="background:var(--surface2);padding:10px;border-radius:8px;">
+          <div class="user-avatar" style="width:34px;height:34px;font-size:12px;">${user.initials}</div>
+          <div>
+            <div class="font-600 text-sm">${user.name}</div>
+            <div class="text-xs text-muted">${user.email} · ${self._roleChip(mb.role)}</div>
+          </div>
+        </div>
+        <div class="card p-12 mb-12" style="border-left:3px solid var(--error);background:rgba(239,68,68,0.06);">
+          <div class="text-sm"><i class="fa-solid fa-triangle-exclamation text-error"></i> การลบไม่สามารถย้อนกลับได้</div>
+        </div>
+        <div class="form-group mb-12">
+          <label class="form-label">เหตุผลในการลบ <span class="text-error">*</span></label>
+          <select id="remove-m-reason-sel" class="form-input mb-8">
+            <option value="">— เลือกเหตุผล —</option>
+            <option value="ลาออก">ลาออก</option>
+            <option value="สิ้นสุดสัญญา">สิ้นสุดสัญญา</option>
+            <option value="ละเมิดนโยบายร้ายแรง">ละเมิดนโยบายร้ายแรง</option>
+            <option value="other">อื่นๆ (ระบุ)</option>
+          </select>
+          <textarea id="remove-m-reason-txt" class="form-input" rows="2" placeholder="ระบุเหตุผล..." style="display:none;"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
+          <button class="btn btn-danger" id="remove-m-confirm"><i class="fa-solid fa-trash"></i> ยืนยันลบ</button>
+        </div>
+      </div>`);
+    setTimeout(() => {
+      const selEl = document.getElementById('remove-m-reason-sel');
+      const txtEl = document.getElementById('remove-m-reason-txt');
+      selEl?.addEventListener('change', () => { txtEl.style.display = selEl.value === 'other' ? '' : 'none'; });
+      document.getElementById('remove-m-confirm')?.addEventListener('click', () => {
+        const reason = selEl.value === 'other' ? txtEl.value.trim() : selEl.value;
+        if (!reason) { App.toast('กรุณาระบุเหตุผล', 'error'); return; }
+        const roleMeta = self._roleMeta[mb.role] || {};
+        self._pushAuditLog(mb.userId, user.name, user.email, 'Removed', 'ลบ ' + (roleMeta.label || mb.role) + ' — เหตุผล: ' + reason);
+        const idx = d.userMemberships.indexOf(mb);
+        if (idx !== -1) d.userMemberships.splice(idx, 1);
+        App.closeModal();
+        App.toast('ลบ ' + user.name + ' ออกจากบทบาทนี้แล้ว', 'success');
         self._rerender();
       });
     }, 50);
@@ -573,7 +1058,7 @@ window.Pages.platformMembers = {
     { label: 'DEV PORTAL', pages: ['dp-dashboard','dp-tenants','dp-api-presets','dp-assign-endpoint'] },
   ],
 
-  _showCustomRolesModal() {
+  _showCustomRolesModal(scopeFilter) {
     const self = this;
     const d = window.MockData;
     const allCustomRoles = d.customRoles || [];
@@ -582,15 +1067,18 @@ window.Pages.platformMembers = {
     const canManage = ctx && (ctx.role === 'super_admin' || ctx.role === 'tenant_admin' || ctx.role === 'subplatform_admin');
     const currentRole = ctx ? ctx.role : null;
 
-    // Filter custom roles: only show roles for levels visible to current user
+    // Filter custom roles by scope (global = backoffice, platform = tenant+subplatform)
     const visibleRoles = self._visibleRoles[currentRole] || [];
     const customRoles = allCustomRoles.filter(cr => {
       if (visibleRoles.indexOf(cr.targetLevel) === -1) return false;
-      // Scope filter
       if (currentRole === 'tenant_admin' && cr.scopeType === 'tenant' && cr.scopeId !== ctx.tenantId) return false;
       if (currentRole === 'subplatform_admin' && cr.scopeType === 'subplatform' && cr.scopeId !== ctx.subPlatformId) return false;
+      // Scope tab filter
+      if (scopeFilter === 'global' && cr.scopeType !== 'global') return false;
+      if (scopeFilter === 'platform' && cr.scopeType === 'global') return false;
       return true;
     });
+    self._currentRolesScope = scopeFilter;
 
     const _levelLabels = {
       tenant_admin: 'Tenant Admin', subplatform_admin: 'SP Admin', subplatform_member: 'Member',
@@ -624,7 +1112,7 @@ window.Pages.platformMembers = {
     App.showModal(
       `<div class="modal modal-xl">
         <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-        <div class="modal-title"><i class="fa-solid fa-sliders text-primary"></i> Custom Roles</div>
+        <div class="modal-title"><i class="fa-solid fa-sliders text-primary"></i> Custom Roles — ${scopeFilter === 'global' ? 'Backoffice' : 'Platform'}</div>
         <div class="text-sm text-muted mb-12">
           แต่ละ Level สามารถสร้าง Custom Role เพื่อกำหนดสิทธิ์ให้ Level ถัดไปได้
         </div>
@@ -678,7 +1166,7 @@ window.Pages.platformMembers = {
           const idx = d.customRoles.indexOf(cr);
           if (idx !== -1) d.customRoles.splice(idx, 1);
           App.toast('ลบ Custom Role "' + cr.name + '" แล้ว', 'success');
-          self._showCustomRolesModal(); // re-render list
+          self._showCustomRolesModal(self._currentRolesScope); // re-render list
         });
       });
     }, 50);
@@ -788,7 +1276,7 @@ window.Pages.platformMembers = {
 
       // Back to list
       document.getElementById('cr-form-back')?.addEventListener('click', () => {
-        self._showCustomRolesModal();
+        self._showCustomRolesModal(self._currentRolesScope);
       });
 
       // Save
@@ -836,7 +1324,7 @@ window.Pages.platformMembers = {
           App.toast('สร้าง Custom Role "' + name + '" สำเร็จ', 'success');
         }
 
-        self._showCustomRolesModal(); // back to list
+        self._showCustomRolesModal(self._currentRolesScope); // back to list
       });
     }, 50);
   },
