@@ -351,13 +351,14 @@ window.Pages.costPricing = {
           </thead>
           <tbody>
             ${packages.map(pkg => {
-              const isSafe = pkg.pricePerToken >= avgCostPerToken;
-              const marginVsCost = avgCostPerToken > 0 ? ((pkg.pricePerToken - avgCostPerToken) / avgCostPerToken * 100) : 0;
+              const pricePerToken = pkg.tokens > 0 ? pkg.price / pkg.tokens : 0;
+              const isSafe = pricePerToken >= avgCostPerToken;
+              const marginVsCost = avgCostPerToken > 0 ? ((pricePerToken - avgCostPerToken) / avgCostPerToken * 100) : 0;
               return '<tr>' +
                 '<td class="font-600">' + pkg.name + ' <span class="text-xs text-muted">(' + pkg.id + ')</span></td>' +
                 '<td class="mono">' + d.formatNumber(pkg.tokens) + '</td>' +
                 '<td class="mono">' + d.formatNumber(pkg.price) + '</td>' +
-                '<td class="mono font-600">' + pkg.pricePerToken.toFixed(2) + '</td>' +
+                '<td class="mono font-600">' + pricePerToken.toFixed(2) + '</td>' +
                 '<td class="mono text-muted">' + avgCostPerToken.toFixed(4) + '</td>' +
                 '<td class="mono font-600" style="color:' + (isSafe ? 'var(--success)' : 'var(--error)') + ';">' + (marginVsCost >= 0 ? '+' : '') + marginVsCost.toFixed(1) + '%</td>' +
                 '<td><span class="chip ' + (isSafe ? 'chip-green' : 'chip-red') + '">' + (isSafe ? '<i class="fa-solid fa-check"></i> Safe' : '<i class="fa-solid fa-xmark"></i> Danger') + '</span></td>' +
