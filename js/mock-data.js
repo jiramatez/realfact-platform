@@ -184,64 +184,64 @@ window.MockData = {
   // ─── Settlements (auto-generated per completed session) ───
   // breakdown: cost + margin → sell price per service line
   settlements: [
-    // ── S-001: 13 min, T-001 ABC Corporation ──
+    // ── 13 min, T-001 ABC Corporation ──
     {
-      settlementId: 'STL-20260302-001', sessionId: 'S-001', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
+      settlementId: 'STL-20260302-001', sessionId: '53a6cf11-e5ae-4554-9730-bf68b87e1a4f', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              type: 'primary', quantity: 13,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 6.500,  totalSell: 13.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3250, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.975,  totalSell: 1.573 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1100, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 1.650,  totalSell: 2.661 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 26,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.988, totalSell: 1.647 },
+        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 13,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 6.500,  totalSell: 13.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 3250, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.975,  totalSell: 1.573 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 1100, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 1.650,  totalSell: 2.661 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 26,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.988, totalSell: 1.647 },
       ],
       summary: { totalCost: 10.113, totalSell: 18.881, profit: 8.768, blendedMargin: 46.4, tokensToDeduct: 18.881 },
       createdAt: '2026-03-02T09:28:00Z',
     },
-    // ── S-002: 5 min, T-001 ABC Corporation ──
+    // ── 5 min, T-001 ABC Corporation ──
     {
-      settlementId: 'STL-20260302-002', sessionId: 'S-002', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
+      settlementId: 'STL-20260302-002', sessionId: 'f0bd84ae-7c21-4e88-a3f5-91d2c4e7b530', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              type: 'primary', quantity: 5,    costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 2.500,  totalSell: 5.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 1200, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.360,  totalSell: 0.581 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 480,  costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 0.720,  totalSell: 1.161 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 10,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.380, totalSell: 0.633 },
+        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 5,    costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 2.500,  totalSell: 5.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 1200, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.360,  totalSell: 0.581 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 480,  costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 0.720,  totalSell: 1.161 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 10,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.380, totalSell: 0.633 },
       ],
       summary: { totalCost: 3.960, totalSell: 7.375, profit: 3.415, blendedMargin: 46.3, tokensToDeduct: 7.375 },
       createdAt: '2026-03-02T09:35:00Z',
     },
-    // ── S-004: 27 min, T-005 Northern Star Hotel ──
+    // ── 27 min, T-005 Northern Star Hotel ──
     {
-      settlementId: 'STL-20260302-003', sessionId: 'S-004', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'avatar', date: '2026-03-02',
+      settlementId: 'STL-20260302-003', sessionId: '0010c2fe-4b8a-49c3-b6d1-a8e3f5c72d19', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              type: 'primary', quantity: 27,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 13.500, totalSell: 27.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 6750, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 2.025,  totalSell: 3.267 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2700, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 4.050,  totalSell: 6.531 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 54,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 2.052,  totalSell: 3.420 },
-        { serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 1500, costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 27,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 13.500, totalSell: 27.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 6750, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 2.025,  totalSell: 3.267 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 2700, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 4.050,  totalSell: 6.531 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 54,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 2.052,  totalSell: 3.420 },
+        { serviceCode: 'openai-embedding-3-small',    category: 'TEXT',  type: 'input',   quantity: 1500, costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
       ],
       summary: { totalCost: 21.628, totalSell: 40.219, profit: 18.591, blendedMargin: 46.2, tokensToDeduct: 40.219 },
       createdAt: '2026-03-02T09:12:00Z',
     },
-    // ── S-007: 15 min, T-003 Thai Finance Group ──
+    // ── 15 min, T-003 Thai Finance Group ──
     {
-      settlementId: 'STL-20260301-001', sessionId: 'S-007', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'avatar', date: '2026-03-01',
+      settlementId: 'STL-20260301-001', sessionId: 'fed2bca2-d914-4a7f-8831-5c0a6e3d91b7', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'avatar', date: '2026-03-01',
       breakdown: [
-        { serviceCode: 'avatar-session',              type: 'primary', quantity: 15,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 7.500,  totalSell: 15.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3800, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 1.140,  totalSell: 1.839 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1500, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 2.250,  totalSell: 3.629 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 30,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 1.140,  totalSell: 1.900 },
-        { serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 800,  costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 15,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 7.500,  totalSell: 15.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 3800, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 1.140,  totalSell: 1.839 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 1500, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 2.250,  totalSell: 3.629 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 30,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 1.140,  totalSell: 1.900 },
+        { serviceCode: 'openai-embedding-3-small',    category: 'TEXT',  type: 'input',   quantity: 800,  costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
       ],
       summary: { totalCost: 12.031, totalSell: 22.369, profit: 10.338, blendedMargin: 46.2, tokensToDeduct: 22.369 },
       createdAt: '2026-03-01T14:35:00Z',
     },
-    // ── S-008: 22 min, T-001 ABC Corporation ──
+    // ── 22 min, T-001 ABC Corporation ──
     {
-      settlementId: 'STL-20260301-002', sessionId: 'S-008', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-01',
+      settlementId: 'STL-20260301-002', sessionId: 'c57cac11-3b6e-4d92-af18-e7b4a2f8c653', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-01',
       breakdown: [
-        { serviceCode: 'avatar-session',              type: 'primary', quantity: 22,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000, totalCost: 11.000, totalSell: 22.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 5500, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484, totalCost: 1.650,  totalSell: 2.662 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2200, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419, totalCost: 3.300,  totalSell: 5.322 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 44,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 1.672,  totalSell: 2.787 },
+        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 22,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000, totalCost: 11.000, totalSell: 22.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 5500, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484, totalCost: 1.650,  totalSell: 2.662 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 2200, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419, totalCost: 3.300,  totalSell: 5.322 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 44,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 1.672,  totalSell: 2.787 },
       ],
       summary: { totalCost: 17.622, totalSell: 32.771, profit: 15.149, blendedMargin: 46.2, tokensToDeduct: 32.771 },
       createdAt: '2026-03-01T16:22:00Z',

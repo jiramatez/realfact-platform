@@ -93,6 +93,32 @@
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
   .user-av{width:36px;height:36px;background:linear-gradient(135deg,var(--primary),#ff8c5a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:12px;font-weight:700;color:white;cursor:pointer}
 
+  /* ===== TENANT SWITCHER ===== */
+  .tenant-sw-wrap{position:relative}
+  .tenant-sw-btn{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px 12px;cursor:pointer;transition:all .2s;min-width:0}
+  .tenant-sw-btn:hover,.tenant-sw-wrap.open .tenant-sw-btn{border-color:var(--primary)}
+  .tenant-sw-icon{width:30px;height:30px;border-radius:8px;background:var(--primary-dim);border:1px solid var(--border-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .tenant-sw-icon i{font-size:13px;color:var(--primary)}
+  .tenant-sw-info{flex:1;min-width:0}
+  .tenant-sw-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .tenant-sw-chevron{font-size:10px;color:var(--text-muted);transition:transform .2s;flex-shrink:0}
+  .tenant-sw-wrap.open .tenant-sw-chevron{transform:rotate(180deg)}
+  .tenant-dd{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:300px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35);z-index:999;overflow:hidden;animation:td-in .15s ease-out;padding:6px}
+  @keyframes td-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .tenant-sw-wrap.open .tenant-dd{display:block}
+  .tenant-dd-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .15s;border:1px solid transparent}
+  .tenant-dd-item:hover{background:rgba(255,255,255,.04)}
+  .tenant-dd-item.active{border-color:var(--primary);background:var(--primary-dim)}
+  .tenant-dd-item .td-info{flex:1;min-width:0}
+  .tenant-dd-item .td-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap}
+  .tenant-dd-item .td-sub{font-size:10px;color:var(--text-muted);white-space:nowrap}
+  .tenant-dd-item .td-check{margin-left:auto;color:var(--primary);font-size:13px;opacity:0;flex-shrink:0}
+  .tenant-dd-item.active .td-check{opacity:1}
+  .tenant-dd-divider{height:1px;background:var(--border);margin:4px 0}
+  .tenant-dd-action{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .15s;font-size:12px;color:var(--text-muted);border:none;background:none;width:100%;text-align:left;font-family:inherit}
+  .tenant-dd-action:hover{background:rgba(255,255,255,.04);color:var(--text)}
+
   /* ===== CONTENT ===== */
   .content{padding:28px;flex:1}
   .page{display:none}
@@ -134,6 +160,8 @@
   .chip-red{background:rgba(239,68,68,.1);color:var(--error);border:1px solid rgba(239,68,68,.2)}
   .chip-gray{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border)}
   .chip-yellow{background:rgba(245,158,11,.1);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
+  .chip-blue{background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.2)}
+  .chip-purple{background:rgba(139,92,246,.15);color:#8b5cf6;border:1px solid rgba(139,92,246,.2)}
 
   .status-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500}
   .status-badge.online{background:rgba(34,197,94,.12);color:var(--success)}
@@ -163,11 +191,14 @@
 
   .divider{height:1px;background:var(--border);margin:16px 0}
   .text-mono{font-family:var(--font-mono)}
+  .mono,.font-mono{font-family:var(--font-mono)}
   .text-muted{color:var(--text-muted)}
   .text-primary{color:var(--primary)}
   .text-success{color:var(--success)}
+  .text-xs{font-size:11px}
   .text-sm{font-size:12px}
   .font-600{font-weight:600}
+  .font-700{font-weight:700}
   .flex{display:flex}
   .items-center{align-items:center}
   .justify-between{justify-content:space-between}
@@ -409,7 +440,7 @@
   }
 
   /* ===== LOGIN ===== */
-  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:500;background:var(--bg);animation:fadeIn .4s ease}
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:500;background:var(--bg);animation:fadeIn .4s ease;overflow-y:auto;padding:20px 0}
   .login-screen.hidden{display:none}
   .login-box{background:var(--surface);border:1px solid var(--border-accent);border-radius:24px;padding:40px;width:100%;max-width:420px;position:relative;overflow:hidden}
   .login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),#ff8c5a,transparent)}
@@ -424,6 +455,21 @@
   .otp-input{flex:1;min-width:0;aspect-ratio:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-align:center;font-size:clamp(14px,4.5vw,20px);font-family:var(--font-mono);color:var(--text);outline:none;transition:border-color .2s;padding:0}
   .otp-input:focus{border-color:var(--primary)}
   @media(max-width:480px){.login-box{padding:28px 20px}}
+  .reg-box{background:var(--surface);border:1px solid var(--border-accent);border-radius:24px;padding:40px;width:500px;max-width:calc(100vw - 32px);box-sizing:border-box;position:relative;overflow:hidden;margin:auto}
+  .reg-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),#ff8c5a,transparent)}
+  .reg-field{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0 14px;transition:border-color .2s}
+  .reg-field:focus-within{border-color:var(--primary)}
+  .reg-field i{color:var(--text-dim);font-size:13px;flex-shrink:0}
+  .reg-field input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;font-family:var(--font-body);padding:11px 0}
+  .reg-field input::placeholder{color:var(--text-dim)}
+  .reg-field .eye-btn{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:0;font-size:13px;line-height:1}
+  .reg-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:24px}
+  .reg-logo-icon{width:56px;height:56px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;font-family:var(--font-heading);font-weight:700;color:white;letter-spacing:-1px;margin-bottom:8px;box-shadow:0 8px 24px rgba(241,91,38,.3)}
+  .reg-logo-text{font-family:var(--font-heading);font-size:18px;letter-spacing:2px;color:var(--text)}
+  .reg-pdpa{display:flex;align-items:flex-start;gap:10px;margin:4px 0 20px}
+  .reg-pdpa input[type=checkbox]{margin-top:2px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+  .reg-pdpa label{font-size:12px;color:var(--text-muted);line-height:1.5;cursor:pointer}
+  .reg-pdpa a{color:var(--primary);text-decoration:underline}
 
   ::-webkit-scrollbar{width:5px}
   ::-webkit-scrollbar-track{background:var(--bg)}
@@ -506,6 +552,106 @@
       <p class="text-muted text-sm mb-16">OTP หมดอายุใน <strong style="color:var(--primary)">04:32</strong> · <a href="#" style="color:var(--primary)">ส่งใหม่</a></p>
       <button class="btn btn-primary" style="width:100%" onclick="doLogin()">✅ ยืนยัน OTP เข้าสู่ระบบ</button>
     </div>
+    <p style="text-align:center;margin-top:18px;font-size:13px;color:var(--text-muted)">ยังไม่มีบัญชี? <a href="#" style="color:var(--primary);text-decoration:underline" onclick="showRegister();return false">สมัครสมาชิก</a></p>
+  </div>
+</div>
+
+<!-- ===== REGISTER SCREEN ===== -->
+<div class="login-screen hidden" id="registerScreen">
+  <div class="reg-box">
+    <div class="reg-logo">
+      <div class="reg-logo-icon">{R}</div>
+      <div class="reg-logo-text">Realfact</div>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px">สร้างบัญชีใหม่</p>
+
+    <!-- ข้อมูลส่วนตัว -->
+    <p style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px">ข้อมูลส่วนตัว</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" style="font-size:11px">ชื่อ</label>
+        <div class="reg-field">
+          <i class="fa-solid fa-user"></i>
+          <input type="text" id="reg-firstname" placeholder="ชื่อ">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" style="font-size:11px">นามสกุล</label>
+        <div class="reg-field">
+          <i class="fa-solid fa-user"></i>
+          <input type="text" id="reg-lastname" placeholder="นามสกุล">
+        </div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label class="form-label" style="font-size:11px">ชื่อที่แสดง</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-circle-user"></i>
+        <input type="text" id="reg-displayname" placeholder="กรอกชื่อที่ต้องการแสดง">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">เบอร์โทร</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-phone"></i>
+        <input type="tel" id="reg-phone" placeholder="08x-xxx-xxxx">
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <!-- ข้อมูลบริษัท -->
+    <p style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px">ข้อมูลบริษัท</p>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">ชื่อบริษัท</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-building"></i>
+        <input type="text" id="reg-company" placeholder="กรอกชื่อบริษัท">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">เลขประจำตัวผู้เสียภาษี</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-hashtag"></i>
+        <input type="text" id="reg-taxid" placeholder="กรอกเลขประจำตัวผู้เสียภาษี" maxlength="13">
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+    <!-- อีเมลและรหัสผ่าน -->
+    <p style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px">อีเมลและรหัสผ่าน</p>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">อีเมล</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-envelope"></i>
+        <input type="email" id="reg-email" placeholder="กรอกอีเมลของคุณ">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">รหัสผ่าน</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="reg-password" placeholder="อย่างน้อย 8 ตัวอักษร">
+        <button class="eye-btn" type="button" onclick="toggleRegPass('reg-password',this)"><i class="fa-solid fa-eye"></i></button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="font-size:11px">ยืนยันรหัสผ่าน</label>
+      <div class="reg-field">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="reg-password2" placeholder="กรอกรหัสผ่านอีกครั้ง">
+        <button class="eye-btn" type="button" onclick="toggleRegPass('reg-password2',this)"><i class="fa-solid fa-eye"></i></button>
+      </div>
+    </div>
+
+    <div class="reg-pdpa">
+      <input type="checkbox" id="reg-pdpa">
+      <label for="reg-pdpa">ข้าพเจ้ายอมรับ<a href="#">นโยบายความเป็นส่วนตัว</a>และยินยอมให้ประมวลผลข้อมูลตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA)</label>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;margin-bottom:16px" onclick="doRegister()">สมัครสมาชิก</button>
+    <p style="text-align:center;font-size:13px;color:var(--text-muted)">มีบัญชีอยู่แล้ว? <a href="#" style="color:var(--primary);text-decoration:underline" onclick="showLogin();return false">เข้าสู่ระบบ</a></p>
   </div>
 </div>
 
@@ -572,6 +718,18 @@
       <span class="topbar-title">REALFACT<span>AVATAR</span></span>
       <span class="topbar-page" id="topbarPageName">DASHBOARD</span>
       <div class="topbar-right">
+        <!-- Tenant Switcher -->
+        <div class="tenant-sw-wrap" id="tenant-sw-wrap">
+          <div class="tenant-sw-btn" id="tenant-sw-btn">
+            <div class="tenant-sw-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="tenant-sw-info">
+              <div class="tenant-sw-name" id="ts-name">DEMO</div>
+            </div>
+            <i class="fa-solid fa-chevron-up tenant-sw-chevron"></i>
+          </div>
+          <div class="tenant-dd" id="tenant-dd"></div>
+        </div>
+        <!-- Wallet -->
         <div class="wallet-chip" onclick="showPage('wallet',null)">
           <span class="ti">◈</span><span class="ta" id="walletBalance">2,450</span><span class="tl">tokens</span>
         </div>
@@ -580,7 +738,7 @@
           <div class="dot"></div>
         </div>
         <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="สลับ Light/Dark Mode">🌙</button>
-        <div class="user-av">DA</div>
+        <div class="user-av" id="user-av-btn">DA</div>
       </div>
     </div>
 
@@ -1749,31 +1907,197 @@
 <script src="../backoffice-ui/js/mock-data.js"></script>
 <script src="../backoffice-ui/js/auth.js"></script>
 <script>
-/* ===== BACKOFFICE AUTH INTEGRATION ===== */
+/* ===== BACKOFFICE AUTH INTEGRATION + TENANT SWITCHER ===== */
 (function() {
-  // Check if user came from backoffice with valid session
-  if (window.Auth) {
-    var restored = Auth.init();
-    if (restored && Auth.activeContext()) {
-      var ctx = Auth.activeContext();
-      // Only SP Admin / Member should be here
-      if (ctx.role === 'subplatform_admin' || ctx.role === 'subplatform_member') {
-        // Skip login screen
-        var loginEl = document.getElementById('loginScreen');
-        if (loginEl) loginEl.classList.add('hidden');
-        // Update user avatar initials in topbar
-        var user = Auth.currentUser();
-        if (user) {
-          var avEl = document.querySelector('.user-av');
-          if (avEl) avEl.textContent = user.initials;
-          avEl.title = user.name + ' (' + (ctx.role === 'subplatform_admin' ? 'SP Admin' : 'Member') + ')';
+  if (!window.Auth) return;
+
+  var restored = Auth.init();
+  if (!restored || !Auth.activeContext()) return;
+
+  var ctx = Auth.activeContext();
+  if (ctx.role !== 'subplatform_admin' && ctx.role !== 'subplatform_member') {
+    Auth.redirectToZone(ctx.role);
+    return;
+  }
+
+  var loginEl = document.getElementById('loginScreen');
+  if (loginEl) loginEl.classList.add('hidden');
+
+  var user = Auth.currentUser();
+  if (!user) return;
+
+  var _rl = {
+    subplatform_admin: 'SP Admin', subplatform_member: 'Member',
+    tenant_admin: 'Tenant Admin', super_admin: 'Owner',
+    bo_admin: 'BO Admin', bo_member: 'BO Staff'
+  };
+
+  // ─── Build tenant descriptions (for subtitle) ───
+  function _tenantSub(tenant) {
+    if (!tenant) return '';
+    var plan = tenant.plan || '';
+    var devices = tenant.devices || 0;
+    return plan + ' — ' + devices + ' device' + (devices !== 1 ? 's' : '');
+  }
+
+  // ─── Update button + avatar ───
+  function _updateUI() {
+    var c = Auth.activeContext();
+    var u = Auth.currentUser();
+    if (!c || !u) return;
+
+    // Avatar circle
+    var initials = u.initials || 'U';
+    document.getElementById('user-av-btn').textContent = initials;
+    document.getElementById('user-av-btn').title = u.name + ' (' + (_rl[c.role] || c.role) + ')';
+
+    // Tenant button label
+    var tenants = Auth.getVisibleTenants();
+    var activeTenant = c.tenantId ? tenants.find(function(t) { return t.id === c.tenantId; }) : null;
+    document.getElementById('ts-name').textContent = activeTenant ? activeTenant.name : 'เลือก Tenant';
+
+    // Rebuild dropdown items
+    _renderDropdown();
+  }
+
+  // ─── Render dropdown list ───
+  function _renderDropdown() {
+    var dd = document.getElementById('tenant-dd');
+    var memberships = Auth.getUserMemberships();
+    var tenants = Auth.getVisibleTenants();
+    var currentCtx = Auth.activeContext();
+
+    var spMemberships = memberships.filter(function(m) {
+      return m.role === 'subplatform_admin' || m.role === 'subplatform_member';
+    });
+
+    var items = spMemberships.map(function(mb) {
+      var tenant = mb.tenantId ? tenants.find(function(t) { return t.id === mb.tenantId; }) : null;
+      var isActive = currentCtx && currentCtx.id === mb.id;
+      return '<div class="tenant-dd-item' + (isActive ? ' active' : '') + '" data-mb-id="' + mb.id + '">' +
+        '<div class="td-info">' +
+          '<div class="td-name">' + (tenant ? tenant.name : 'Unknown') + '</div>' +
+          '<div class="td-sub">' + (tenant ? _tenantSub(tenant) : '') + '</div>' +
+        '</div>' +
+        '<span class="td-check"><i class="fa-solid fa-check"></i></span>' +
+      '</div>';
+    }).join('');
+
+    dd.innerHTML = items +
+      '<div class="tenant-dd-divider"></div>' +
+      '<button class="tenant-dd-action" id="dd-create-tenant"><i class="fa-solid fa-plus"></i> สร้าง Tenant ใหม่</button>';
+
+    // Bind click on items
+    dd.querySelectorAll('.tenant-dd-item').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var mbId = item.dataset.mbId;
+        if (Auth.switchContext(mbId)) {
+          var newCtx = Auth.activeContext();
+          if (newCtx.role === 'subplatform_admin' || newCtx.role === 'subplatform_member') {
+            wrap.classList.remove('open');
+            _updateUI();
+          } else {
+            Auth.redirectToZone(newCtx.role);
+          }
         }
-      } else {
-        // Wrong role — redirect back to correct zone
-        Auth.redirectToZone(ctx.role);
-      }
+      });
+    });
+
+    // Bind create tenant
+    var createBtn = document.getElementById('dd-create-tenant');
+    if (createBtn) {
+      createBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        wrap.classList.remove('open');
+        _showCreateTenantModal();
+      });
     }
   }
+
+  _updateUI();
+
+  // ─── Toggle dropdown ───
+  var wrap = document.getElementById('tenant-sw-wrap');
+  document.getElementById('tenant-sw-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    wrap.classList.toggle('open');
+  });
+  document.addEventListener('click', function(e) {
+    if (!wrap.contains(e.target)) wrap.classList.remove('open');
+  });
+
+  // ─── Create Tenant Modal ───
+  function _showCreateTenantModal() {
+    var existing = document.getElementById('createTenantModal');
+    if (existing) existing.remove();
+
+    var modal = document.createElement('div');
+    modal.id = 'createTenantModal';
+    modal.className = 'modal-overlay open';
+    modal.innerHTML =
+      '<div class="modal" style="max-width:480px;">' +
+        '<button class="modal-close" id="closeCreateTenant">&times;</button>' +
+        '<div class="modal-title"><i class="fa-solid fa-plus" style="margin-right:8px;"></i>สร้าง Tenant ใหม่</div>' +
+        '<div class="modal-sub">กรอกข้อมูลเพื่อขอเปิด Tenant ใหม่ในระบบ</div>' +
+        '<div class="form-group" style="margin-top:16px;">' +
+          '<label class="form-label">ชื่อ Tenant</label>' +
+          '<input type="text" class="form-input" id="newTenantName" placeholder="เช่น บริษัท ABC จำกัด">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label">ประเภทธุรกิจ</label>' +
+          '<select class="form-input" id="newTenantType">' +
+            '<option value="">— เลือก —</option>' +
+            '<option value="retail">Retail / ค้าปลีก</option>' +
+            '<option value="hospitality">Hospitality / โรงแรม</option>' +
+            '<option value="healthcare">Healthcare / สุขภาพ</option>' +
+            '<option value="education">Education / การศึกษา</option>' +
+            '<option value="corporate">Corporate / องค์กร</option>' +
+            '<option value="other">อื่น ๆ</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label">อีเมลผู้ดูแล Tenant</label>' +
+          '<input type="email" class="form-input" id="newTenantEmail" placeholder="admin@company.com">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label class="form-label">หมายเหตุ (ไม่บังคับ)</label>' +
+          '<textarea class="form-input" id="newTenantNote" rows="2" placeholder="รายละเอียดเพิ่มเติม..." style="resize:vertical;"></textarea>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;margin-top:20px;">' +
+          '<button class="btn btn-outline" style="flex:1" id="cancelCreateTenant">ยกเลิก</button>' +
+          '<button class="btn btn-primary" style="flex:2" id="submitCreateTenant"><i class="fa-solid fa-paper-plane"></i> ส่งคำขอ</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(modal);
+
+    function _close() {
+      modal.classList.remove('open');
+      setTimeout(function() { modal.remove(); }, 200);
+    }
+    document.getElementById('closeCreateTenant').addEventListener('click', _close);
+    document.getElementById('cancelCreateTenant').addEventListener('click', _close);
+    modal.addEventListener('click', function(e) { if (e.target === modal) _close(); });
+
+    document.getElementById('submitCreateTenant').addEventListener('click', function() {
+      var name = document.getElementById('newTenantName').value.trim();
+      var type = document.getElementById('newTenantType').value;
+      var email = document.getElementById('newTenantEmail').value.trim();
+
+      if (!name) { document.getElementById('newTenantName').focus(); return; }
+      if (!type) { document.getElementById('newTenantType').focus(); return; }
+      if (!email) { document.getElementById('newTenantEmail').focus(); return; }
+
+      _close();
+      if (window.App && App.toast) {
+        App.toast('ส่งคำขอสร้าง Tenant "' + name + '" แล้ว — รอ Admin อนุมัติ', 'success');
+      } else {
+        alert('ส่งคำขอสร้าง Tenant "' + name + '" แล้ว — รอ Admin อนุมัติ');
+      }
+    });
+  }
+
 })();
 </script>
 <script>
@@ -1814,6 +2138,52 @@ function setLoginTab(tab, btn) {
 }
 function showOTP() { document.getElementById('otpSection').style.display = ''; }
 function doLogin() { document.getElementById('loginScreen').classList.add('hidden'); }
+
+function showRegister() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('registerScreen').classList.remove('hidden');
+}
+
+// Auto-open register if ?register=1
+if (new URLSearchParams(window.location.search).get('register') === '1') {
+  showRegister();
+}
+function showLogin() {
+  document.getElementById('registerScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+function toggleRegPass(id, btn) {
+  var inp = document.getElementById(id);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+  } else {
+    inp.type = 'password';
+    btn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+  }
+}
+function doRegister() {
+  var firstname = document.getElementById('reg-firstname').value.trim();
+  var lastname  = document.getElementById('reg-lastname').value.trim();
+  var email     = document.getElementById('reg-email').value.trim();
+  var phone     = document.getElementById('reg-phone').value.trim();
+  var pass      = document.getElementById('reg-password').value;
+  var pass2     = document.getElementById('reg-password2').value;
+  var pdpa      = document.getElementById('reg-pdpa').checked;
+
+  if (!firstname) { document.getElementById('reg-firstname').focus(); return; }
+  if (!lastname)  { document.getElementById('reg-lastname').focus(); return; }
+  if (!email)    { document.getElementById('reg-email').focus(); return; }
+  if (!phone)    { document.getElementById('reg-phone').focus(); return; }
+  if (pass.length < 8) { document.getElementById('reg-password').focus(); return; }
+  if (pass !== pass2)  { document.getElementById('reg-password2').focus(); return; }
+  if (!pdpa) { document.getElementById('reg-pdpa').focus(); return; }
+
+  // Mock: สมัครสำเร็จ → กลับหน้า login
+  document.getElementById('registerScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('otpSection').style.display = 'none';
+}
 function doLogout() {
   // If logged in via Backoffice auth, clear session and redirect to login page
   if (window.Auth && Auth.isAuthenticated()) {

@@ -14,6 +14,7 @@
     'cost-margin':         { title: 'Margin Configuration',  module: 'costMargin',         ctx: 'backoffice' },
     'cost-snapshots':      { title: 'Pricing Snapshots',     module: 'costSnapshots',      ctx: 'backoffice' },
     'cost-change-requests':{ title: 'Change Requests',       module: 'costChangeRequests', ctx: 'backoffice' },
+    'cost-settlement-log': { title: 'Settlement Log',        module: 'costSettlementLog',  ctx: 'backoffice' },
     'plans-packages':      { title: 'Subscription Plans',    module: 'plansPackages',      ctx: 'backoffice' },
     'plans-tokens':        { title: 'Token Packages',        module: 'plansTokens',        ctx: 'backoffice' },
     'plans-bonus':         { title: 'Welcome Bonus',         module: 'plansBonus',         ctx: 'backoffice' },

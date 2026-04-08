@@ -229,7 +229,7 @@ window.Auth = (function () {
   }
 
   var _contextPages = {
-    backoffice: ['dashboard', 'sub-platforms', 'tenants', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'plans-packages', 'plans-tokens', 'plans-bonus', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-customers', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue'],
+    backoffice: ['dashboard', 'sub-platforms', 'tenants', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'cost-settlement-log', 'plans-packages', 'plans-tokens', 'plans-bonus', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-customers', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue'],
     avatar: ['avatar-dashboard', 'avatar-tenants', 'hardware', 'devices', 'service-builder', 'knowledge-base', 'analytics-usage', 'platform-members'],
     devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'dp-app-approval'],
   };

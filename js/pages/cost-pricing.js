@@ -295,7 +295,10 @@ window.Pages.costPricing = {
 
       <!-- Settlement Log Section -->
       <div class="divider mb-20"></div>
-      <div class="section-title mb-12" id="settlement-log"><i class="fa-solid fa-scroll"></i> Settlement Log (ประวัติการคำนวณต่อ Session)</div>
+      <div class="flex items-center justify-between mb-12" id="settlement-log">
+        <div class="section-title"><i class="fa-solid fa-scroll"></i> Settlement Log (ประวัติการคำนวณต่อ Session)</div>
+        <a href="#cost-settlement-log" class="text-sm font-600" style="color:var(--primary);text-decoration:none;">ดู Settlement Log ทั้งหมด <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
       <div class="text-xs text-muted mb-16">คลิกแถวเพื่อดูรายละเอียด breakdown ทุก service | Token ที่หัก = Sell Price</div>
       <div class="table-wrap mb-24">
         <table>
@@ -314,7 +317,7 @@ window.Pages.costPricing = {
           <tbody>
             ${settlements.map(stl => `
               <tr class="settlement-row" data-settlement-id="${stl.settlementId}" style="cursor:pointer;">
-                <td class="mono text-primary font-600">${stl.sessionId}</td>
+                <td class="mono text-primary font-600" title="${stl.sessionId}">${stl.sessionId.substring(0, 10)}...</td>
                 <td class="font-600">${stl.tenantName}</td>
                 <td class="mono text-sm">${stl.date}</td>
                 <td class="mono" style="color:var(--error);">${stl.summary.totalCost.toFixed(2)}</td>
@@ -767,75 +770,98 @@ window.Pages.costPricing = {
         const stl = settlements.find(s => s.settlementId === stlId);
         if (!stl) return;
 
-        const marginSourceLabel = (src) => {
-          if (src === 'service_override') return '<span class="chip chip-purple" style="font-size:10px;">Service</span>';
-          if (src === 'provider_override') return '<span class="chip chip-orange" style="font-size:10px;">Provider</span>';
-          return '<span class="chip chip-gray" style="font-size:10px;">Global</span>';
+        // Thai date formatter
+        const thaiMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+        const dt = new Date(stl.createdAt);
+        const thaiDate = dt.getDate() + ' ' + thaiMonths[dt.getMonth()] + ' ' + (dt.getFullYear() + 543) + ' เวลา ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0');
+
+        const categoryChip = (cat) => {
+          const colors = { TEXT: 'chip-blue', AUDIO: 'chip-orange', VIDEO: 'chip-purple' };
+          return '<span class="chip ' + (colors[cat] || 'chip-gray') + ' text-xs">' + (cat || '-') + '</span>';
         };
 
         window.App.showModal(`
           <div class="modal modal-wide">
             <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title heading">Settlement Breakdown</div>
-            <div class="modal-subtitle">
-              Session: <span class="mono font-600">${stl.sessionId}</span> —
-              ${stl.tenantName} —
-              <span class="mono text-muted">${stl.date}</span>
+            <div class="modal-title heading">รายละเอียดการคำนวณ (Settlement Breakdown)</div>
+
+            <!-- Header grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 32px;margin-bottom:20px;">
+              <div>
+                <div class="text-xs text-muted mb-4" style="text-transform:uppercase;">Session ID</div>
+                <div class="mono font-600 text-sm flex items-center gap-6">${stl.sessionId} <button class="btn-icon" onclick="navigator.clipboard.writeText('${stl.sessionId}');App.toast('Copied!','success')" title="Copy"><i class="fa-regular fa-copy" style="font-size:12px;opacity:0.5;cursor:pointer;"></i></button></div>
+              </div>
+              <div>
+                <div class="text-xs text-muted mb-4" style="text-transform:uppercase;">ลูกค้า (Tenant)</div>
+                <div class="font-600">${stl.tenantName}</div>
+              </div>
+              <div>
+                <div class="text-xs text-muted mb-4" style="text-transform:uppercase;">Sub-Platform</div>
+                <div><span class="chip chip-gray text-xs font-600" style="text-transform:uppercase;">${stl.subPlatform}</span></div>
+              </div>
+              <div>
+                <div class="text-xs text-muted mb-4" style="text-transform:uppercase;">วันที่</div>
+                <div class="font-600">${thaiDate}</div>
+              </div>
             </div>
 
             <!-- Summary cards -->
-            <div class="grid-4 gap-12 mb-16">
-              <div class="card p-12" style="text-align:center;">
-                <div class="text-xs text-muted mb-4">ต้นทุนรวม</div>
-                <div class="mono font-700" style="color:var(--error);">${stl.summary.totalCost.toFixed(2)} THB</div>
+            <div class="grid-4 gap-12 mb-20">
+              <div class="card p-12">
+                <div class="text-xs text-muted mb-4">ต้นทุนรวม (TOTAL COST)</div>
+                <div class="mono font-700" style="font-size:18px;color:var(--error);">\u0E3F${stl.summary.totalCost.toFixed(4)}</div>
               </div>
-              <div class="card p-12" style="text-align:center;">
-                <div class="text-xs text-muted mb-4">ราคาขายรวม</div>
-                <div class="mono font-700" style="color:var(--primary);">${stl.summary.totalSell.toFixed(2)} THB</div>
+              <div class="card p-12">
+                <div class="text-xs text-muted mb-4">รายรับรวม (TOTAL SELL)</div>
+                <div class="mono font-700" style="font-size:18px;">\u0E3F${stl.summary.totalSell.toFixed(4)}</div>
               </div>
-              <div class="card p-12" style="text-align:center;">
-                <div class="text-xs text-muted mb-4">Token หัก</div>
-                <div class="mono font-700">${stl.summary.tokensToDeduct.toFixed(3)}</div>
+              <div class="card p-12">
+                <div class="text-xs text-muted mb-4">TOKEN หัก (TOKENS DEDUCTED)</div>
+                <div class="mono font-700" style="font-size:18px;">${stl.summary.tokensToDeduct.toFixed(4)}</div>
               </div>
-              <div class="card p-12" style="text-align:center;">
-                <div class="text-xs text-muted mb-4">กำไร (${stl.summary.blendedMargin.toFixed(1)}%)</div>
-                <div class="mono font-700" style="color:var(--success);">${stl.summary.profit.toFixed(2)} THB</div>
+              <div class="card p-12">
+                <div class="text-xs text-muted mb-4">กำไร (PROFIT)</div>
+                <div class="mono font-700" style="font-size:18px;color:var(--success);">\u0E3F${stl.summary.profit.toFixed(4)}</div>
+                <div class="text-xs text-muted">Margin ${stl.summary.blendedMargin.toFixed(2)}%</div>
               </div>
             </div>
 
-            <div class="text-xs text-muted mb-8">Token ที่หัก = Sell Price — ไม่มี conversion</div>
-
             <!-- Breakdown table -->
+            <div class="font-600 mb-8">รายละเอียดตามบริการ (Breakdown by Service)</div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Service</th>
-                    <th>Type</th>
-                    <th>Quantity</th>
-                    <th>Cost/Unit</th>
+                    <th>บริการ</th>
+                    <th>หมวด</th>
+                    <th>Variant</th>
+                    <th>จำนวน</th>
+                    <th>ต้นทุน/หน่วย</th>
                     <th>Margin%</th>
-                    <th>Sell/Unit</th>
-                    <th>Total Cost</th>
-                    <th>Total Sell</th>
+                    <th>ราคา/หน่วย</th>
+                    <th>ต้นทุนรวม</th>
+                    <th>รายรับรวม</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${stl.breakdown.map(b => `
                     <tr>
                       <td class="mono text-sm font-600">${b.serviceCode}</td>
-                      <td><span class="chip chip-gray text-xs">${b.type}</span></td>
+                      <td>${categoryChip(b.category)}</td>
+                      <td><span class="chip chip-gray text-xs">${b.type.toUpperCase()}</span></td>
                       <td class="mono">${d.formatNumber(b.quantity)}</td>
                       <td class="mono text-sm">${b.costPerUnit.toFixed(4)}</td>
-                      <td>
-                        <span class="mono font-600">${(b.effectiveMargin * 100).toFixed(0)}%</span>
-                        ${marginSourceLabel(b.marginSource)}
-                      </td>
-                      <td class="mono text-sm">${b.sellPerUnit.toFixed(6)}</td>
-                      <td class="mono" style="color:var(--error);">${b.totalCost.toFixed(3)}</td>
-                      <td class="mono" style="color:var(--primary);">${b.totalSell.toFixed(3)}</td>
+                      <td class="mono font-600">${(b.effectiveMargin * 100).toFixed(0)}%</td>
+                      <td class="mono text-sm">${b.sellPerUnit.toFixed(4)}</td>
+                      <td class="mono" style="color:var(--error);">${b.totalCost.toFixed(4)}</td>
+                      <td class="mono" style="color:var(--primary);">${b.totalSell.toFixed(4)}</td>
                     </tr>
                   `).join('')}
+                  <tr style="border-top:2px solid var(--border);font-weight:700;">
+                    <td colspan="7" style="text-align:right;" class="text-muted">รวมทั้งหมด (TOTAL)</td>
+                    <td class="mono" style="color:var(--error);">${stl.summary.totalCost.toFixed(4)}</td>
+                    <td class="mono" style="color:var(--primary);">${stl.summary.totalSell.toFixed(4)}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>

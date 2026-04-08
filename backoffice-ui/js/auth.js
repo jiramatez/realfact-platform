@@ -229,7 +229,7 @@ window.Auth = (function () {
   }
 
   var _contextPages = {
-    backoffice: ['dashboard', 'sub-platforms', 'tenants', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'plans-packages', 'plans-tokens', 'plans-bonus', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-customers', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue'],
+    backoffice: ['dashboard', 'sub-platforms', 'tenants', 'cost-pricing', 'cost-margin', 'cost-snapshots', 'cost-change-requests', 'cost-settlement-log', 'plans-packages', 'plans-tokens', 'plans-bonus', 'payment-settings', 'platform-members', 'analytics-revenue', 'analytics-customers', 'billing', 'billing-verify', 'billing-credit', 'billing-overdue'],
     avatar: ['avatar-dashboard', 'avatar-tenants', 'hardware', 'devices', 'service-builder', 'knowledge-base', 'analytics-usage', 'platform-members'],
     devportal: ['dp-dashboard', 'dp-tenants', 'dp-api-presets', 'dp-assign-endpoint', 'dp-app-approval'],
   };
@@ -835,6 +835,7 @@ window.Auth = (function () {
           '<button type="submit" class="btn btn-primary w-full" style="margin-top:8px;">' +
             '<i class="fa-solid fa-right-to-bracket"></i> Login' +
           '</button>' +
+          '<p style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted)">ยังไม่มีบัญชี? <a href="avatar/realfactavatar-demo_1.html?register=1" style="color:var(--primary);text-decoration:underline;">สมัครสมาชิก</a></p>' +
         '</form>' +
         '<div class="login-footer">' +
           '<div class="text-xs text-dim" style="margin-top:20px;text-align:center;">Demo Accounts <span class="text-dim" style="font-size:9px;opacity:.5;">(hover เพื่อดูสิทธิ์)</span></div>' +
