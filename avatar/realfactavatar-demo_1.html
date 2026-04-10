@@ -339,6 +339,20 @@
   .pkg-buy-btn{display:block;width:100%;margin-top:12px;padding:9px 0;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:var(--font-body);cursor:pointer;opacity:0;transform:translateY(6px);transition:opacity .2s,transform .2s;pointer-events:none}
   .package-card:hover .pkg-buy-btn{opacity:1;transform:translateY(0);pointer-events:auto}
   .package-card.popular .pkg-buy-btn{opacity:1;transform:translateY(0);pointer-events:auto}
+  .package-card.active{border-color:var(--success);background:linear-gradient(180deg,rgba(34,197,94,.06),transparent 60%)}
+  .package-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--success)}
+  .pkg-active-chip{position:absolute;top:14px;right:14px;font-size:10px;padding:3px 9px;border-radius:10px;background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.4);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+  .plan-features{list-style:none;padding:0;margin:14px 0 0;font-size:12px;border-top:1px solid var(--border);padding-top:12px}
+  .plan-features li{display:flex;align-items:center;gap:8px;padding:4px 0;color:var(--text-muted)}
+  .plan-features li.yes{color:var(--text)}
+  .plan-features li i{font-size:11px;width:12px;text-align:center}
+  .plan-features li.yes i{color:var(--success)}
+  .plan-features li.no i{color:var(--text-muted);opacity:.5}
+  .pkg-plan-name{font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;color:var(--text)}
+  .pkg-plan-price{font-family:var(--font-mono);font-size:30px;font-weight:700;color:var(--primary);line-height:1}
+  .pkg-plan-price-unit{font-size:12px;color:var(--text-muted);margin-left:4px}
+  .pkg-plan-tokens{font-size:12px;color:var(--text-muted);margin-top:8px;padding:6px 10px;background:var(--surface2);border-radius:8px}
+  .pkg-plan-tokens b{color:var(--primary);font-family:var(--font-mono)}
 
   /* ===== SECTION SEPARATOR ===== */
   .section-sep{display:flex;align-items:center;gap:16px;margin:28px 0 24px}
@@ -352,7 +366,10 @@
   .modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:20px;padding:28px;width:100%;max-width:440px;position:relative}
   .modal-title{font-family:var(--font-heading);font-size:26px;letter-spacing:2px;margin-bottom:4px}
   .modal-sub{font-size:13px;color:var(--text-muted);margin-bottom:22px}
-  .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:18px;line-height:1;transition:all .2s}
+  .modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:18px;line-height:1;transition:all .2s;z-index:2}
+  .pay-step-dot{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-muted);flex-shrink:0}
+  .pay-step-dot.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  .pay-step-dot.done{background:var(--success);border-color:var(--success);color:#fff}
   .modal-close:hover{border-color:var(--error);color:var(--error)}
   .summary-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px}
   .summary-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 0}
@@ -417,16 +434,34 @@
   .inv-footer{padding:12px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:rgba(241,91,38,.04)}
   .inv-footer-item{font-size:12px;color:var(--text-muted);line-height:1.7}
   .inv-footer-item strong{color:var(--text)}
+  .inv-card.in-modal{max-width:none}
+  .inv-status-banner{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;display:flex;align-items:center;gap:10px;font-weight:600}
+  .inv-status-banner.paid{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+  .inv-status-banner.pending{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#f59e0b}
+  .inv-status-banner.demo{background:rgba(241,91,38,.06);border:1px solid var(--border-accent);color:var(--primary)}
+  .inv-status-banner i{font-size:18px}
+  .inv-paid-details{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px}
+  .inv-pd-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+  .inv-pd-value{font-size:13px;font-weight:600}
+  .inv-pd-value.mono{font-family:var(--font-mono)}
+  .inv-slip-section-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;font-weight:600}
+  .inv-slip-file{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px}
+  .inv-slip-file-icon{width:42px;height:42px;border-radius:9px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:18px;flex-shrink:0}
+  .inv-slip-file-info{flex:1;min-width:0}
+  .inv-slip-file-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .inv-slip-file-meta{font-size:11px;color:var(--text-muted);margin-top:2px}
 
   /* ===== BURN CHART ===== */
   .burn-chart{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px}
   .burn-chart-title{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-weight:500}
   .burn-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:12px}
   .burn-bar-row:last-child{margin-bottom:0}
-  .burn-bar-label{color:var(--text-muted);width:90px;flex-shrink:0}
+  .burn-bar-label{color:var(--text-muted);width:140px;flex-shrink:0}
   .burn-bar-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
   .burn-bar-fill{height:100%;background:var(--primary);border-radius:4px}
   .burn-bar-val{font-family:var(--font-mono);font-size:12px;color:var(--text);flex-shrink:0;min-width:72px;text-align:right}
+  .burn-bar-sessions{font-family:var(--font-mono);font-size:12px;color:var(--text-muted);flex-shrink:0;min-width:64px;text-align:right}
+  .burn-bar-status{flex-shrink:0;min-width:70px;text-align:right}
   @media print{
     .sidebar,.topbar,.demo-banner,.modal-overlay{display:none!important}
     .main{margin:0!important}
@@ -679,7 +714,7 @@
     </button>
     <button class="nav-item" onclick="showPage('wallet',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="22" height="16" rx="2"/><path d="M1 10h22"/><circle cx="17" cy="15" r="2"/></svg>
-      <span class="nav-label">Wallet</span>
+      <span class="nav-label">Wallet & Package</span>
     </button>
     <button class="nav-item" onclick="showPage('history',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -687,7 +722,7 @@
     </button>
     <button class="nav-item" onclick="showPage('receipt',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      <span class="nav-label">e-Receipt</span>
+      <span class="nav-label">Billing</span>
     </button>
 
     <button class="nav-item" onclick="showPage('settings',this)">
@@ -1346,8 +1381,8 @@
       <div class="page" id="page-wallet">
         <div class="section-header">
           <div>
-            <div class="section-title">TOKEN <span class="accent">WALLET</span></div>
-            <div class="section-sub">ยอดคงเหลือ · ใช้ร่วมกันทุก Device</div>
+            <div class="section-title">WALLET & <span class="accent">PACKAGE</span></div>
+            <div class="section-sub">ยอดคงเหลือ · Plan ปัจจุบัน · เติม Token</div>
           </div>
         </div>
         <!-- Section 1: ยอดคงเหลือ — 3 cards in a row -->
@@ -1434,13 +1469,116 @@
         </div>
 
         <!-- Section Separator -->
-        <div class="section-sep"><span><i class="fa-solid fa-bag-shopping"></i> เติม Token — เลือก Package</span></div>
+        <div class="section-sep"><span><i class="fa-solid fa-cube"></i> Package & Plan</span></div>
 
-        <!-- Section 2: Packages -->
+        <!-- Tab bar: Subscription | Token Add-on -->
+        <div class="tab-bar">
+          <button class="tab-btn active" id="pkgTabBtn-sub" onclick="switchPkgTab('sub')"><i class="fa-solid fa-calendar-check" style="margin-right:5px"></i>Subscription Plans</button>
+          <button class="tab-btn" id="pkgTabBtn-token" onclick="switchPkgTab('token')"><i class="fa-solid fa-bag-shopping" style="margin-right:5px"></i>Token Add-on</button>
+        </div>
+
+        <!-- ===== TAB: SUBSCRIPTION PLANS ===== -->
+        <div id="pkgTab-sub">
         <div class="flex items-center justify-between mb-20">
           <div>
-            <div class="section-title" style="font-size:26px">TOKEN <span class="accent">PACKAGES</span></div>
-            <div class="section-sub">ราคา Package · ยอดชำระจริงบวก VAT 7% เพิ่มเติม</div>
+            <div class="section-title" style="font-size:26px">SUBSCRIPTION <span class="accent">PLANS</span></div>
+            <div class="section-sub">รายเดือน · เปลี่ยน Plan ได้ตลอดเวลา · ผูกกับ Tenant</div>
+          </div>
+          <div class="chip chip-gray">+VAT 7% เมื่อชำระ</div>
+        </div>
+        <div class="grid-4">
+
+          <!-- FREE -->
+          <div class="package-card" onclick="selectPlan('FREE')">
+            <div class="pkg-plan-name"><i class="fa-solid fa-gift" style="color:var(--primary);margin-right:5px"></i>Free</div>
+            <div class="pkg-plan-price">ฟรี<span class="pkg-plan-price-unit">/เดือน</span></div>
+            <div class="pkg-plan-tokens">🪙 <b>100</b> tokens/เดือน</div>
+            <ul class="plan-features">
+              <li class="yes"><i class="fa-solid fa-check"></i> จำนวน Avatar: <b>1 ตัว</b></li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Knowledge Base</li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Priority KB</li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Custom Agent</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Support SLA: <b>Community</b></li>
+            </ul>
+            <div class="pkg-price-block">
+              <button class="pkg-buy-btn" onclick="event.stopPropagation();selectPlan('FREE')">เลือก Plan นี้</button>
+            </div>
+          </div>
+
+          <!-- STARTER (current) -->
+          <div class="package-card active" onclick="selectPlan('STARTER')">
+            <span class="pkg-active-chip">● ใช้งานอยู่</span>
+            <div class="pkg-plan-name"><i class="fa-solid fa-rocket" style="color:var(--primary);margin-right:5px"></i>Starter</div>
+            <div class="pkg-plan-price">990<span class="pkg-plan-price-unit">THB/เดือน</span></div>
+            <div class="pkg-plan-tokens">🪙 <b>1,100</b> tokens/เดือน <span style="color:var(--success)">(1,000 + Bonus 100)</span></div>
+            <ul class="plan-features">
+              <li class="yes"><i class="fa-solid fa-check"></i> จำนวน Avatar: <b>5 ตัว</b></li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Knowledge Base</li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Priority KB</li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Custom Agent</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Support SLA: <b>Email</b></li>
+            </ul>
+            <div class="pkg-price-block">
+              <button class="pkg-buy-btn" style="background:var(--success);opacity:1;transform:none;pointer-events:auto" disabled>✓ Plan ปัจจุบัน</button>
+            </div>
+          </div>
+
+          <!-- PRO -->
+          <div class="package-card popular" onclick="selectPlan('PRO')">
+            <div class="popular-tag">🔥 ยอดนิยม</div>
+            <div class="pkg-plan-name"><i class="fa-solid fa-crown" style="color:var(--primary);margin-right:5px"></i>Pro</div>
+            <div class="pkg-plan-price">2,990<span class="pkg-plan-price-unit">THB/เดือน</span></div>
+            <div class="pkg-plan-tokens">🪙 <b>3,500</b> tokens/เดือน <span style="color:var(--success)">(3,000 + Bonus 500)</span></div>
+            <ul class="plan-features">
+              <li class="yes"><i class="fa-solid fa-check"></i> จำนวน Avatar: <b>15 ตัว</b></li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Knowledge Base</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Priority KB</li>
+              <li class="no"><i class="fa-solid fa-xmark"></i> Custom Agent</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Support SLA: <b>Priority Email</b></li>
+            </ul>
+            <div class="pkg-price-block">
+              <button class="pkg-buy-btn" onclick="event.stopPropagation();selectPlan('PRO')"><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
+            </div>
+          </div>
+
+          <!-- BUSINESS -->
+          <div class="package-card" onclick="selectPlan('BUSINESS')">
+            <div class="pkg-plan-name"><i class="fa-solid fa-building" style="color:var(--primary);margin-right:5px"></i>Business</div>
+            <div class="pkg-plan-price">7,990<span class="pkg-plan-price-unit">THB/เดือน</span></div>
+            <div class="pkg-plan-tokens">🪙 <b>9,500</b> tokens/เดือน <span style="color:var(--success)">(8,000 + Bonus 1,500)</span></div>
+            <ul class="plan-features">
+              <li class="yes"><i class="fa-solid fa-check"></i> จำนวน Avatar: <b>50 ตัว</b></li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Knowledge Base</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Priority KB</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Custom Agent</li>
+              <li class="yes"><i class="fa-solid fa-check"></i> Support SLA: <b>24/7 Priority</b></li>
+            </ul>
+            <div class="pkg-price-block">
+              <button class="pkg-buy-btn" onclick="event.stopPropagation();selectPlan('BUSINESS')"><i class="fa-solid fa-arrow-up"></i> Upgrade</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Enterprise: full-width banner -->
+        <div class="card-accent" style="margin-top:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-size:28px"><i class="fa-solid fa-gem" style="color:var(--primary)"></i></div>
+            <div>
+              <div class="font-600" style="font-size:16px;letter-spacing:1px">ENTERPRISE</div>
+              <div class="text-muted text-sm">Unlimited Avatar · Custom SLA · Dedicated Support · On-premise option</div>
+            </div>
+          </div>
+          <button class="btn btn-outline" onclick="selectPlan('ENTERPRISE')"><i class="fa-solid fa-phone" style="margin-right:6px"></i>ติดต่อฝ่ายขาย</button>
+        </div>
+        </div><!-- /#pkgTab-sub -->
+
+        <!-- ===== TAB: TOKEN ADD-ON ===== -->
+        <div id="pkgTab-token" style="display:none">
+        <div class="flex items-center justify-between mb-20">
+          <div>
+            <div class="section-title" style="font-size:26px">TOKEN <span class="accent">ADD-ON</span></div>
+            <div class="section-sub">ซื้อ Token เพิ่มแบบครั้งเดียว · ไม่หมดอายุ · บวกเข้ายอดทันที</div>
           </div>
           <div class="chip chip-gray">+VAT 7% เมื่อชำระ</div>
         </div>
@@ -1495,62 +1633,32 @@
           </div>
 
         </div>
+        </div><!-- /#pkgTab-token -->
 
         <!-- Section Separator -->
         <div class="section-sep"><span><i class="fa-solid fa-receipt"></i> ประวัติ Transaction</span></div>
 
-        <!-- Section 3: Transaction History -->
+        <!-- Section 3: Transaction History (Top-up · Subscription · Plan Change) -->
         <div class="flex gap-8 mb-12" id="txnFilters">
           <button class="chip chip-blue" onclick="filterTxn(this,'all')">ทั้งหมด</button>
           <button class="chip chip-gray" onclick="filterTxn(this,'topup')"><i class="fa-solid fa-circle-plus"></i> Top-up</button>
-          <button class="chip chip-gray" onclick="filterTxn(this,'session')"><i class="fa-solid fa-fire-flame-curved"></i> Session</button>
+          <button class="chip chip-gray" onclick="filterTxn(this,'subscription')"><i class="fa-solid fa-calendar-check"></i> Subscription</button>
+          <button class="chip chip-gray" onclick="filterTxn(this,'planchange')"><i class="fa-solid fa-arrows-up-down"></i> Plan Change</button>
         </div>
         <div class="table-wrap">
           <table id="txnTable">
-            <thead><tr><th>วันที่</th><th>ประเภท</th><th>Package</th><th>Token</th><th>ราคา Package</th><th>VAT 7%</th><th>ยอดชำระ</th><th>สถานะ</th></tr></thead>
+            <thead><tr><th>วันที่</th><th>ประเภท</th><th>Package / Plan</th><th>Token</th><th>ราคา</th><th>VAT 7%</th><th>ยอดชำระ</th><th>สถานะ</th></tr></thead>
             <tbody>
-              <tr data-type="topup"><td class="text-mono text-sm">18 ก.พ. 2026</td><td><span class="chip chip-green">Top-up</span></td><td>Pro (1,500+150 bonus)</td><td class="amount-pos">+1,650</td><td class="text-mono">฿400.00</td><td class="text-mono">฿28.00</td><td class="text-mono">฿428.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
-              <tr data-type="topup"><td class="text-mono text-sm">10 ก.พ. 2026</td><td><span class="chip chip-green">Top-up</span></td><td>Business (5,000+750 bonus)</td><td class="amount-pos">+5,750</td><td class="text-mono">฿1,000.00</td><td class="text-mono">฿70.00</td><td class="text-mono">฿1,070.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="planchange"><td class="text-mono text-sm">09 เม.ย. 2026</td><td><span class="chip chip-orange"><i class="fa-solid fa-arrow-up"></i> Upgrade</span></td><td><div class="font-600">STARTER → PRO</div><div class="text-muted text-sm">โอนธนาคาร · Pro-rata 15 วัน</div></td><td class="text-mono text-muted">—</td><td class="text-mono">฿1,000.00</td><td class="text-mono">฿70.00</td><td class="text-mono">฿1,070.00</td><td><span class="chip chip-orange"><i class="fa-regular fa-clock"></i> รออนุมัติ</span></td></tr>
+              <tr data-type="topup"><td class="text-mono text-sm">08 เม.ย. 2026</td><td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td><td>Pro (1,500+150 bonus)<div class="text-muted text-sm">โอนธนาคาร · แนบสลิปแล้ว</div></td><td class="text-mono text-muted">+1,650</td><td class="text-mono">฿400.00</td><td class="text-mono">฿28.00</td><td class="text-mono">฿428.00</td><td><span class="chip chip-orange"><i class="fa-regular fa-clock"></i> รออนุมัติ</span></td></tr>
+              <tr data-type="subscription"><td class="text-mono text-sm">01 เม.ย. 2026</td><td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td><td><div class="font-600">STARTER</div><div class="text-muted text-sm">รายเดือน · auto-renew</div></td><td class="amount-pos">+1,100</td><td class="text-mono">฿990.00</td><td class="text-mono">฿69.30</td><td class="text-mono">฿1,059.30</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="planchange"><td class="text-mono text-sm">20 มี.ค. 2026</td><td><span class="chip chip-gray"><i class="fa-solid fa-arrow-down"></i> Downgrade</span></td><td><div class="font-600">PRO → STARTER</div><div class="text-muted text-sm">Extended +45 วัน</div></td><td class="text-mono text-muted">—</td><td class="text-mono text-muted">—</td><td class="text-mono text-muted">—</td><td class="text-mono">฿0.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="planchange"><td class="text-mono text-sm">05 มี.ค. 2026</td><td><span class="chip chip-orange"><i class="fa-solid fa-arrow-up"></i> Upgrade</span></td><td><div class="font-600">STARTER → PRO</div><div class="text-muted text-sm">Pro-rata 15 วัน</div></td><td class="amount-pos">+0</td><td class="text-mono">฿1,000.00</td><td class="text-mono">฿70.00</td><td class="text-mono">฿1,070.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="subscription"><td class="text-mono text-sm">01 มี.ค. 2026</td><td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td><td><div class="font-600">STARTER</div><div class="text-muted text-sm">รายเดือน · auto-renew</div></td><td class="amount-pos">+1,100</td><td class="text-mono">฿990.00</td><td class="text-mono">฿69.30</td><td class="text-mono">฿1,059.30</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="topup"><td class="text-mono text-sm">18 ก.พ. 2026</td><td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td><td>Pro (1,500+150 bonus)</td><td class="amount-pos">+1,650</td><td class="text-mono">฿400.00</td><td class="text-mono">฿28.00</td><td class="text-mono">฿428.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="topup"><td class="text-mono text-sm">10 ก.พ. 2026</td><td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td><td>Business (5,000+750 bonus)</td><td class="amount-pos">+5,750</td><td class="text-mono">฿1,000.00</td><td class="text-mono">฿70.00</td><td class="text-mono">฿1,070.00</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr data-type="subscription"><td class="text-mono text-sm">01 ก.พ. 2026</td><td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td><td><div class="font-600">STARTER</div><div class="text-muted text-sm">รายเดือน · เริ่มต้น</div></td><td class="amount-pos">+1,100</td><td class="text-mono">฿990.00</td><td class="text-mono">฿69.30</td><td class="text-mono">฿1,059.30</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
               <tr data-type="topup"><td class="text-mono text-sm">01 ก.พ. 2026</td><td><span class="chip chip-orange">Demo</span></td><td>Demo Credit</td><td class="amount-pos">+500</td><td class="text-mono">—</td><td class="text-mono">—</td><td class="text-mono">฿0</td><td><span class="chip chip-green">✅ ได้รับ</span></td></tr>
-              <tr data-type="session">
-                <td class="text-mono text-sm">20 ก.พ. 2026 · 14:32</td>
-                <td><span class="chip chip-orange" style="font-size:11px"><i class="fa-solid fa-fire-flame-curved"></i> Session</span></td>
-                <td>
-                  <a class="text-primary text-mono text-sm" style="cursor:pointer;text-decoration:none" onclick="showPage('history',null)">S-0217 →</a>
-                  <div class="text-muted text-sm">Box-A · Aria · 03:12</div>
-                </td>
-                <td class="text-mono" style="color:var(--error)">-48</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td><span class="chip chip-green" style="font-size:11px">✅ สำเร็จ</span></td>
-              </tr>
-              <tr data-type="session">
-                <td class="text-mono text-sm">20 ก.พ. 2026 · 13:50</td>
-                <td><span class="chip chip-orange" style="font-size:11px"><i class="fa-solid fa-fire-flame-curved"></i> Session</span></td>
-                <td>
-                  <a class="text-primary text-mono text-sm" style="cursor:pointer;text-decoration:none" onclick="showPage('history',null)">S-0215 →</a>
-                  <div class="text-muted text-sm">Box-A · Aria · 05:44</div>
-                </td>
-                <td class="text-mono" style="color:var(--error)">-86</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td><span class="chip chip-green" style="font-size:11px">✅ สำเร็จ</span></td>
-              </tr>
-              <tr data-type="session">
-                <td class="text-mono text-sm">20 ก.พ. 2026 · 12:44</td>
-                <td><span class="chip chip-orange" style="font-size:11px"><i class="fa-solid fa-fire-flame-curved"></i> Session</span></td>
-                <td>
-                  <a class="text-primary text-mono text-sm" style="cursor:pointer;text-decoration:none" onclick="showPage('history',null)">S-0213 →</a>
-                  <div class="text-muted text-sm">Box-B · Nova · 20:00</div>
-                </td>
-                <td class="text-mono" style="color:var(--error)">-300</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td class="text-mono text-muted">—</td>
-                <td><span class="chip chip-green" style="font-size:11px">✅ สำเร็จ</span></td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -1570,39 +1678,61 @@
           </div>
         </div>
 
-        <!-- Stats: 4 cards -->
+        <!-- Stats: 4 aggregate cards (ไม่ผูกกับจำนวนตู้) -->
         <div class="grid-4 mb-16">
-          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-tv" style="margin-right:4px;opacity:.6"></i>Box-A (Lobby)</div><div class="stat-value primary">12</div><div class="stat-sub">84 นาที · -480 tokens</div></div>
-          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-tv" style="margin-right:4px;opacity:.6"></i>Box-B (Meeting)</div><div class="stat-value primary">5</div><div class="stat-sub">46 นาที · -200 tokens</div></div>
-          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-chart-simple" style="margin-right:4px;opacity:.6"></i>เฉลี่ย/Session</div><div class="stat-value">7.6<span style="font-size:14px;color:var(--text-muted)"> นาที</span></div><div class="stat-sub">40 tokens/session เฉลี่ย</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-list-check" style="margin-right:4px;opacity:.6"></i>Total Sessions วันนี้</div><div class="stat-value primary">34</div><div class="stat-sub">รวม -1,040 tokens</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-tv" style="margin-right:4px;opacity:.6"></i>Active Boxes</div><div class="stat-value primary">4<span style="font-size:14px;color:var(--text-muted)">/5 ตู้</span></div><div class="stat-sub">1 ตู้ Offline</div></div>
+          <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-chart-simple" style="margin-right:4px;opacity:.6"></i>เฉลี่ย/Session</div><div class="stat-value">7.6<span style="font-size:14px;color:var(--text-muted)"> นาที</span></div><div class="stat-sub">30.6 tokens/session เฉลี่ย</div></div>
           <div class="stat-card"><div class="stat-label"><i class="fa-solid fa-stopwatch" style="margin-right:4px;opacity:.6"></i>Session ยาวสุด</div><div class="stat-value">20:00</div><div class="stat-sub">Box-B · S-0216 · Nova</div></div>
         </div>
 
-        <!-- Token burn chart -->
+        <!-- Token burn chart - per Box (scale ได้ไม่จำกัด) -->
         <div class="burn-chart">
           <div class="burn-chart-title"><i class="fa-solid fa-fire-flame-curved" style="color:var(--primary);margin-right:6px"></i>Token Burn วันนี้ (ต่อตู้)</div>
           <div class="burn-bar-row">
             <div class="burn-bar-label">Box-A (Lobby)</div>
             <div class="burn-bar-track"><div class="burn-bar-fill" style="width:100%"></div></div>
             <div class="burn-bar-val">-480 tok</div>
+            <div class="burn-bar-sessions">12 sessions</div>
+            <div class="burn-bar-status"><span class="chip chip-orange" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Active</span></div>
           </div>
           <div class="burn-bar-row">
             <div class="burn-bar-label">Box-B (Meeting)</div>
             <div class="burn-bar-track"><div class="burn-bar-fill" style="width:41.7%"></div></div>
             <div class="burn-bar-val">-200 tok</div>
+            <div class="burn-bar-sessions">5 sessions</div>
+            <div class="burn-bar-status"><span class="chip chip-green" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Online</span></div>
+          </div>
+          <div class="burn-bar-row">
+            <div class="burn-bar-label">Box-C (Kiosk)</div>
+            <div class="burn-bar-track"><div class="burn-bar-fill" style="width:33.3%"></div></div>
+            <div class="burn-bar-val">-160 tok</div>
+            <div class="burn-bar-sessions">8 sessions</div>
+            <div class="burn-bar-status"><span class="chip chip-green" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Online</span></div>
+          </div>
+          <div class="burn-bar-row">
+            <div class="burn-bar-label">Box-D (Cafe)</div>
+            <div class="burn-bar-track"><div class="burn-bar-fill" style="width:25%"></div></div>
+            <div class="burn-bar-val">-120 tok</div>
+            <div class="burn-bar-sessions">6 sessions</div>
+            <div class="burn-bar-status"><span class="chip chip-green" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Online</span></div>
+          </div>
+          <div class="burn-bar-row">
+            <div class="burn-bar-label">Box-E (Reception)</div>
+            <div class="burn-bar-track"><div class="burn-bar-fill" style="width:16.7%"></div></div>
+            <div class="burn-bar-val">-80 tok</div>
+            <div class="burn-bar-sessions">3 sessions</div>
+            <div class="burn-bar-status"><span class="chip chip-gray" style="font-size:10px"><i class="fa-solid fa-circle" style="font-size:6px"></i> Offline</span></div>
           </div>
         </div>
 
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Session ID</th><th>วันที่ / เริ่ม–จบ</th><th>Device</th><th>Avatar / KB</th><th>Agent Role</th><th>ระยะเวลา</th><th>Token หัก</th><th>ยอดหลังหัก</th><th>สถานะ</th></tr></thead>
+            <thead><tr><th>Session ID</th><th>วันที่ / เวลา</th><th>Device</th><th>Avatar / KB</th><th>Agent Role</th><th>ระยะเวลา</th><th>ยอดหลังหัก</th><th>สถานะ</th></tr></thead>
             <tbody>
-              <tr><td><span class="text-mono text-primary">S-0217</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">14:32 – 14:35</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">03:12</td><td class="amount-neg">-48</td><td class="text-mono">2,450</td><td><span class="chip chip-orange">● Active</span></td></tr>
-              <tr><td><span class="text-mono text-primary">S-0216</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">14:15 – 14:35</div></td><td><div class="font-600">Box-B</div><div class="text-muted text-sm">Meeting</div></td><td><div>Nova</div><div class="text-muted text-sm">Company FAQ</div></td><td class="text-sm">Receptionist</td><td class="text-mono">20:00</td><td class="amount-neg">-300</td><td class="text-mono">2,498</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
-              <tr><td><span class="text-mono text-primary">S-0215</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">13:50 – 13:56</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">05:44</td><td class="amount-neg">-86</td><td class="text-mono">2,798</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
-              <tr><td><span class="text-mono text-primary">S-0214</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">13:22 – 13:30</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">08:10</td><td class="amount-neg">-122</td><td class="text-mono">2,884</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
-              <tr><td><span class="text-mono text-primary">S-0213</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">12:44 – 13:04</div></td><td><div class="font-600">Box-B</div><div class="text-muted text-sm">Meeting</div></td><td><div>Nova</div><div class="text-muted text-sm">Company FAQ</div></td><td class="text-sm">Receptionist</td><td class="text-mono">20:00</td><td class="amount-neg">-300</td><td class="text-mono">3,006</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
-              <tr><td><span class="text-mono text-primary">S-0212</span></td><td><div>20 ก.พ. 2026</div><div class="text-muted text-sm text-mono">11:05 – 11:07</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">01:55</td><td class="amount-neg">-29</td><td class="text-mono">3,306</td><td><span class="chip chip-green">✅ สำเร็จ</span></td></tr>
+              <tr><td><a class="text-mono text-primary" style="cursor:pointer;text-decoration:none" onclick="openSessionDetail('75ad1b6f-5fac-4d7e-b06b-6a2','10 เม.ย. 2026','14:54:15','-15.567','98,636.243','98,651.810')">75ad1b6f… →</a></td><td><div>10 เม.ย. 2026</div><div class="text-muted text-sm text-mono">14:54:15</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">12:58</td><td class="text-mono">98,636.243</td><td><span class="chip chip-green">หักสำเร็จ</span></td></tr>
+              <tr><td><a class="text-mono text-primary" style="cursor:pointer;text-decoration:none" onclick="openSessionDetail('d863ba37-d7c0-493e-bcb7-b89','10 เม.ย. 2026','14:44:34','-6.56','98,651.81','98,658.37')">d863ba37… →</a></td><td><div>10 เม.ย. 2026</div><div class="text-muted text-sm text-mono">14:44:34</div></td><td><div class="font-600">Box-B</div><div class="text-muted text-sm">Meeting</div></td><td><div>Nova</div><div class="text-muted text-sm">Company FAQ</div></td><td class="text-sm">Receptionist</td><td class="text-mono">05:28</td><td class="text-mono">98,651.81</td><td><span class="chip chip-green">หักสำเร็จ</span></td></tr>
+              <tr><td><a class="text-mono text-primary" style="cursor:pointer;text-decoration:none" onclick="openSessionDetail('98f818c6-6275-410a-b05c-f7ad','10 เม.ย. 2026','12:19:00','-6.47','98,658.37','98,664.84')">98f818c6… →</a></td><td><div>10 เม.ย. 2026</div><div class="text-muted text-sm text-mono">12:19:00</div></td><td><div class="font-600">Box-A</div><div class="text-muted text-sm">Lobby</div></td><td><div>Aria</div><div class="text-muted text-sm">Product Catalog</div></td><td class="text-sm">Sales Assist</td><td class="text-mono">05:23</td><td class="text-mono">98,658.37</td><td><span class="chip chip-green">หักสำเร็จ</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -1612,177 +1742,153 @@
       <div class="page" id="page-receipt">
         <div class="section-header">
           <div>
-            <div class="section-title">TAX <span class="accent">INVOICE</span></div>
-            <div class="section-sub">ใบกำกับภาษีอิเล็กทรอนิกส์ · ออกอัตโนมัติหลังชำระสำเร็จ</div>
+            <div class="section-title">BILLING <span class="accent">HISTORY</span></div>
+            <div class="section-sub">ใบกำกับภาษี · ใบเสร็จ · ใบแจ้งหนี้ · บันทึกการเปลี่ยน Plan</div>
           </div>
           <div class="flex gap-8">
             <button class="btn btn-outline">📧 ส่งทาง Email</button>
             <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-file-arrow-down" style="margin-right:6px"></i>ดาวน์โหลด PDF</button>
           </div>
         </div>
-        <div class="flex gap-20" style="flex-wrap:wrap;align-items:flex-start">
-
-          <!-- ===== LEFT: Invoice History Table ===== -->
-          <div style="flex:1;min-width:420px">
-            <div class="flex items-center justify-between mb-16">
-              <div class="font-600"><i class="fa-solid fa-file-invoice" style="margin-right:6px;color:var(--primary)"></i>ประวัติ Invoice ทั้งหมด</div>
-              <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download" style="margin-right:5px"></i>Export</button>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>เลขที่ Invoice</th>
-                    <th>วันที่ / เวลา</th>
-                    <th>Package</th>
-                    <th>Token</th>
-                    <th>ราคา Package</th>
-                    <th>VAT 7%</th>
-                    <th>ยอดชำระ</th>
-                    <th>ช่องทาง</th>
-                    <th>สถานะ</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span class="text-mono text-primary text-sm">INV-2026-0218-0042</span></td>
-                    <td><div>18 ก.พ. 2026</div><div class="text-muted text-sm text-mono">11:24 น.</div></td>
-                    <td><div class="font-600">Business</div><div class="text-muted text-sm">5,000 + 750B</div></td>
-                    <td class="amount-pos text-mono">+5,750</td>
-                    <td class="text-mono">฿1,000.00</td>
-                    <td class="text-mono">฿70.00</td>
-                    <td class="text-mono text-primary font-600">฿1,070.00</td>
-                    <td class="text-sm">PromptPay</td>
-                    <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
-                    <td><button class="btn btn-sm btn-outline">ดู Invoice</button></td>
-                  </tr>
-                  <tr>
-                    <td><span class="text-mono text-primary text-sm">INV-2026-0210-0031</span></td>
-                    <td><div>10 ก.พ. 2026</div><div class="text-muted text-sm text-mono">09:15 น.</div></td>
-                    <td><div class="font-600">Pro</div><div class="text-muted text-sm">1,500 + 150B</div></td>
-                    <td class="amount-pos text-mono">+1,650</td>
-                    <td class="text-mono">฿400.00</td>
-                    <td class="text-mono">฿28.00</td>
-                    <td class="text-mono text-primary font-600">฿428.00</td>
-                    <td class="text-sm">PromptPay</td>
-                    <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
-                    <td><button class="btn btn-sm btn-outline">ดู Invoice</button></td>
-                  </tr>
-                  <tr>
-                    <td><span class="text-mono text-muted text-sm">DEMO-2026-0201</span></td>
-                    <td><div>01 ก.พ. 2026</div><div class="text-muted text-sm text-mono">08:00 น.</div></td>
-                    <td><div class="font-600 text-muted">Demo Credit</div><div class="text-muted text-sm">—</div></td>
-                    <td class="amount-pos text-mono">+500</td>
-                    <td class="text-mono text-muted">—</td>
-                    <td class="text-mono text-muted">—</td>
-                    <td class="text-mono">฿0</td>
-                    <td class="text-sm">System</td>
-                    <td><span class="chip chip-orange">🎁 Demo</span></td>
-                    <td><span class="text-muted text-sm">—</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="card mt-16" style="background:rgba(241,91,38,.04);border-color:var(--border-accent)">
-              <div class="text-sm text-muted" style="line-height:1.8">
-                ✅ Tax Invoice ออกอัตโนมัติทุกครั้งที่ชำระสำเร็จ<br>
-                📋 ใช้เป็นหลักฐานในการขอคืนภาษีมูลค่าเพิ่ม (VAT Refund)<br>
-                📧 รับสำเนาทาง Email ที่ลงทะเบียน (Optional)
-              </div>
-            </div>
+        <div class="flex items-center justify-between mb-16">
+          <div class="font-600"><i class="fa-solid fa-file-invoice" style="margin-right:6px;color:var(--primary)"></i>ประวัติ Invoice ทั้งหมด</div>
+          <button class="btn btn-outline btn-sm"><i class="fa-solid fa-download" style="margin-right:5px"></i>Export CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table id="invHistoryTable">
+            <thead>
+              <tr>
+                <th>เลขที่ Invoice</th>
+                <th>วันที่</th>
+                <th>ประเภท</th>
+                <th>Package / Plan</th>
+                <th>Token</th>
+                <th>ยอดชำระ</th>
+                <th>ช่องทาง</th>
+                <th>สถานะ</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0409-0099" data-date="09 เม.ย. 2026" data-time="14:23 น." data-type="planchange" data-type-label="Upgrade" data-status="pending" data-method="bank" data-package="STARTER → PRO" data-package-desc="Pro-rata 15 วัน · Plan Upgrade" data-tokens="—" data-subtotal="1000.00" data-vat="70.00" data-total="1070.00" data-ref="TRF-20260409-1423" data-slip-url="https://s3.realfact.ai/slips/slip_inv_20260409_00099.jpg" data-slip-name="slip_inv_20260409_00099.jpg" data-slip-size="312 KB" data-slip-uploaded="09 เม.ย. 2026">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0409-0099</span></td>
+                <td class="text-mono text-sm">09 เม.ย. 2026</td>
+                <td><span class="chip chip-orange"><i class="fa-solid fa-arrow-up"></i> Upgrade</span></td>
+                <td><div class="font-600">STARTER → PRO</div><div class="text-muted text-sm">Pro-rata 15 วัน</div></td>
+                <td class="text-mono text-muted">—</td>
+                <td class="text-mono text-primary font-600">฿1,070.00</td>
+                <td class="text-sm">Bank Transfer</td>
+                <td><span class="chip chip-orange"><i class="fa-regular fa-clock"></i> รออนุมัติ</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0408-0098" data-date="08 เม.ย. 2026" data-time="10:12 น." data-type="topup" data-type-label="Top-up" data-status="pending" data-method="bank" data-package="Pro Package" data-package-desc="Token Top-up · 1,500 + 150 Bonus" data-tokens="+1,650" data-subtotal="400.00" data-vat="28.00" data-total="428.00" data-ref="TRF-20260408-1012" data-slip-url="https://s3.realfact.ai/slips/slip_inv_20260408_00098.jpg" data-slip-name="slip_inv_20260408_00098.jpg" data-slip-size="245 KB" data-slip-uploaded="08 เม.ย. 2026">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0408-0098</span></td>
+                <td class="text-mono text-sm">08 เม.ย. 2026</td>
+                <td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td>
+                <td><div class="font-600">Pro Package</div><div class="text-muted text-sm">1,500 + 150B</div></td>
+                <td class="text-mono text-muted">+1,650</td>
+                <td class="text-mono text-primary font-600">฿428.00</td>
+                <td class="text-sm">Bank Transfer</td>
+                <td><span class="chip chip-orange"><i class="fa-regular fa-clock"></i> รออนุมัติ</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0401-0091" data-date="01 เม.ย. 2026" data-time="08:00 น." data-type="subscription" data-type-label="Subscription" data-status="paid" data-method="promptpay" data-package="STARTER Plan" data-package-desc="รายเดือน · auto-renew · 1,000 + 100 Bonus" data-tokens="+1,100" data-subtotal="990.00" data-vat="69.30" data-total="1059.30" data-ref="PP-20260401-0800">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0401-0091</span></td>
+                <td class="text-mono text-sm">01 เม.ย. 2026</td>
+                <td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td>
+                <td><div class="font-600">STARTER</div><div class="text-muted text-sm">auto-renew</div></td>
+                <td class="amount-pos text-mono">+1,100</td>
+                <td class="text-mono text-primary font-600">฿1,059.30</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0320-0085" data-date="20 มี.ค. 2026" data-time="16:45 น." data-type="planchange" data-type-label="Downgrade" data-status="paid" data-method="—" data-package="PRO → STARTER" data-package-desc="Plan Downgrade · Extended +45 วัน" data-tokens="—" data-subtotal="0.00" data-vat="0.00" data-total="0.00" data-ref="PC-20260320-1645">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0320-0085</span></td>
+                <td class="text-mono text-sm">20 มี.ค. 2026</td>
+                <td><span class="chip chip-gray"><i class="fa-solid fa-arrow-down"></i> Downgrade</span></td>
+                <td><div class="font-600">PRO → STARTER</div><div class="text-muted text-sm">Extended +45 วัน</div></td>
+                <td class="text-mono text-muted">—</td>
+                <td class="text-mono">฿0.00</td>
+                <td class="text-sm text-muted">—</td>
+                <td><span class="chip chip-green">✅ สำเร็จ</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0305-0072" data-date="05 มี.ค. 2026" data-time="11:30 น." data-type="planchange" data-type-label="Upgrade" data-status="paid" data-method="promptpay" data-package="STARTER → PRO" data-package-desc="Pro-rata 15 วัน · Plan Upgrade" data-tokens="—" data-subtotal="1000.00" data-vat="70.00" data-total="1070.00" data-ref="PP-20260305-1130">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0305-0072</span></td>
+                <td class="text-mono text-sm">05 มี.ค. 2026</td>
+                <td><span class="chip chip-orange"><i class="fa-solid fa-arrow-up"></i> Upgrade</span></td>
+                <td><div class="font-600">STARTER → PRO</div><div class="text-muted text-sm">Pro-rata 15 วัน</div></td>
+                <td class="text-mono text-muted">—</td>
+                <td class="text-mono text-primary font-600">฿1,070.00</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0301-0068" data-date="01 มี.ค. 2026" data-time="08:00 น." data-type="subscription" data-type-label="Subscription" data-status="paid" data-method="promptpay" data-package="STARTER Plan" data-package-desc="รายเดือน · auto-renew · 1,000 + 100 Bonus" data-tokens="+1,100" data-subtotal="990.00" data-vat="69.30" data-total="1059.30" data-ref="PP-20260301-0800">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0301-0068</span></td>
+                <td class="text-mono text-sm">01 มี.ค. 2026</td>
+                <td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td>
+                <td><div class="font-600">STARTER</div><div class="text-muted text-sm">auto-renew</div></td>
+                <td class="amount-pos text-mono">+1,100</td>
+                <td class="text-mono text-primary font-600">฿1,059.30</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0218-0042" data-date="18 ก.พ. 2026" data-time="11:24 น." data-type="topup" data-type-label="Top-up" data-status="paid" data-method="promptpay" data-package="Pro Package" data-package-desc="Token Top-up · 1,500 + 150 Bonus · ไม่มีวันหมดอายุ" data-tokens="+1,650" data-subtotal="400.00" data-vat="28.00" data-total="428.00" data-ref="PP-20260218-1124">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0218-0042</span></td>
+                <td class="text-mono text-sm">18 ก.พ. 2026</td>
+                <td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td>
+                <td><div class="font-600">Pro Package</div><div class="text-muted text-sm">1,500 + 150B</div></td>
+                <td class="amount-pos text-mono">+1,650</td>
+                <td class="text-mono text-primary font-600">฿428.00</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0210-0031" data-date="10 ก.พ. 2026" data-time="09:15 น." data-type="topup" data-type-label="Top-up" data-status="paid" data-method="promptpay" data-package="Business Package" data-package-desc="Token Top-up · 5,000 + 750 Bonus · ไม่มีวันหมดอายุ" data-tokens="+5,750" data-subtotal="1000.00" data-vat="70.00" data-total="1070.00" data-ref="PP-20260210-0915">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0210-0031</span></td>
+                <td class="text-mono text-sm">10 ก.พ. 2026</td>
+                <td><span class="chip chip-green"><i class="fa-solid fa-circle-plus"></i> Top-up</span></td>
+                <td><div class="font-600">Business Package</div><div class="text-muted text-sm">5,000 + 750B</div></td>
+                <td class="amount-pos text-mono">+5,750</td>
+                <td class="text-mono text-primary font-600">฿1,070.00</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="INV-2026-0201-0015" data-date="01 ก.พ. 2026" data-time="08:00 น." data-type="subscription" data-type-label="Subscription" data-status="paid" data-method="promptpay" data-package="STARTER Plan" data-package-desc="รายเดือน · เริ่มต้น · 1,000 + 100 Bonus" data-tokens="+1,100" data-subtotal="990.00" data-vat="69.30" data-total="1059.30" data-ref="PP-20260201-0800">
+                <td><span class="text-mono text-primary text-sm">INV-2026-0201-0015</span></td>
+                <td class="text-mono text-sm">01 ก.พ. 2026</td>
+                <td><span class="chip chip-blue"><i class="fa-solid fa-calendar-check"></i> Subscription</span></td>
+                <td><div class="font-600">STARTER</div><div class="text-muted text-sm">เริ่มต้น</div></td>
+                <td class="amount-pos text-mono">+1,100</td>
+                <td class="text-mono text-primary font-600">฿1,059.30</td>
+                <td class="text-sm">PromptPay</td>
+                <td><span class="chip chip-green">✅ ชำระแล้ว</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+              <tr style="cursor:pointer" onclick="openInvoiceDetail(this)" data-inv-no="DEMO-2026-0201" data-date="01 ก.พ. 2026" data-time="08:00 น." data-type="demo" data-type-label="Demo Credit" data-status="demo" data-method="system" data-package="Demo Credit" data-package-desc="Demo tokens · ไม่มีวันหมดอายุ" data-tokens="+500" data-subtotal="0.00" data-vat="0.00" data-total="0.00" data-ref="—">
+                <td><span class="text-mono text-muted text-sm">DEMO-2026-0201</span></td>
+                <td class="text-mono text-sm">01 ก.พ. 2026</td>
+                <td><span class="chip chip-orange">🎁 Demo</span></td>
+                <td><div class="font-600 text-muted">Demo Credit</div><div class="text-muted text-sm">—</div></td>
+                <td class="amount-pos text-mono">+500</td>
+                <td class="text-mono">฿0</td>
+                <td class="text-sm">System</td>
+                <td><span class="chip chip-orange">🎁 Demo</span></td>
+                <td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openInvoiceDetail(this.closest('tr'))">ดู</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card mt-16" style="background:rgba(241,91,38,.04);border-color:var(--border-accent)">
+          <div class="text-sm text-muted" style="line-height:1.8">
+            ✅ Tax Invoice ออกอัตโนมัติทุกครั้งที่ชำระสำเร็จ<br>
+            📋 ใช้เป็นหลักฐานในการขอคืนภาษีมูลค่าเพิ่ม (VAT Refund)<br>
+            📧 รับสำเนาทาง Email ที่ลงทะเบียน (Optional)
           </div>
-
-          <!-- ===== RIGHT: Invoice Card ===== -->
-          <div class="inv-card" style="flex:0 0 520px">
-
-            <!-- Header: Brand + Doc Info -->
-            <div class="inv-head">
-              <div>
-                <div class="inv-brand-name">REALFACTAVATAR</div>
-                <div class="inv-brand-sub">บริษัท เรียลแฟคท์ เอไอ จำกัด</div>
-                <div class="inv-brand-sub">เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3</div>
-                <div class="inv-brand-sub">123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กทม. 10110</div>
-              </div>
-              <div class="inv-doc-info">
-                <div class="inv-doc-title">TAX INVOICE</div>
-                <div class="inv-doc-title" style="font-size:13px;letter-spacing:1px;color:var(--text-muted)">ใบกำกับภาษี / ใบเสร็จรับเงิน</div>
-                <div class="inv-doc-num">INV-2026-0218-0042</div>
-                <div class="inv-doc-date">วันที่: 18 ก.พ. 2026 · 11:24 น.</div>
-                <div style="margin-top:6px"><span class="chip chip-green" style="font-size:12px">✅ ชำระแล้ว</span></div>
-              </div>
-            </div>
-
-            <!-- Parties -->
-            <div class="inv-parties">
-              <div class="inv-party">
-                <div class="inv-party-label"><i class="fa-solid fa-building" style="margin-right:4px"></i>ผู้ออกใบกำกับภาษี (Seller)</div>
-                <div class="inv-party-name">บริษัท เรียลแฟคท์ เอไอ จำกัด</div>
-                <div class="inv-party-detail">
-                  เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3<br>
-                  123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย<br>
-                  กรุงเทพมหานคร 10110<br>
-                  โทร: 02-XXX-XXXX
-                </div>
-              </div>
-              <div class="inv-party">
-                <div class="inv-party-label"><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>ออกให้แก่ (Bill To)</div>
-                <div class="inv-party-name">บริษัท เดโม คอร์ปอเรชั่น จำกัด</div>
-                <div class="inv-party-detail">
-                  เลขประจำตัวผู้เสียภาษี: 0-1055-XXXXX-XX-X<br>
-                  456 ถ.พระราม 9 แขวงห้วยขวาง<br>
-                  เขตห้วยขวาง กรุงเทพมหานคร 10310
-                </div>
-              </div>
-            </div>
-
-            <!-- Line Items -->
-            <table class="inv-items">
-              <thead>
-                <tr>
-                  <th style="width:36px">#</th>
-                  <th>รายการ / Description</th>
-                  <th style="width:60px;text-align:center">จำนวน</th>
-                  <th style="width:110px;text-align:right">ราคา/หน่วย</th>
-                  <th style="width:110px;text-align:right">รวม</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="text-muted">1</td>
-                  <td>
-                    <div class="inv-item-name">Business Package — Token Top-up</div>
-                    <div class="inv-item-desc">จำนวน Token: 5,000 + 750 Bonus · ไม่มีวันหมดอายุ</div>
-                    <div class="inv-item-desc">ช่องทาง: PromptPay (QR) · อ้างอิง: REF-20260218-1124</div>
-                  </td>
-                  <td class="text-mono" style="text-align:center">1</td>
-                  <td class="text-mono" style="text-align:right">฿1,000.00</td>
-                  <td class="text-mono" style="text-align:right">฿1,000.00</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <!-- Summary -->
-            <div class="inv-summary">
-              <div class="inv-summary-table">
-                <div class="inv-summary-row"><span class="isl">ราคาก่อนภาษี (Subtotal)</span><span class="isv">฿1,000.00</span></div>
-                <div class="inv-summary-row"><span class="isl">ภาษีมูลค่าเพิ่ม 7% (VAT)</span><span class="isv">฿70.00</span></div>
-                <div class="inv-summary-total"><span class="isl">ยอดชำระรวมภาษี</span><span class="isv">฿1,070.00</span></div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="inv-footer">
-              <div>
-                <div class="inv-footer-item"><i class="fa-solid fa-qrcode" style="margin-right:5px;color:var(--primary)"></i>ช่องทางชำระ: <strong>PromptPay (QR Code)</strong></div>
-                <div class="inv-footer-item">เลขอ้างอิง: <strong class="text-mono">REF-20260218-1124</strong></div>
-              </div>
-              <div class="inv-footer-item" style="text-align:right">
-                ออกโดยระบบอัตโนมัติ<br>ใบกำกับภาษีนี้ใช้ได้โดยไม่ต้องลงนาม
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
 
@@ -1843,26 +1949,248 @@
   </div>
 </div>
 
+<!-- ===== PLAN CHANGE MODAL ===== -->
+<div class="modal-overlay" id="planChangeModal">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closePlanChangeModal()">×</button>
+    <div class="modal-title" id="pcmTitle">UPGRADE PLAN</div>
+    <div class="modal-sub" id="pcmSub">คำนวณ Pro-rata จากวันที่เหลือในรอบบิล</div>
+
+    <!-- Plan transition -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px">
+      <div style="flex:1;text-align:center">
+        <div class="text-muted text-sm" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">ปัจจุบัน</div>
+        <div class="font-600" id="pcmFrom" style="font-size:16px;letter-spacing:1px">STARTER</div>
+        <div class="text-mono text-sm text-muted" id="pcmFromPrice">฿990/เดือน</div>
+      </div>
+      <i class="fa-solid fa-arrow-right" style="color:var(--primary);font-size:18px"></i>
+      <div style="flex:1;text-align:center">
+        <div class="text-muted text-sm" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">เปลี่ยนเป็น</div>
+        <div class="font-600" id="pcmTo" style="font-size:16px;letter-spacing:1px;color:var(--primary)">PRO</div>
+        <div class="text-mono text-sm text-muted" id="pcmToPrice">฿2,990/เดือน</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:10px">
+      <span>วันที่เหลือในรอบปัจจุบัน</span>
+      <span class="text-mono"><b id="pcmDaysLeft">15</b> / 30 วัน</span>
+    </div>
+
+    <!-- Calculation breakdown -->
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px" id="pcmCalcTitle">PRO-RATA CALCULATION</div>
+    <div class="summary-box" id="pcmCalcBox" style="margin-bottom:14px">
+      <!-- rows injected by JS -->
+    </div>
+
+    <!-- Note about bonus tokens -->
+    <div id="pcmBonusNote" style="font-size:12px;color:var(--text-muted);background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:10px 12px;margin-bottom:18px">
+      <div style="margin-bottom:4px"><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:5px"></i>Bonus Token ของ Plan เก่าที่เหลือ ยังใช้ได้จนหมดรอบ</div>
+      <div><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:5px"></i>รอบถัดไป: ได้รับ Bonus Token ของ Plan ใหม่เต็มจำนวน</div>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" style="flex:1" onclick="closePlanChangeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" style="flex:2" id="pcmConfirmBtn" onclick="confirmPlanChange()">ยืนยัน Upgrade</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SESSION DETAIL MODAL ===== -->
+<div class="modal-overlay" id="sessionDetailModal">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeSessionDetailModal()">×</button>
+    <div class="modal-title">SESSION DETAIL</div>
+    <div class="modal-sub">รายละเอียดการหัก Token ของ Session</div>
+
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Session ID</div>
+    <div class="text-mono text-primary" id="sdSessionId" style="word-break:break-all;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:13px">—</div>
+
+    <div class="summary-box">
+      <div class="summary-row"><span class="sl">วันที่</span><span class="sv text-mono" id="sdDate">—</span></div>
+      <div class="summary-row"><span class="sl">เวลา</span><span class="sv text-mono" id="sdTime">—</span></div>
+      <div class="summary-row"><span class="sl">ยอดก่อนหัก</span><span class="sv text-mono" id="sdBefore">—</span></div>
+      <div class="summary-row"><span class="sl">จำนวนที่หัก</span><span class="sv text-mono amount-neg" id="sdAmount">—</span></div>
+      <div class="summary-row total"><span class="sl">ยอดคงเหลือ</span><span class="sv text-mono" id="sdAfter">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INVOICE DETAIL MODAL ===== -->
+<div class="modal-overlay" id="invoiceDetailModal">
+  <div class="modal" style="max-width:720px;max-height:92vh;overflow:hidden;padding:0;display:flex;flex-direction:column">
+    <div style="padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0">
+      <div>
+        <div class="font-600" style="font-size:16px">รายละเอียดใบกำกับภาษี</div>
+        <div class="text-muted text-sm text-mono" id="invDetailNo">—</div>
+      </div>
+      <div class="flex gap-8" style="align-items:center">
+        <button class="btn btn-outline btn-sm" onclick="window.print()"><i class="fa-solid fa-file-arrow-down" style="margin-right:5px"></i>PDF</button>
+        <button class="modal-close" style="position:static" onclick="closeInvoiceDetailModal()">×</button>
+      </div>
+    </div>
+    <div style="padding:22px 24px;overflow-y:auto;flex:1" id="invDetailBody">
+      <!-- รายละเอียด inject ผ่าน JS -->
+    </div>
+  </div>
+</div>
+
 <!-- ===== PAYMENT MODAL ===== -->
 <div class="modal-overlay" id="payModal">
-  <div class="modal">
+  <div class="modal" style="max-width:500px;max-height:90vh;overflow-y:auto">
     <button class="modal-close" onclick="closePayModal()">×</button>
-    <div class="modal-title">PAYMENT</div>
-    <div class="modal-sub">ยืนยันการซื้อ Token Package</div>
-    <div class="summary-box">
-      <div class="summary-row"><span class="sl">Package</span><span class="sv" id="payPkgName">Pro</span></div>
-      <div class="summary-row"><span class="sl">Token</span><span class="sv" id="payPkgTokens">1,500 + 150 bonus</span></div>
-      <div class="summary-row"><span class="sl">ราคา Package</span><span class="sv" id="payExVat">฿1,000</span></div>
-      <div class="summary-row"><span class="sl">+ VAT 7%</span><span class="sv" id="payVat">฿70</span></div>
-      <div class="summary-row total"><span class="sl">ยอดชำระ</span><span class="sv" id="payTotal">฿1,070</span></div>
+    <div class="modal-title" id="payTitle">PAYMENT</div>
+    <div class="modal-sub" id="paySub">ยืนยันการซื้อ Token Package</div>
+
+    <!-- Step indicator -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+      <div id="payStepDot1" class="pay-step-dot active">1</div>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <div id="payStepDot2" class="pay-step-dot">2</div>
+      <span style="margin-left:6px" id="payStepLabel">ขั้นตอนที่ 1/2 · เลือกวิธีชำระเงิน</span>
     </div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px">ช่องทางชำระเงิน</div>
-    <div class="payment-methods">
-      <div class="pay-method selected" onclick="selectPayMethod(this)"><div class="pay-method-icon">🏦</div><div><div class="pay-method-name">PromptPay (QR)</div><div class="pay-method-desc">สแกน QR ชำระทันที</div></div><div class="pay-method-radio"></div></div>
-      <div class="pay-method" onclick="selectPayMethod(this)"><div class="pay-method-icon">💳</div><div><div class="pay-method-name">Credit / Debit Card</div><div class="pay-method-desc">Visa, MasterCard, JCB</div></div><div class="pay-method-radio"></div></div>
-      <div class="pay-method" onclick="selectPayMethod(this)"><div class="pay-method-icon">🏛</div><div><div class="pay-method-name">โอนผ่านธนาคาร</div><div class="pay-method-desc">แนบสลิป · Admin อนุมัติ 1-2 ชม.</div></div><div class="pay-method-radio"></div></div>
+
+    <div class="summary-box" id="paySummary">
+      <div class="summary-row"><span class="sl">Package</span><span class="sv">Pro</span></div>
+      <div class="summary-row total"><span class="sl">ยอดชำระ</span><span class="sv">฿1,070</span></div>
     </div>
-    <button class="btn btn-primary btn-lg" style="width:100%" onclick="doPayment()">ชำระเงิน ฿<span id="payBtnAmt">399.00</span> →</button>
+
+    <!-- ===== STEP 1: Method Selection ===== -->
+    <div id="payStep1">
+
+      <!-- Billing info (read-only company + optional contact) -->
+      <div style="font-size:12px;color:var(--text-muted);margin:16px 0 8px;text-transform:uppercase;letter-spacing:1px"><i class="fa-solid fa-file-invoice" style="margin-right:5px"></i>ออกใบกำกับภาษีในนาม</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <i class="fa-solid fa-building" style="color:var(--primary);font-size:16px;margin-top:2px"></i>
+          <div style="flex:1;min-width:0">
+            <div class="font-600" style="font-size:14px">บริษัท เดโม คอร์ปอเรชั่น จำกัด</div>
+            <div class="text-muted text-sm text-mono" style="margin-top:2px">Tax ID: 0-1055-XXXXX-XX-X</div>
+            <div class="text-muted text-sm" style="margin-top:2px">456 ถ.พระราม 9 แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพฯ 10310</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-muted);margin:0 0 10px;text-transform:uppercase;letter-spacing:1px"><i class="fa-solid fa-credit-card" style="margin-right:5px"></i>เลือกช่องทางชำระเงิน</div>
+      <div class="payment-methods">
+        <div class="pay-method selected" data-method="promptpay" onclick="selectPayMethod(this)"><div class="pay-method-icon">🏦</div><div><div class="pay-method-name">PromptPay (QR)</div><div class="pay-method-desc">สแกน QR ชำระทันที · ตัดยอดทันที</div></div><div class="pay-method-radio"></div></div>
+        <div class="pay-method" data-method="card" onclick="selectPayMethod(this)"><div class="pay-method-icon">💳</div><div><div class="pay-method-name">Credit / Debit Card</div><div class="pay-method-desc">Visa, MasterCard, JCB · ตัดยอดทันที</div></div><div class="pay-method-radio"></div></div>
+        <div class="pay-method" data-method="bank" onclick="selectPayMethod(this)"><div class="pay-method-icon">🏛</div><div><div class="pay-method-name">โอนผ่านธนาคาร</div><div class="pay-method-desc">แนบสลิป · Admin อนุมัติ 1–2 ชม.</div></div><div class="pay-method-radio"></div></div>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%;margin-top:18px" onclick="payGoStep2()">ถัดไป <i class="fa-solid fa-arrow-right" style="margin-left:6px"></i></button>
+    </div>
+
+    <!-- ===== STEP 2: Action ===== -->
+    <div id="payStep2" style="display:none">
+      <button class="btn btn-outline btn-sm" style="margin:14px 0" onclick="payBackStep1()"><i class="fa-solid fa-arrow-left" style="margin-right:5px"></i>เปลี่ยนวิธีชำระ</button>
+
+      <!-- ----- PromptPay action ----- -->
+      <div id="payAction-promptpay" class="pay-action">
+        <div style="text-align:center;padding:18px;background:var(--surface2);border:1px solid var(--border);border-radius:12px">
+          <div style="display:inline-block;padding:14px;background:#fff;border-radius:12px;margin-bottom:10px">
+            <div style="width:160px;height:160px;background:repeating-linear-gradient(45deg,#000 0 8px,#fff 8px 16px);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:monospace;color:#fff;text-shadow:0 0 4px #000;font-size:11px">[ QR DEMO ]</div>
+          </div>
+          <div class="font-600" style="font-size:15px;margin-bottom:4px"><i class="fa-solid fa-mobile-screen" style="margin-right:5px;color:var(--primary)"></i>สแกน QR ผ่านแอปธนาคาร</div>
+          <div class="text-muted text-sm">ยอดโอน <b class="text-mono" id="ppQrAmt" style="color:var(--primary)">฿1,070.00</b></div>
+          <div class="text-muted text-sm" style="margin-top:6px"><i class="fa-regular fa-clock"></i> หมดอายุใน 15 นาที</div>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:16px" onclick="doPayment()"><i class="fa-solid fa-check" style="margin-right:6px"></i>ฉันได้ชำระแล้ว</button>
+      </div>
+
+      <!-- ----- Credit/Debit Card action ----- -->
+      <div id="payAction-card" class="pay-action" style="display:none">
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้ถือบัตร</label>
+          <input type="text" class="form-input" placeholder="JOHN DOE" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">หมายเลขบัตร</label>
+          <input type="text" class="form-input" placeholder="0000 0000 0000 0000" maxlength="19" />
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">วันหมดอายุ</label>
+            <input type="text" class="form-input" placeholder="MM/YY" maxlength="5" />
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">CVV</label>
+            <input type="text" class="form-input" placeholder="123" maxlength="4" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:8px" onclick="doPayment()"><i class="fa-solid fa-lock" style="margin-right:6px"></i>ชำระ <span class="text-mono" id="cardPayAmt">฿1,070.00</span></button>
+      </div>
+
+      <!-- ----- Bank Transfer action ----- -->
+      <div id="payAction-bank" class="pay-action" style="display:none">
+        <!-- Bank account info card -->
+        <div style="background:linear-gradient(135deg,rgba(0,169,80,.08),rgba(0,169,80,.02));border:1px solid rgba(0,169,80,.3);border-radius:14px;padding:18px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(0,169,80,.2)">
+            <div style="width:48px;height:48px;border-radius:12px;background:#00A950;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;font-family:var(--font-heading);box-shadow:0 4px 12px rgba(0,169,80,.3)">K</div>
+            <div style="flex:1">
+              <div class="font-600" style="font-size:15px">ธนาคารกสิกรไทย</div>
+              <div class="text-muted text-sm">KASIKORNBANK · KBANK</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <div class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">ชื่อบัญชี</div>
+            <div class="font-600" style="font-size:15px">RealFact AI Co., Ltd.</div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <div class="text-muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">เลขที่บัญชี</div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="text-mono font-600" style="font-size:22px;letter-spacing:1px;color:var(--text)">123-4-56789-0</div>
+              <button class="btn btn-outline btn-sm" onclick="copyBankAcc(this)" style="padding:5px 12px"><i class="fa-regular fa-copy" style="margin-right:4px"></i>คัดลอก</button>
+            </div>
+          </div>
+
+          <div style="padding-top:12px;border-top:1px solid rgba(0,169,80,.2);display:flex;justify-content:space-between;align-items:center">
+            <div class="text-muted text-sm">ยอดที่ต้องโอน</div>
+            <div class="text-mono font-600" style="font-size:20px;color:var(--primary)" id="bankAmt">฿1,070.00</div>
+          </div>
+        </div>
+
+        <!-- Slip upload -->
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px"><i class="fa-solid fa-paperclip" style="margin-right:5px"></i>แนบสลิปโอนเงิน <span style="color:var(--error)">*</span></div>
+
+        <label for="slipFileInput" id="slipDropzone" style="display:block;border:2px dashed var(--border);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2)">
+          <div id="slipPlaceholder">
+            <div style="font-size:34px;color:var(--text-muted);margin-bottom:6px"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+            <div style="font-size:13px;color:var(--text);font-weight:600">คลิกเพื่อแนบสลิป</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">รองรับ JPG, PNG, PDF · ไม่เกิน 5 MB</div>
+          </div>
+          <div id="slipPreview" style="display:none">
+            <img id="slipPreviewImg" style="max-width:100%;max-height:140px;border-radius:8px;margin-bottom:8px" />
+            <div id="slipFileName" style="font-size:12px;color:var(--text);font-weight:600"></div>
+            <div style="font-size:11px;color:var(--success);margin-top:4px"><i class="fa-solid fa-circle-check"></i> แนบสลิปเรียบร้อย — คลิกเพื่อเปลี่ยน</div>
+          </div>
+        </label>
+        <input type="file" id="slipFileInput" accept="image/*,application/pdf" style="display:none" onchange="onSlipSelected(this)" />
+
+        <div class="form-group" style="margin-top:12px;margin-bottom:0">
+          <label class="form-label" style="font-size:11px">หมายเหตุ (ไม่บังคับ)</label>
+          <input type="text" class="form-input" id="slipNote" placeholder="เช่น เลขที่อ้างอิงการโอน, เวลาโอน" style="font-size:13px" />
+        </div>
+
+        <div style="font-size:11px;color:var(--text-muted);margin:10px 0;text-align:center"><i class="fa-solid fa-shield-halved" style="margin-right:4px"></i>หลักฐานจะถูกส่งให้ Backoffice ตรวจสอบและอนุมัติภายใน 1–2 ชม.</div>
+
+        <button class="btn btn-primary btn-lg" style="width:100%;margin-top:6px" onclick="doPayment()"><i class="fa-solid fa-paper-plane" style="margin-right:6px"></i>ส่งหลักฐาน — <span class="text-mono" id="bankPayAmt">฿1,070.00</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUBMITTED MODAL (รอ Backoffice อนุมัติ) ===== -->
+<div class="modal-overlay" id="submittedModal">
+  <div class="modal" style="text-align:center;padding:40px;max-width:440px">
+    <div style="font-size:56px;margin-bottom:16px">📤</div>
+    <div class="modal-title" style="font-size:26px;display:flex;justify-content:center">ส่งหลักฐานเรียบร้อย</div>
+    <div class="text-muted" style="margin:8px 0 20px;font-size:13px">หลักฐานถูกส่งไปยัง Backoffice แล้ว<br>ทีมงานจะตรวจสอบและอนุมัติภายใน 1–2 ชั่วโมง</div>
+    <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left">
+      <div class="text-sm" style="display:flex;align-items:center;gap:8px;color:#f59e0b;font-weight:600;margin-bottom:6px"><i class="fa-solid fa-clock"></i> สถานะ: รออนุมัติ</div>
+      <div class="text-sm text-muted">คุณจะได้รับ Email แจ้งเตือนเมื่อ Admin อนุมัติ และระบบจะเปลี่ยน Plan/เพิ่ม Token ให้อัตโนมัติ</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="closeSubmittedModal()">รับทราบ</button>
   </div>
 </div>
 
@@ -1876,7 +2204,7 @@
       <div class="text-muted text-sm mb-4">Token เพิ่มขึ้น</div>
       <div style="font-family:var(--font-heading);font-size:40px;color:var(--primary);letter-spacing:3px" id="successTokenAmt">+1,650</div>
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="closeSuccessModal()">ดู e-Receipt</button>
+    <button class="btn btn-primary" style="width:100%" onclick="closeSuccessModal()">ดู Billing</button>
   </div>
 </div>
 
@@ -2218,7 +2546,7 @@ function toggleSidebarLock() {
 /* ===== NAVIGATION ===== */
 const PAGE_NAMES = {
   dashboard:'DASHBOARD', devices:'DEVICES', avatars:'AVATAR PRESETS',
-  wallet:'WALLET', history:'SESSION HISTORY', receipt:'e-RECEIPT'
+  wallet:'WALLET & PACKAGE', history:'SESSION HISTORY', receipt:'BILLING'
 };
 function showPage(id, navBtn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2352,33 +2680,529 @@ function confirmLoad() { closeLoadModal(); }
 /* ===== PAYMENT ===== */
 const fmt = n => n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 let currentPkg = {};
+let payMode = 'topup'; // 'topup' | 'upgrade'
+let slipFile = null;
+
 function openPayModal(tokens, exVat, name, bonus) {
+  payMode = 'topup';
   const vatAmt = Math.round(exVat * 0.07 * 100) / 100;
   const incVat = Math.round((exVat + vatAmt) * 100) / 100;
   currentPkg = { tokens, exVat, vatAmt, incVat, name, bonus };
-  document.getElementById('payPkgName').textContent   = name + ' Package';
-  document.getElementById('payPkgTokens').textContent = tokens.toLocaleString() + (bonus ? ` + ${bonus.toLocaleString()} bonus` : '');
-  document.getElementById('payExVat').textContent     = '฿' + fmt(exVat);
-  document.getElementById('payVat').textContent       = '฿' + fmt(vatAmt);
-  document.getElementById('payTotal').textContent     = '฿' + fmt(incVat);
-  document.getElementById('payBtnAmt').textContent    = fmt(incVat);
+
+  document.getElementById('payTitle').textContent = 'PAYMENT';
+  document.getElementById('paySub').textContent   = 'ยืนยันการซื้อ Token Package';
+  document.getElementById('paySummary').innerHTML = `
+    <div class="summary-row"><span class="sl">Package</span><span class="sv">${name} Package</span></div>
+    <div class="summary-row"><span class="sl">Token</span><span class="sv">${tokens.toLocaleString()}${bonus ? ' + ' + bonus.toLocaleString() + ' bonus' : ''}</span></div>
+    <div class="summary-row"><span class="sl">ราคา Package</span><span class="sv">฿${fmt(exVat)}</span></div>
+    <div class="summary-row"><span class="sl">+ VAT 7%</span><span class="sv">฿${fmt(vatAmt)}</span></div>
+    <div class="summary-row total"><span class="sl">ยอดชำระ</span><span class="sv">฿${fmt(incVat)}</span></div>
+  `;
+  resetPayModalState();
   document.getElementById('payModal').classList.add('open');
 }
+
+function openPayModalForUpgrade(fromPlan, toPlan, exVat, daysLeft) {
+  payMode = 'upgrade';
+  const vatAmt = Math.round(exVat * 0.07 * 100) / 100;
+  const incVat = Math.round((exVat + vatAmt) * 100) / 100;
+  currentPkg = { fromPlan, toPlan, exVat, vatAmt, incVat, daysLeft };
+
+  document.getElementById('payTitle').textContent = 'UPGRADE PAYMENT';
+  document.getElementById('paySub').textContent   = `ชำระค่า Pro-rata เพื่อ Upgrade Plan`;
+  document.getElementById('paySummary').innerHTML = `
+    <div class="summary-row"><span class="sl">Plan</span><span class="sv"><span class="text-muted">${fromPlan}</span> → <b style="color:var(--primary)">${toPlan}</b></span></div>
+    <div class="summary-row"><span class="sl">วันที่เหลือ</span><span class="sv text-mono">${daysLeft} / 30 วัน</span></div>
+    <div class="summary-row"><span class="sl">Pro-rata (net)</span><span class="sv text-mono">฿${fmt(exVat)}</span></div>
+    <div class="summary-row"><span class="sl">+ VAT 7%</span><span class="sv text-mono">฿${fmt(vatAmt)}</span></div>
+    <div class="summary-row total"><span class="sl">ยอดชำระ</span><span class="sv text-mono">฿${fmt(incVat)}</span></div>
+  `;
+  resetPayModalState();
+  document.getElementById('payModal').classList.add('open');
+}
+
+function resetPayModalState() {
+  // reset to step 1 + PromptPay default
+  payGoStep(1);
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+  const first = document.querySelector('.pay-method[data-method="promptpay"]');
+  if (first) first.classList.add('selected');
+  // clear slip
+  slipFile = null;
+  const slipInput = document.getElementById('slipFileInput');
+  if (slipInput) slipInput.value = '';
+  const slipPrev = document.getElementById('slipPreview');
+  if (slipPrev) slipPrev.style.display = 'none';
+  const slipPh = document.getElementById('slipPlaceholder');
+  if (slipPh) slipPh.style.display = '';
+  const slipNote = document.getElementById('slipNote');
+  if (slipNote) slipNote.value = '';
+  // sync amount in all step-2 placeholders
+  const amtTxt = '฿' + fmt(currentPkg.incVat);
+  ['ppQrAmt','cardPayAmt','bankAmt','bankPayAmt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = amtTxt;
+  });
+}
+
 function closePayModal() { document.getElementById('payModal').classList.remove('open'); }
+
 function selectPayMethod(el) {
   document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
   el.classList.add('selected');
 }
-function doPayment() {
-  closePayModal();
-  const total = currentPkg.tokens + (currentPkg.bonus||0);
-  document.getElementById('successTokenAmt').textContent = '+' + total.toLocaleString();
-  document.getElementById('successModal').classList.add('open');
-  document.getElementById('walletBalance').textContent = (2450 + total).toLocaleString();
+
+function payGoStep(step) {
+  document.getElementById('payStep1').style.display = step === 1 ? '' : 'none';
+  document.getElementById('payStep2').style.display = step === 2 ? '' : 'none';
+  document.getElementById('payStepDot1').className = 'pay-step-dot ' + (step === 1 ? 'active' : 'done');
+  document.getElementById('payStepDot2').className = 'pay-step-dot ' + (step === 2 ? 'active' : '');
+  const selected = document.querySelector('.pay-method.selected');
+  const methodName = selected ? selected.querySelector('.pay-method-name').textContent : '';
+  document.getElementById('payStepLabel').textContent = step === 1
+    ? 'ขั้นตอนที่ 1/2 · เลือกวิธีชำระเงิน'
+    : 'ขั้นตอนที่ 2/2 · ' + methodName;
 }
+
+function payGoStep2() {
+  const selected = document.querySelector('.pay-method.selected');
+  if (!selected) return;
+  const method = selected.dataset.method;
+  // show only the matching action panel
+  document.querySelectorAll('#payStep2 .pay-action').forEach(p => p.style.display = 'none');
+  const target = document.getElementById('payAction-' + method);
+  if (target) target.style.display = '';
+  payGoStep(2);
+}
+
+function payBackStep1() { payGoStep(1); }
+
+function copyBankAcc(btn) {
+  const acc = '1234567890';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(acc).then(() => {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right:4px"></i>คัดลอกแล้ว';
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    });
+  }
+}
+
+function onSlipSelected(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert('ไฟล์ใหญ่เกิน 5 MB');
+    input.value = '';
+    return;
+  }
+  slipFile = file;
+  document.getElementById('slipFileName').textContent = file.name;
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('slipPreviewImg').src = e.target.result;
+      document.getElementById('slipPreviewImg').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    document.getElementById('slipPreviewImg').style.display = 'none';
+  }
+  document.getElementById('slipPlaceholder').style.display = 'none';
+  document.getElementById('slipPreview').style.display = '';
+}
+
+function doPayment() {
+  const selectedMethod = document.querySelector('.pay-method.selected');
+  const method = selectedMethod ? selectedMethod.dataset.method : 'promptpay';
+  const isBank = method === 'bank';
+
+  if (isBank && !slipFile) {
+    alert('กรุณาแนบสลิปก่อนส่งหลักฐาน');
+    return;
+  }
+
+  closePayModal();
+
+  if (isBank) {
+    // ส่งให้ Backoffice อนุมัติ — ยังไม่ apply ทันที
+    showSubmittedModal();
+    return;
+  }
+
+  // ชำระทันที
+  if (payMode === 'upgrade') {
+    applyPlanChange(currentPkg.toPlan);
+    showSuccessModal('upgrade');
+  } else {
+    const total = currentPkg.tokens + (currentPkg.bonus||0);
+    document.getElementById('walletBalance').textContent = (2450 + total).toLocaleString();
+    showSuccessModal('topup', total);
+  }
+}
+
+function showSuccessModal(mode, addedTokens) {
+  if (mode === 'upgrade') {
+    document.querySelector('#successModal .modal-title').textContent = 'Upgrade สำเร็จ!';
+    document.querySelector('#successModal .text-muted').textContent  = 'Plan ใหม่เริ่มมีผลทันที · Bonus เก่าใช้ได้จนหมดรอบ';
+    document.getElementById('successTokenAmt').textContent = currentPkg.toPlan;
+  } else {
+    document.querySelector('#successModal .modal-title').textContent = 'ชำระเงินสำเร็จ!';
+    document.querySelector('#successModal .text-muted').textContent  = 'Token ถูกเพิ่มเข้า Wallet แล้ว พร้อมใช้ทุก Device';
+    document.getElementById('successTokenAmt').textContent = '+' + (addedTokens||0).toLocaleString();
+  }
+  document.getElementById('successModal').classList.add('open');
+}
+
+function showSubmittedModal() {
+  document.getElementById('submittedModal').classList.add('open');
+}
+function closeSubmittedModal() {
+  document.getElementById('submittedModal').classList.remove('open');
+}
+
 function closeSuccessModal() {
   document.getElementById('successModal').classList.remove('open');
-  showPage('receipt', null);
+  if (payMode !== 'upgrade') showPage('receipt', null);
+}
+
+/* ===== PACKAGE TAB SWITCHER ===== */
+function switchPkgTab(tab) {
+  document.getElementById('pkgTab-sub').style.display    = tab === 'sub'   ? '' : 'none';
+  document.getElementById('pkgTab-token').style.display  = tab === 'token' ? '' : 'none';
+  document.getElementById('pkgTabBtn-sub').classList.toggle('active', tab === 'sub');
+  document.getElementById('pkgTabBtn-token').classList.toggle('active', tab === 'token');
+}
+
+/* ===== SUBSCRIPTION PLAN ===== */
+const PLAN_PRICES = { FREE: 0, STARTER: 990, PRO: 2990, BUSINESS: 7990 };
+const CYCLE_DAYS  = 30;
+const DAYS_LEFT   = 15; // mock: วันที่ 15 ของรอบ
+let currentPlan   = 'STARTER';
+let pendingPlan   = null;
+
+function selectPlan(planName) {
+  if (planName === currentPlan) return;
+  if (planName === 'ENTERPRISE') {
+    alert('กรุณาติดต่อฝ่ายขายผ่านอีเมล sales@realfact.ai หรือโทร 02-xxx-xxxx');
+    return;
+  }
+  openPlanChangeModal(planName);
+}
+
+function openPlanChangeModal(targetPlan) {
+  pendingPlan = targetPlan;
+  const oldPrice = PLAN_PRICES[currentPlan];
+  const newPrice = PLAN_PRICES[targetPlan];
+  const isUpgrade = newPrice > oldPrice;
+
+  // Header
+  document.getElementById('pcmTitle').textContent = isUpgrade ? 'UPGRADE PLAN' : 'DOWNGRADE PLAN';
+  document.getElementById('pcmSub').textContent   = isUpgrade
+    ? 'คำนวณ Pro-rata จากวันที่เหลือในรอบบิล'
+    : 'คำนวณ Extended Days จากมูลค่าที่เหลือ';
+
+  // Plan transition
+  document.getElementById('pcmFrom').textContent      = currentPlan;
+  document.getElementById('pcmFromPrice').textContent = oldPrice === 0 ? 'ฟรี' : '฿' + oldPrice.toLocaleString() + '/เดือน';
+  document.getElementById('pcmTo').textContent        = targetPlan;
+  document.getElementById('pcmToPrice').textContent   = newPrice === 0 ? 'ฟรี' : '฿' + newPrice.toLocaleString() + '/เดือน';
+  document.getElementById('pcmDaysLeft').textContent  = DAYS_LEFT;
+
+  const calcBox     = document.getElementById('pcmCalcBox');
+  const calcTitle   = document.getElementById('pcmCalcTitle');
+  const confirmBtn  = document.getElementById('pcmConfirmBtn');
+  const bonusNote   = document.getElementById('pcmBonusNote');
+
+  if (isUpgrade) {
+    // ===== UPGRADE: Pro-rata Credit =====
+    const creditOld         = (DAYS_LEFT * oldPrice) / CYCLE_DAYS;
+    const newCostRemaining  = (DAYS_LEFT * newPrice) / CYCLE_DAYS;
+    const amountDue         = newCostRemaining - creditOld;
+
+    calcTitle.textContent = 'PRO-RATA CALCULATION';
+    calcBox.innerHTML = `
+      <div class="summary-row"><span class="sl">1. Credit คงเหลือจาก ${currentPlan}</span><span class="sv text-mono">${DAYS_LEFT} × (${oldPrice.toLocaleString()}/30) = ฿${creditOld.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+      <div class="summary-row"><span class="sl">2. ค่า ${targetPlan} ช่วงที่เหลือ</span><span class="sv text-mono">${DAYS_LEFT} × (${newPrice.toLocaleString()}/30) = ฿${newCostRemaining.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+      <div class="summary-row total"><span class="sl">3. ยอดที่ต้องจ่ายเพิ่ม</span><span class="sv text-mono" style="color:var(--primary)">฿${amountDue.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+    `;
+    bonusNote.style.display = '';
+    confirmBtn.innerHTML = `ยืนยัน Upgrade — ฿${amountDue.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+    confirmBtn.style.background = '';
+  } else {
+    // ===== DOWNGRADE: Extended Days =====
+    const remainingValue = (DAYS_LEFT * oldPrice) / CYCLE_DAYS;
+    const dailyNew       = newPrice / CYCLE_DAYS;
+    const extendedDays   = dailyNew > 0 ? Math.floor(remainingValue / dailyNew) : 0;
+    const totalDays      = CYCLE_DAYS + extendedDays;
+
+    calcTitle.textContent = 'EXTENDED DAYS CALCULATION';
+    if (newPrice === 0) {
+      // Downgrade เป็น FREE
+      calcBox.innerHTML = `
+        <div class="summary-row"><span class="sl">1. Remaining Value จาก ${currentPlan}</span><span class="sv text-mono">${DAYS_LEFT} × (${oldPrice.toLocaleString()}/30) = ฿${remainingValue.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+        <div class="summary-row"><span class="sl">2. Plan ใหม่ (FREE)</span><span class="sv text-mono">ไม่มีค่าใช้จ่าย</span></div>
+        <div class="summary-row total"><span class="sl">3. มูลค่าคงเหลือ</span><span class="sv text-mono" style="color:var(--text-muted)">ไม่ได้รับคืน</span></div>
+      `;
+    } else {
+      calcBox.innerHTML = `
+        <div class="summary-row"><span class="sl">1. Remaining Value จาก ${currentPlan}</span><span class="sv text-mono">${DAYS_LEFT} × (${oldPrice.toLocaleString()}/30) = ฿${remainingValue.toLocaleString(undefined,{maximumFractionDigits:2})}</span></div>
+        <div class="summary-row"><span class="sl">2. Daily Rate ${targetPlan}</span><span class="sv text-mono">${newPrice.toLocaleString()} / 30 = ฿${dailyNew.toLocaleString(undefined,{maximumFractionDigits:2})}/วัน</span></div>
+        <div class="summary-row total"><span class="sl">3. Extended Days</span><span class="sv text-mono" style="color:var(--success)">+${extendedDays} วัน (รวม ${totalDays} วัน)</span></div>
+      `;
+    }
+    bonusNote.style.display = 'none';
+    confirmBtn.innerHTML = 'ยืนยัน Downgrade';
+    confirmBtn.style.background = 'var(--text-muted)';
+  }
+
+  document.getElementById('planChangeModal').classList.add('open');
+}
+
+function closePlanChangeModal() {
+  document.getElementById('planChangeModal').classList.remove('open');
+  pendingPlan = null;
+}
+
+function confirmPlanChange() {
+  if (!pendingPlan) return;
+  const oldPrice = PLAN_PRICES[currentPlan];
+  const newPrice = PLAN_PRICES[pendingPlan];
+  const isUpgrade = newPrice > oldPrice;
+
+  if (isUpgrade) {
+    // คำนวณ pro-rata อีกรอบ (ตรงกับ modal ที่แสดง)
+    const creditOld        = (DAYS_LEFT * oldPrice) / CYCLE_DAYS;
+    const newCostRemaining = (DAYS_LEFT * newPrice) / CYCLE_DAYS;
+    const amountDue        = newCostRemaining - creditOld;
+    const fromPlan = currentPlan;
+    const toPlan   = pendingPlan;
+    closePlanChangeModal();
+    openPayModalForUpgrade(fromPlan, toPlan, amountDue, DAYS_LEFT);
+    pendingPlan = toPlan; // เก็บไว้ให้ doPayment ใช้
+    currentPkg.toPlan = toPlan; // sync
+  } else {
+    // Downgrade: ไม่ต้องชำระเงิน → apply ทันที
+    applyPlanChange(pendingPlan);
+    closePlanChangeModal();
+  }
+}
+
+function applyPlanChange(planName) {
+  document.querySelectorAll('#page-wallet .package-card').forEach(c => {
+    c.classList.remove('active');
+    const chip = c.querySelector('.pkg-active-chip');
+    if (chip) chip.remove();
+    const btn = c.querySelector('.pkg-buy-btn');
+    if (btn) {
+      btn.disabled = false;
+      btn.style.background = '';
+      btn.style.opacity = '';
+      btn.style.transform = '';
+      btn.style.pointerEvents = '';
+      btn.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Upgrade';
+    }
+  });
+  const target = [...document.querySelectorAll('#page-wallet .pkg-plan-name')]
+    .find(el => el.textContent.trim().toUpperCase().includes(planName));
+  if (target) {
+    const card = target.closest('.package-card');
+    card.classList.add('active');
+    const chip = document.createElement('span');
+    chip.className = 'pkg-active-chip';
+    chip.textContent = '● ใช้งานอยู่';
+    card.appendChild(chip);
+    const btn = card.querySelector('.pkg-buy-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.style.background = 'var(--success)';
+      btn.style.opacity = '1';
+      btn.style.transform = 'none';
+      btn.style.pointerEvents = 'auto';
+      btn.innerHTML = '✓ Plan ปัจจุบัน';
+    }
+  }
+  currentPlan = planName;
+}
+
+/* ===== INVOICE DETAIL ===== */
+const METHOD_LABEL = {
+  promptpay: 'PromptPay (QR Code)',
+  bank:      'โอนผ่านธนาคาร',
+  card:      'Credit / Debit Card',
+  system:    'System (Demo Credit)',
+  '—':       '—'
+};
+
+function openInvoiceDetail(rowEl) {
+  if (!rowEl) return;
+  const d = rowEl.dataset;
+  document.getElementById('invDetailNo').textContent = d.invNo || '—';
+  document.getElementById('invDetailBody').innerHTML = buildInvoiceHtml(d);
+  document.getElementById('invoiceDetailModal').classList.add('open');
+}
+
+function closeInvoiceDetailModal() {
+  document.getElementById('invoiceDetailModal').classList.remove('open');
+}
+
+function buildInvoiceHtml(d) {
+  const isPaid    = d.status === 'paid';
+  const isPending = d.status === 'pending';
+  const isDemo    = d.status === 'demo';
+  const methodLabel = METHOD_LABEL[d.method] || d.method || '—';
+
+  // ==== Status banner + payment/slip section ====
+  let topSection = '';
+  if (isPaid) {
+    topSection = `
+      <div class="inv-status-banner paid"><i class="fa-solid fa-circle-check"></i>ชำระเงินเรียบร้อยแล้ว</div>
+      <div class="inv-paid-details">
+        <div><div class="inv-pd-label">วันที่ชำระ</div><div class="inv-pd-value mono">${d.date} ${d.time || ''}</div></div>
+        <div><div class="inv-pd-label">ช่องทาง</div><div class="inv-pd-value">${methodLabel}</div></div>
+        <div><div class="inv-pd-label">เลขอ้างอิง</div><div class="inv-pd-value mono">${d.ref || '—'}</div></div>
+        <div><div class="inv-pd-label">ตรวจสอบโดย</div><div class="inv-pd-value">ระบบอัตโนมัติ</div></div>
+      </div>
+    `;
+  } else if (isPending) {
+    const slipUrl  = d.slipUrl  || '#';
+    const slipName = d.slipName || 'slip.jpg';
+    const slipSize = d.slipSize || '—';
+    const slipDate = d.slipUploaded || d.date;
+    topSection = `
+      <div class="inv-status-banner pending"><i class="fa-regular fa-clock"></i>รอตรวจสอบสลิปการโอนเงิน · 1–2 ชม.</div>
+      <div class="inv-paid-details" style="grid-template-columns:repeat(4,1fr)">
+        <div><div class="inv-pd-label">ช่องทาง</div><div class="inv-pd-value">Bank Transfer</div></div>
+        <div><div class="inv-pd-label">เลข REF.</div><div class="inv-pd-value mono">${d.ref || '—'}</div></div>
+        <div><div class="inv-pd-label">สถานะ</div><div class="inv-pd-value"><span class="chip chip-orange" style="font-size:11px">รอตรวจสอบ</span></div></div>
+        <div><div class="inv-pd-label">วันที่แนบ</div><div class="inv-pd-value mono">${slipDate}</div></div>
+      </div>
+      <div class="inv-slip-section-label">หลักฐานการชำระเงิน</div>
+      <div class="inv-slip-file">
+        <div class="inv-slip-file-icon"><i class="fa-regular fa-image"></i></div>
+        <div class="inv-slip-file-info">
+          <div class="inv-slip-file-name">${slipName}</div>
+          <div class="inv-slip-file-meta">${slipSize} · อัปโหลดเมื่อ ${slipDate}</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="window.open('${slipUrl}','_blank','noopener,noreferrer')"><i class="fa-regular fa-eye" style="margin-right:5px"></i>ดูสลิป</button>
+      </div>
+      <div class="text-muted text-sm" style="margin:0 0 14px;text-align:center"><i class="fa-solid fa-shield-halved" style="margin-right:4px"></i>หลักฐานถูกส่งให้ Backoffice ตรวจสอบแล้ว — รออีเมลยืนยัน</div>
+    `;
+  } else if (isDemo) {
+    topSection = `
+      <div class="inv-status-banner demo"><i class="fa-solid fa-gift"></i>Demo Credit · เครดิตทดลองใช้ไม่มีค่าใช้จ่าย</div>
+    `;
+  }
+
+  // ==== Status chip ใน header ====
+  const headerChip = isPaid
+    ? '<span class="chip chip-green" style="font-size:12px">✅ ชำระแล้ว</span>'
+    : isPending
+      ? '<span class="chip chip-orange" style="font-size:12px"><i class="fa-regular fa-clock"></i> รออนุมัติ</span>'
+      : '<span class="chip chip-orange" style="font-size:12px">🎁 Demo</span>';
+
+  // ==== Doc title ====
+  const docTitle = isPending ? 'ใบแจ้งหนี้ / Bill' : (isDemo ? 'Demo Receipt' : 'TAX INVOICE');
+  const docSub   = isPending ? 'ใบแจ้งหนี้ชั่วคราว · ใบกำกับภาษีจะออกหลังตรวจสอบ' : 'ใบกำกับภาษี / ใบเสร็จรับเงิน';
+
+  // ==== Footer ====
+  const footerHtml = isDemo
+    ? '<div><div class="inv-footer-item"><i class="fa-solid fa-gift" style="margin-right:5px;color:var(--primary)"></i>ประเภท: <strong>Demo Credit</strong></div></div><div class="inv-footer-item" style="text-align:right">เครดิตทดลองใช้</div>'
+    : `<div><div class="inv-footer-item"><i class="fa-solid fa-qrcode" style="margin-right:5px;color:var(--primary)"></i>ช่องทางชำระ: <strong>${methodLabel}</strong></div><div class="inv-footer-item">เลขอ้างอิง: <strong class="text-mono">${d.ref || '—'}</strong></div></div><div class="inv-footer-item" style="text-align:right">ออกโดยระบบอัตโนมัติ<br>ใบกำกับภาษีนี้ใช้ได้โดยไม่ต้องลงนาม</div>`;
+
+  // ==== Token line (ถ้ามี) ====
+  const tokenLine = (d.tokens && d.tokens !== '—')
+    ? `<div class="inv-item-desc">จำนวน Token: ${d.tokens}</div>`
+    : '';
+
+  return `
+    ${topSection}
+    <div class="inv-card in-modal">
+      <div class="inv-head">
+        <div>
+          <div class="inv-brand-name">REALFACTAVATAR</div>
+          <div class="inv-brand-sub">บริษัท เรียลแฟคท์ เอไอ จำกัด</div>
+          <div class="inv-brand-sub">เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3</div>
+          <div class="inv-brand-sub">123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย กทม. 10110</div>
+        </div>
+        <div class="inv-doc-info">
+          <div class="inv-doc-title">${docTitle}</div>
+          <div class="inv-doc-title" style="font-size:12px;letter-spacing:1px;color:var(--text-muted)">${docSub}</div>
+          <div class="inv-doc-num">${d.invNo}</div>
+          <div class="inv-doc-date">วันที่: ${d.date} · ${d.time || ''}</div>
+          <div style="margin-top:6px">${headerChip}</div>
+        </div>
+      </div>
+      <div class="inv-parties">
+        <div class="inv-party">
+          <div class="inv-party-label"><i class="fa-solid fa-building" style="margin-right:4px"></i>ผู้ออกใบกำกับภาษี (Seller)</div>
+          <div class="inv-party-name">บริษัท เรียลแฟคท์ เอไอ จำกัด</div>
+          <div class="inv-party-detail">
+            เลขประจำตัวผู้เสียภาษี: 0-1055-68005-12-3<br>
+            123 ถ.สุขุมวิท แขวงคลองเตย เขตคลองเตย<br>
+            กรุงเทพมหานคร 10110<br>
+            โทร: 02-XXX-XXXX
+          </div>
+        </div>
+        <div class="inv-party">
+          <div class="inv-party-label"><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>ออกให้แก่ (Bill To)</div>
+          <div class="inv-party-name">บริษัท เดโม คอร์ปอเรชั่น จำกัด</div>
+          <div class="inv-party-detail">
+            เลขประจำตัวผู้เสียภาษี: 0-1055-XXXXX-XX-X<br>
+            456 ถ.พระราม 9 แขวงห้วยขวาง<br>
+            เขตห้วยขวาง กรุงเทพมหานคร 10310
+          </div>
+        </div>
+      </div>
+      <table class="inv-items">
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th>รายการ / Description</th>
+            <th style="width:60px;text-align:center">จำนวน</th>
+            <th style="width:110px;text-align:right">ราคา/หน่วย</th>
+            <th style="width:110px;text-align:right">รวม</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-muted">1</td>
+            <td>
+              <div class="inv-item-name">${d.package}</div>
+              <div class="inv-item-desc">${d.packageDesc || ''}</div>
+              ${tokenLine}
+              <div class="inv-item-desc">อ้างอิง: ${d.ref || '—'}</div>
+            </td>
+            <td class="text-mono" style="text-align:center">1</td>
+            <td class="text-mono" style="text-align:right">฿${d.subtotal}</td>
+            <td class="text-mono" style="text-align:right">฿${d.subtotal}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="inv-summary">
+        <div class="inv-summary-table">
+          <div class="inv-summary-row"><span class="isl">ราคาก่อนภาษี (Subtotal)</span><span class="isv">฿${d.subtotal}</span></div>
+          <div class="inv-summary-row"><span class="isl">ภาษีมูลค่าเพิ่ม 7% (VAT)</span><span class="isv">฿${d.vat}</span></div>
+          <div class="inv-summary-total"><span class="isl">ยอดชำระรวมภาษี</span><span class="isv">฿${d.total}</span></div>
+        </div>
+      </div>
+      <div class="inv-footer">${footerHtml}</div>
+    </div>
+  `;
+}
+
+/* ===== SESSION DETAIL ===== */
+function openSessionDetail(sessionId, date, time, amount, after, before) {
+  document.getElementById('sdSessionId').textContent = sessionId;
+  document.getElementById('sdDate').textContent      = date;
+  document.getElementById('sdTime').textContent      = time;
+  document.getElementById('sdBefore').textContent    = before;
+  document.getElementById('sdAmount').textContent    = amount;
+  document.getElementById('sdAfter').textContent     = after;
+  document.getElementById('sessionDetailModal').classList.add('open');
+}
+function closeSessionDetailModal() {
+  document.getElementById('sessionDetailModal').classList.remove('open');
 }
 
 /* ===== OTP ===== */
