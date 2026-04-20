@@ -302,6 +302,31 @@
                 </div>
               </div>
 
+              ${(() => {
+                const resolved = d.resolveSnapshotForTenant(stl.tenantId, stl.date);
+                if (resolved) {
+                  return `<div class="card p-12 mb-20" style="background:var(--surface2);border-left:3px solid var(--primary);">
+                    <div class="flex items-center gap-12">
+                      <i class="fa-solid fa-camera" style="color:var(--primary);"></i>
+                      <div class="flex-1">
+                        <div class="text-xs text-muted uppercase">Snapshot ใช้ ณ วันที่ settlement</div>
+                        <div class="font-600 text-sm" style="cursor:pointer;text-decoration:underline;" onclick="App.closeModal();setTimeout(()=>{App.navigate('cost-snapshots');setTimeout(()=>window.Pages.snapshots._showDetail('${resolved.id}'),200)},100);">${resolved.name} <span class="mono text-xs text-dim">(${resolved.id})</span></div>
+                      </div>
+                      <div class="flex gap-6">${d.snapshotStatusChip(resolved)}<span class="chip chip-blue">${resolved.services.length} svc frozen</span></div>
+                    </div>
+                  </div>`;
+                }
+                return `<div class="card p-12 mb-20" style="background:var(--surface2);border-left:3px solid #6b7280;">
+                  <div class="flex items-center gap-12">
+                    <i class="fa-solid fa-bolt" style="color:#6b7280;"></i>
+                    <div class="flex-1">
+                      <div class="text-xs text-muted uppercase">ใช้ Live Price ณ วันที่ settlement</div>
+                      <div class="font-600 text-sm">💱 Live (cost × live margin) — ไม่มี Snapshot active สำหรับ tenant นี้</div>
+                    </div>
+                  </div>
+                </div>`;
+              })()}
+
               <div class="grid-4 gap-12 mb-20">
                 <div class="card p-12">
                   <div class="text-xs text-muted mb-4">ต้นทุนรวม (TOTAL COST)</div>

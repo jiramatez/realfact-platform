@@ -11,6 +11,7 @@
     'hub-dashboard':     { title: 'Dashboard',        module: 'hubDashboard' },
     'hub-subscriptions': { title: 'Subscriptions',    module: 'hubSubscriptions' },
     'hub-billing':       { title: 'Billing',          module: 'hubBilling' },
+    'hub-pricing':       { title: 'Pricing',          module: 'hubPricing' },
     'hub-team':          { title: 'Team',             module: 'hubTeam' },
     'hub-wallet':        { title: 'Wallet',           module: 'hubWallet' },
     'hub-usage':         { title: 'Usage Report',     module: 'hubUsage' },

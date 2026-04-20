@@ -12,7 +12,7 @@
     'tenants':         { title: 'Tenant Management',  module: 'tenants',         ctx: 'backoffice' },
     'cost-pricing':        { title: 'Cost Configuration',    module: 'costPricing',        ctx: 'backoffice' },
     'cost-margin':         { title: 'Margin Configuration',  module: 'costMargin',         ctx: 'backoffice' },
-    'cost-snapshots':      { title: 'Pricing Snapshots',     module: 'costSnapshots',      ctx: 'backoffice' },
+    'cost-snapshots':      { title: 'Snapshots',             module: 'snapshots',          ctx: 'backoffice' },
     'cost-change-requests':{ title: 'Change Requests',       module: 'costChangeRequests', ctx: 'backoffice' },
     'cost-settlement-log': { title: 'Settlement Log',        module: 'costSettlementLog',  ctx: 'backoffice' },
     'plans-packages':      { title: 'Subscription Plans',    module: 'plansPackages',      ctx: 'backoffice' },

@@ -90,7 +90,6 @@ window.Pages.costPricing = {
     const costConfig = d.costConfig;
     const mc = d.marginConfig;
     const snapshots = d.snapshots;
-    const priceLocks = d.priceLocks;
     const ccr = d.costChangeRequests;
     const mcr = d.marginChangeRequests;
     const self = window.Pages.costPricing;
@@ -102,8 +101,9 @@ window.Pages.costPricing = {
     const pendingCCR = ccr.filter(r => r.status === 'Pending').length;
     const pendingMCR = mcr.filter(r => r.status === 'Pending').length;
     const totalPendingRequests = pendingCCR + pendingMCR;
-    const activeSnapshots = snapshots.filter(s => s.isActive).length;
-    const activeLocks = priceLocks.filter(pl => pl.status === 'Active').length;
+    const activeSnapshotCount = snapshots.filter(s => d.isSnapshotActive(s)).length;
+    const expiringSoon = d.getExpiringSnapshots(30).length;
+    const priceGuardCritical = d.getPriceGuardAlerts().filter(a => a.severity === 'critical').length;
 
     // ─── Safeguard Alerts data ───
     const alerts = d.safeguardAlerts || [];
@@ -125,7 +125,50 @@ window.Pages.costPricing = {
     const grandProfit = grandTotalSell - grandTotalCost;
     const grandBlendedMargin = grandTotalSell > 0 ? ((1 - grandTotalCost / grandTotalSell) * 100) : 0;
 
+    // Severity rank for sort: critical > warning > info
+    const sevRank = { critical: 0, warning: 1, info: 2 };
+    const sortedAlerts = [...alerts].sort((a, b) => (sevRank[a.severity] ?? 9) - (sevRank[b.severity] ?? 9));
+    const critCount = alerts.filter(a => a.severity === 'critical').length;
+    const warnCount = alerts.filter(a => a.severity === 'warning').length;
+    const infoCount = alerts.filter(a => a.severity === 'info').length;
+
     return `
+      ${alerts.length ? `
+        <!-- Safeguard Alerts Strip (top, compact) -->
+        <div class="safeguard-strip mb-16" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+          <div class="flex items-center gap-12 px-16 py-12" style="background:var(--surface);border-bottom:1px solid var(--border);">
+            <i class="fa-solid fa-shield-halved" style="color:${critCount ? 'var(--error)' : (warnCount ? '#f59e0b' : 'var(--primary)')};font-size:14px;"></i>
+            <span class="font-700 text-sm">Safeguard Alerts</span>
+            <div class="flex gap-6">
+              ${critCount ? `<span class="chip chip-red" style="font-size:10px;">${critCount} critical</span>` : ''}
+              ${warnCount ? `<span class="chip chip-yellow" style="font-size:10px;">${warnCount} warning</span>` : ''}
+              ${infoCount ? `<span class="chip chip-blue" style="font-size:10px;">${infoCount} info</span>` : ''}
+            </div>
+            <div class="flex-1"></div>
+            <button class="btn-icon" id="safeguard-toggle" title="ยุบ/ขยาย" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;font-size:12px;">
+              <i class="fa-solid fa-chevron-up" id="safeguard-chev"></i>
+            </button>
+          </div>
+          <div id="safeguard-body">
+            ${sortedAlerts.map(a => {
+              const sty = severityStyles[a.severity] || severityStyles.info;
+              return `
+                <div class="flex items-center gap-12 px-16 py-12 safeguard-row" data-alert-id="${a.id}" style="border-left:3px solid ${sty.border};border-bottom:1px solid var(--border);font-size:13px;min-height:44px;">
+                  <i class="fa-solid ${a.icon}" style="color:${sty.icon};font-size:13px;flex-shrink:0;width:14px;"></i>
+                  <span class="font-600" style="flex-shrink:0;">${a.title}</span>
+                  <span class="text-muted" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.85;">· ${a.message}</span>
+                  <button class="btn btn-sm alert-action-btn" data-section="${a.action.section}" data-route="${a.action.route}" style="font-size:11px;padding:5px 12px;background:transparent;border:1px solid ${sty.border};color:${sty.icon};flex-shrink:0;">
+                    ${a.action.label} →
+                  </button>
+                  <button class="safeguard-dismiss" data-alert-id="${a.id}" title="ปิด" style="flex-shrink:0;background:none;border:none;cursor:pointer;padding:6px 8px;opacity:0.4;font-size:13px;">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Page Header -->
       <div class="page-header">
         <h1 class="heading">COST & PRICING</h1>
@@ -134,33 +177,8 @@ window.Pages.costPricing = {
         </div>
       </div>
 
-      <!-- Safeguard Alerts Section -->
-      ${alerts.length ? `
-        <div class="section-title mb-12"><i class="fa-solid fa-bell"></i> การแจ้งเตือน</div>
-        <div class="flex-col gap-12 mb-24">
-          ${alerts.map(a => {
-            const sty = severityStyles[a.severity] || severityStyles.info;
-            return `
-              <div class="card p-16" style="border-left:4px solid ${sty.border};background:${sty.bg};">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-12">
-                    <i class="fa-solid ${a.icon}" style="color:${sty.icon};font-size:18px;"></i>
-                    <div>
-                      <div class="font-600">${a.title}</div>
-                      <div class="text-sm text-muted mt-2">${a.message}</div>
-                    </div>
-                  </div>
-                  <button class="btn btn-sm btn-outline alert-action-btn" data-section="${a.action.section}">
-                    ${a.action.label} <i class="fa-solid fa-arrow-right" style="margin-left:4px;font-size:10px;"></i>
-                  </button>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>
-      ` : ''}
-
       <!-- Stats Row -->
-      <div class="grid-4 mb-20">
+      <div class="grid-4 mb-24">
         <div class="stat-card">
           <div class="stat-header">
             <span class="stat-label">Service Codes</span>
@@ -187,20 +205,20 @@ window.Pages.costPricing = {
         </div>
         <div class="stat-card clickable" onclick="App.navigate('cost-snapshots')" style="cursor:pointer;">
           <div class="stat-header">
-            <span class="stat-label">Snapshots & Price Locks</span>
+            <span class="stat-label">Snapshots</span>
             <div class="stat-icon purple"><i class="fa-solid fa-camera"></i></div>
           </div>
-          <div class="stat-value mono">${activeSnapshots}</div>
-          <div class="stat-change up"><i class="fa-solid fa-lock"></i> ${activeLocks} Price Lock</div>
+          <div class="stat-value mono">${activeSnapshotCount}</div>
+          <div class="stat-change ${(priceGuardCritical || expiringSoon) ? 'down' : 'up'}">${priceGuardCritical > 0 ? `🛡️ ${priceGuardCritical} PriceGuard` : ''}${priceGuardCritical > 0 && expiringSoon > 0 ? ' · ' : ''}${expiringSoon > 0 ? `⏳ ${expiringSoon} ใกล้หมด` : ''}${!priceGuardCritical && !expiringSoon ? 'ทั้งหมดปลอดภัย' : ''}</div>
         </div>
       </div>
 
       <!-- Profit Dashboard (from Settlements) -->
-      <div class="divider mb-20"></div>
-      <div class="section-title mb-12"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไร (Token Economy)</div>
-      <div class="text-xs text-muted mb-16">คำนวณจาก Settlement records | Token ที่หัก = Sell Price (THB) — ไม่มี conversion</div>
+      <div class="divider" style="margin:8px 0 24px 0;"></div>
+      <div class="section-title" style="margin-bottom:6px;"><i class="fa-solid fa-coins"></i> สรุปต้นทุน &amp; กำไร (Token Economy)</div>
+      <div class="text-xs text-muted mb-20">คำนวณจาก Settlement records | Token ที่หัก = Sell Price (THB) — ไม่มี conversion</div>
 
-      <div class="grid-3 gap-16 mb-20">
+      <div class="grid-3 gap-16 mb-16">
         <div class="stat-card">
           <div class="stat-header">
             <span class="stat-label">Sessions ทั้งหมด</span>
@@ -294,12 +312,12 @@ window.Pages.costPricing = {
       </div>
 
       <!-- Settlement Log Section -->
-      <div class="divider mb-20"></div>
-      <div class="flex items-center justify-between mb-12" id="settlement-log">
-        <div class="section-title"><i class="fa-solid fa-scroll"></i> Settlement Log (ประวัติการคำนวณต่อ Session)</div>
+      <div class="divider" style="margin:8px 0 24px 0;"></div>
+      <div class="flex items-center justify-between" style="margin-bottom:6px;" id="settlement-log">
+        <div class="section-title" style="margin:0;"><i class="fa-solid fa-scroll"></i> Settlement Log (ประวัติการคำนวณต่อ Session)</div>
         <a href="#cost-settlement-log" class="text-sm font-600" style="color:var(--primary);text-decoration:none;">ดู Settlement Log ทั้งหมด <i class="fa-solid fa-arrow-right"></i></a>
       </div>
-      <div class="text-xs text-muted mb-16">คลิกแถวเพื่อดูรายละเอียด breakdown ทุก service | Token ที่หัก = Sell Price</div>
+      <div class="text-xs text-muted mb-20">คลิกแถวเพื่อดูรายละเอียด breakdown ทุก service | Token ที่หัก = Sell Price</div>
       <div class="table-wrap mb-24">
         <table>
           <thead>
@@ -331,9 +349,15 @@ window.Pages.costPricing = {
         </table>
       </div>
 
-      <!-- Package Price Guard Section -->
-      <div class="divider mb-20"></div>
-      <div class="section-title mb-12" id="package-guard"><i class="fa-solid fa-shield-halved"></i> Package Price Guard</div>
+      <!-- Package Price Guard Section (Live Price baseline — separate from Snapshot PriceGuard) -->
+      <div class="divider" style="margin:8px 0 24px 0;"></div>
+      <div class="section-title" style="margin-bottom:14px;" id="package-guard"><i class="fa-solid fa-shield-halved"></i> Package Price Guard</div>
+      <div class="card p-14 mb-14" style="background:var(--surface2);border-left:3px solid #3b82f6;">
+        <div class="flex items-center gap-12">
+          <i class="fa-solid fa-bolt" style="color:#3b82f6;"></i>
+          <div class="flex-1 text-sm">เทียบราคา package กับ <strong>Live Price</strong> (avg cost ปัจจุบันต่อ Token) — สำหรับ tenant ที่ผูก Snapshot ให้ตรวจ <a href="#cost-snapshots" onclick="event.preventDefault();App.navigate('cost-snapshots')" style="text-decoration:underline;">PriceGuard</a> แทน</div>
+        </div>
+      </div>
       <div class="card p-16 mb-16" style="background:rgba(59,130,246,0.06);border:1px solid var(--border);">
         <div class="flex items-center gap-8 mb-8">
           <i class="fa-solid fa-chart-simple" style="color:var(--primary);"></i>
@@ -375,7 +399,7 @@ window.Pages.costPricing = {
       </div>
 
       <!-- Cost Configuration Table -->
-      <div class="divider mb-20"></div>
+      <div class="divider" style="margin:8px 0 24px 0;"></div>
       <div class="flex justify-between items-center mb-16">
         <div class="flex items-center gap-12">
           <div class="section-title">ตารางต้นทุนบริการ</div>
@@ -874,18 +898,46 @@ window.Pages.costPricing = {
       });
     });
 
-    // ─── Alert Action Buttons — scroll to relevant section ───
+    // ─── Safeguard Strip: collapse/expand ───
+    const sfToggle = document.getElementById('safeguard-toggle');
+    const sfBody = document.getElementById('safeguard-body');
+    const sfChev = document.getElementById('safeguard-chev');
+    if (sfToggle && sfBody) {
+      sfToggle.addEventListener('click', () => {
+        const hidden = sfBody.style.display === 'none';
+        sfBody.style.display = hidden ? 'block' : 'none';
+        if (sfChev) sfChev.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+      });
+    }
+    // ─── Safeguard Strip: dismiss row ───
+    document.querySelectorAll('.safeguard-dismiss').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const row = btn.closest('.safeguard-row');
+        if (row) {
+          row.style.transition = 'opacity 0.2s';
+          row.style.opacity = '0';
+          setTimeout(() => {
+            row.remove();
+            const remaining = document.querySelectorAll('.safeguard-row').length;
+            if (!remaining) {
+              const strip = document.querySelector('.safeguard-strip');
+              if (strip) strip.remove();
+            }
+          }, 220);
+        }
+      });
+    });
+
+        // ─── Alert Action Buttons — navigate off-page or scroll to section ───
     document.querySelectorAll('.alert-action-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const section = btn.dataset.section;
-        if (section === 'margin-config') {
-          App.navigate('cost-margin');
-          return;
-        }
+        const route = btn.dataset.route;
+        if (section === 'margin-config') { App.navigate('cost-margin'); return; }
         const target = document.getElementById(section);
-        if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+        if (route && route !== 'cost-pricing') { App.navigate(route); }
       });
     });
 
@@ -1631,234 +1683,694 @@ window.Pages.costMargin = {
 };
 
 /* ================================================================
-   3. window.Pages.costSnapshots — Pricing Snapshots
+   3. window.Pages.snapshots — Snapshots + PriceGuard (unified brief)
    ================================================================ */
-window.Pages.costSnapshots = {
+window.Pages.snapshots = {
+
+  _filters: { status: 'all', search: '' },
+  _wizard: null,
 
   _rerender() {
     const ct = document.getElementById('content');
-    ct.innerHTML = window.Pages.costSnapshots.render();
-    window.Pages.costSnapshots.init();
+    ct.innerHTML = window.Pages.snapshots.render();
+    window.Pages.snapshots.init();
   },
 
   render() {
     const d = window.MockData;
-    const snapshots = d.snapshots;
-    const priceLocks = d.priceLocks;
-    const self = window.Pages.costPricing;
+    const snaps = d.snapshots;
+    const active = snaps.filter(s => d.isSnapshotActive(s));
+    const scheduled = snaps.filter(s => s.status === 'scheduled');
+    const expiring = d.getExpiringSnapshots(30);
+    const pgAlerts = d.getPriceGuardAlerts();
+    const pgCritical = pgAlerts;
 
     return `
-      <!-- Page Header -->
+      ${pgAlerts.length ? this._renderPriceGuard(pgAlerts) : ''}
+      ${expiring.length ? this._renderExpiration(expiring) : ''}
+
       <div class="page-header">
         <div class="flex items-center gap-12">
           <a href="#cost-pricing" onclick="event.preventDefault();App.navigate('cost-pricing')" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-left"></i> Cost Config</a>
-          <h1 class="heading">PRICING SNAPSHOTS</h1>
+          <h1 class="heading">SNAPSHOTS</h1>
         </div>
         <div class="page-header-actions">
-          <button class="btn btn-primary btn-sm" id="btn-create-snapshot"><i class="fa-solid fa-plus"></i> สร้าง Snapshot ใหม่</button>
+          <button class="btn btn-primary btn-sm" id="btn-new-snapshot"><i class="fa-solid fa-plus"></i> สร้าง Snapshot ใหม่</button>
         </div>
       </div>
 
-      <!-- Snapshots Grid -->
-      <div class="grid-3 gap-16 mb-24">
-        ${snapshots.map(snap => {
-          const isDefault = snap.type === 'Default';
-          const tenant = snap.tenantId ? d.tenants.find(t => t.id === snap.tenantId) : null;
-          return `
-            <div class="${isDefault ? 'card-accent' : 'card'} p-20">
-              <div class="flex justify-between items-center mb-12">
-                ${self._snapTypeChip(snap.type)}
-                ${snap.isActive ? '<span class="chip chip-green">Active</span>' : '<span class="chip chip-gray">Inactive</span>'}
-              </div>
-              <div class="font-700 mb-8" style="font-size:16px;">${snap.name}</div>
-              <div class="flex-col gap-6 mb-12">
-                <div class="flex justify-between">
-                  <span class="text-sm text-muted">ID</span>
-                  <span class="text-sm mono">${snap.id}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-muted">สร้างเมื่อ</span>
-                  <span class="text-sm mono">${snap.createdDate}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-muted">Global Margin</span>
-                  <span class="text-sm mono font-600">${snap.data.globalMargin}%</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm text-muted">ลูกค้าที่ผูก</span>
-                  <span class="text-sm mono font-600">${snap.assignedCustomers} ราย</span>
-                </div>
-                ${tenant ? `
-                  <div class="flex justify-between">
-                    <span class="text-sm text-muted">Tenant</span>
-                    <span class="text-sm font-600">${tenant.name}</span>
-                  </div>
-                ` : ''}
-              </div>
-              ${snap.modifiedDate ? `
-                <div class="divider mb-8"></div>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-muted"><i class="fa-solid fa-clock"></i> แก้ไขล่าสุด</span>
-                  <div style="text-align:right;">
-                    <div class="mono text-xs text-muted">${snap.modifiedDate}</div>
-                    ${snap.modifiedBy ? `<div class="text-xs text-dim">${snap.modifiedBy.split('@')[0]}</div>` : ''}
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          `;
-        }).join('')}
+      <div class="grid-4 mb-24">
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Active</span><div class="stat-icon green"><i class="fa-solid fa-camera"></i></div></div>
+          <div class="stat-value mono">${active.length}</div>
+          <div class="stat-change up">ใช้อยู่ขณะนี้</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">Scheduled</span><div class="stat-icon blue"><i class="fa-solid fa-calendar-plus"></i></div></div>
+          <div class="stat-value mono">${scheduled.length}</div>
+          <div class="stat-change up">รอวันเริ่ม</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">ใกล้หมดอายุ (≤30d)</span><div class="stat-icon ${expiring.length ? 'yellow' : 'green'}"><i class="fa-solid fa-hourglass-half"></i></div></div>
+          <div class="stat-value mono">${expiring.length}</div>
+          <div class="stat-change ${expiring.length ? 'down' : 'up'}">${expiring.length ? 'ต้องดำเนินการ' : 'ปลอดภัย'}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header"><span class="stat-label">PriceGuard</span><div class="stat-icon ${pgCritical.length ? 'red' : 'green'}"><i class="fa-solid fa-shield-halved"></i></div></div>
+          <div class="stat-value mono">${pgCritical.length}</div>
+          <div class="stat-change ${pgCritical.length ? 'down' : 'up'}">${pgCritical.length ? 'ขาดทุน (ต้องแก้)' : 'ปลอดภัย'}</div>
+        </div>
       </div>
 
-      <!-- Price Locks -->
-      <div class="divider mb-20"></div>
-      <div class="section-title mb-12"><i class="fa-solid fa-lock"></i> Price Locks</div>
-      <div class="flex items-center gap-12 mb-16">
+      <div class="flex items-center gap-12 mb-20">
         <div class="search-bar flex-1">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="pl-search" placeholder="ค้นหา Tenant / Snapshot ID...">
+          <input type="text" id="sn-search" placeholder="ค้นหา Snapshot ID / ชื่อ / Tenant..." value="${this._filters.search}">
         </div>
-        <div class="form-group" style="margin:0;min-width:150px;">
-          <select class="form-input" id="pl-status-filter">
-            <option value="all">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Expired">Expired</option>
+        <div class="form-group" style="margin:0;min-width:140px;">
+          <select class="form-input" id="sn-status-filter">
+            <option value="all">ทุกสถานะ</option>
+            <option value="active">Active</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="expired">Expired</option>
+            <option value="canceled">Canceled</option>
           </select>
         </div>
       </div>
-      <div class="table-wrap" id="pl-table-wrap"></div>
+
+      <div class="table-wrap" id="sn-table-wrap"></div>
     `;
   },
 
-  _renderPriceLocks() {
+  _renderPriceGuard(alerts) {
     const d = window.MockData;
-    let priceLocks = d.priceLocks;
-    const search = (document.getElementById('pl-search') || {}).value.trim().toLowerCase();
-    const status = (document.getElementById('pl-status-filter') || {}).value;
+    const critCount = alerts.length;
+    const renderRow = (a) => {
+      const color = 'var(--error)';
+      const bg = 'rgba(239,68,68,0.04)';
+      return `<div class="flex items-center gap-14 px-20 py-12 pg-row" style="border-left:3px solid ${color};border-bottom:1px solid var(--border);background:${bg};font-size:13px;">
+        <i class="fa-solid fa-shield-halved" style="color:${color};font-size:14px;flex-shrink:0;width:14px;"></i>
+        <div class="flex-1" style="min-width:0;">
+          <span class="font-600">${a.snapshotName}</span>
+          <span class="mono text-xs text-dim" style="margin-left:6px;">${a.snapshotId}</span>
+          <span style="margin-left:10px;">กำลังขาดทุน <span class="mono font-700" style="color:${color};">${a.lossPct.toFixed(1)}%</span></span>
+        </div>
+        <button class="btn btn-sm alert-action-btn btn-view-snap" data-id="${a.snapshotId}" style="font-size:11px;padding:5px 12px;background:transparent;border:1px solid ${color};color:${color};flex-shrink:0;"><i class="fa-solid fa-eye"></i> ดู</button>
+      </div>`;
+    };
+    return `<div class="safeguard-strip mb-16" id="priceguard" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div class="flex items-center gap-12 px-20 py-12" style="background:var(--surface);border-bottom:1px solid var(--border);">
+        <i class="fa-solid fa-shield-halved" style="color:var(--error);font-size:14px;"></i>
+        <span class="font-700 text-sm">PriceGuard</span>
+        <span class="chip chip-red" style="font-size:10px;">${critCount} ขาดทุน</span>
+        <div class="flex-1"></div>
+        <button class="btn-icon" id="pg-toggle" title="ยุบ/ขยาย" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;font-size:12px;">
+          <i class="fa-solid fa-chevron-up" id="pg-chev"></i>
+        </button>
+      </div>
+      <div id="pg-body">
+        ${alerts.map(renderRow).join('')}
+      </div>
+    </div>`;
+  },
 
-    if (search) {
-      priceLocks = priceLocks.filter(pl =>
-        pl.tenantName.toLowerCase().includes(search) || pl.snapshotId.toLowerCase().includes(search)
-      );
+  _renderExpiration(list) {
+    const d = window.MockData;
+    const renderRow = (s) => {
+      const rem = d.snapshotDaysRemaining(s);
+      const tenants = s.tenantIds.map(tid => (d.tenants.find(t => t.id === tid) || {}).name || tid).join(', ');
+      const color = rem <= 7 ? 'var(--error)' : '#f59e0b';
+      return `<div class="flex items-center gap-14 px-20 py-12 exp-row" style="border-left:3px solid ${color};border-bottom:1px solid var(--border);background:rgba(245,158,11,0.03);font-size:13px;">
+        <i class="fa-solid fa-hourglass-half" style="color:${color};font-size:14px;flex-shrink:0;width:14px;"></i>
+        <div class="flex-1" style="min-width:0;">
+          <div class="flex items-center gap-8" style="flex-wrap:wrap;">
+            <span class="font-600">${s.name}</span>
+            <span class="mono text-xs text-dim">${s.id}</span>
+            <span class="text-muted">·</span>
+            <span class="text-xs text-muted">${tenants}</span>
+            <span class="text-muted">·</span>
+            <span class="mono text-xs text-muted">${s.startDate} → ${s.endDate}</span>
+          </div>
+        </div>
+        <span class="mono font-700" style="color:${color};font-size:14px;flex-shrink:0;">${rem}d</span>
+        <button class="btn btn-sm alert-action-btn btn-view-snap" data-id="${s.id}" style="font-size:11px;padding:5px 12px;background:transparent;border:1px solid ${color};color:${color};flex-shrink:0;"><i class="fa-solid fa-eye"></i> ดู</button>
+      </div>`;
+    };
+    return `<div class="safeguard-strip mb-16" id="expiration-section" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div class="flex items-center gap-12 px-20 py-12" style="background:var(--surface);border-bottom:1px solid var(--border);">
+        <i class="fa-solid fa-hourglass-half" style="color:#f59e0b;font-size:14px;"></i>
+        <span class="font-700 text-sm">ใกล้หมดอายุ (≤30 วัน) · ${list.length} snapshot</span>
+        <div class="flex-1"></div>
+        <button class="btn-icon" id="exp-toggle" title="ยุบ/ขยาย" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;font-size:12px;">
+          <i class="fa-solid fa-chevron-up" id="exp-chev"></i>
+        </button>
+      </div>
+      <div id="exp-body">
+        ${list.map(renderRow).join('')}
+      </div>
+    </div>`;
+  },
+
+  _renderTable() {
+    const d = window.MockData;
+    const f = this._filters;
+    let list = [...d.snapshots];
+    if (f.status !== 'all') list = list.filter(s => s.status === f.status);
+    if (f.search) {
+      const q = f.search.toLowerCase();
+      list = list.filter(s => {
+        if (s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)) return true;
+        return s.tenantIds.some(tid => {
+          const t = d.tenants.find(x => x.id === tid);
+          return t && t.name.toLowerCase().includes(q);
+        });
+      });
     }
-    if (status !== 'all') priceLocks = priceLocks.filter(pl => pl.status === status);
 
-    const wrap = document.getElementById('pl-table-wrap');
+    const wrap = document.getElementById('sn-table-wrap');
     if (!wrap) return;
-
-    if (!priceLocks.length) {
-      wrap.innerHTML = '<div class="text-sm text-muted p-16" style="text-align:center;">ไม่พบ Price Lock ที่ตรงกับเงื่อนไข</div>';
-      return;
-    }
+    if (!list.length) { wrap.innerHTML = '<div class="text-sm text-muted p-16" style="text-align:center;">ไม่พบ Snapshot</div>'; return; }
 
     wrap.innerHTML = `<table><thead><tr>
-      <th>ID</th><th>Tenant</th><th>Snapshot</th><th>เริ่มต้น</th><th>สิ้นสุด</th>
-      <th>เหลืออีก (วัน)</th><th>สถานะ</th><th>แจ้งเตือน 30 วัน</th><th>แก้ไขล่าสุด</th>
-    </tr></thead><tbody>${priceLocks.map(pl => `<tr>
-      <td class="mono text-sm">${pl.id}</td>
-      <td class="font-600">${pl.tenantName}</td>
-      <td class="mono text-sm">${pl.snapshotId}</td>
-      <td class="text-sm mono">${pl.startDate}</td>
-      <td class="text-sm mono">${pl.endDate}</td>
-      <td>
-        <span class="mono font-700 ${pl.daysRemaining <= 30 ? 'text-warning' : 'text-success'}">${pl.daysRemaining}</span>
-        ${pl.daysRemaining <= 30 ? '<span class="chip chip-yellow" style="font-size:10px;padding:1px 4px;margin-left:4px;">ใกล้หมดอายุ</span>' : ''}
-      </td>
-      <td>${d.statusChip(pl.status)}</td>
-      <td>${pl.notified30d ? '<span class="chip chip-green">แจ้งแล้ว</span>' : '<span class="chip chip-gray">ยังไม่แจ้ง</span>'}</td>
-      <td style="white-space:nowrap;"><div class="mono text-sm text-muted">${pl.modifiedDate || '-'}</div>${pl.modifiedBy ? `<div class="text-xs text-dim">${pl.modifiedBy.split('@')[0]}</div>` : ''}</td>
-    </tr>`).join('')}</tbody></table>`;
+      <th>ID</th><th>ชื่อ</th><th>Tenants</th><th>Services</th><th>Period</th><th>Duration</th><th>เหลือ</th><th>สถานะ</th><th>สร้างเมื่อ</th><th>Actions</th>
+    </tr></thead><tbody>${list.map(s => {
+      const rem = d.snapshotDaysRemaining(s);
+      const dur = Math.max(1, Math.ceil((new Date(s.endDate) - new Date(s.startDate)) / 86400000));
+      const firstTenant = s.tenantIds[0] ? ((d.tenants.find(t => t.id === s.tenantIds[0]) || {}).name || s.tenantIds[0]) : '—';
+      const extra = s.tenantIds.length > 1 ? ` <span class="chip chip-gray" style="font-size:10px;">+${s.tenantIds.length - 1}</span>` : '';
+      const isActive = d.isSnapshotActive(s);
+      return `<tr>
+        <td class="mono text-sm">${s.id}</td>
+        <td class="font-600">${s.name}</td>
+        <td>${firstTenant}${extra}</td>
+        <td class="mono">${s.services.length}</td>
+        <td class="mono text-xs">${s.startDate} → ${s.endDate}</td>
+        <td class="mono text-sm">${dur}d</td>
+        <td>${s.status === 'scheduled' ? '<span class="text-dim">—</span>' : (rem === null ? '—' : (isActive ? `<span class="mono ${rem <= 30 ? 'text-warning font-700' : 'text-sm'}">${rem}d</span>` : '<span class="text-dim mono">0d</span>'))}</td>
+        <td>${d.snapshotStatusChip(s)}</td>
+        <td><div class="mono text-xs">${s.createdDate}</div><div class="text-xs text-dim mono" style="margin-top:2px;">${(s.createdBy || '').split('@')[0]}</div></td>
+        <td>
+          <button class="btn btn-sm btn-outline btn-view-snap" data-id="${s.id}" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  },
+
+  _showDetail(id) {
+    const d = window.MockData;
+    const s = d.snapshots.find(x => x.id === id);
+    if (!s) return;
+    const rem = d.snapshotDaysRemaining(s);
+    const dur = Math.max(1, Math.ceil((new Date(s.endDate) - new Date(s.startDate)) / 86400000));
+    const tenants = s.tenantIds.map(tid => d.tenants.find(t => t.id === tid)).filter(Boolean);
+
+    const catChipD = (c) => {
+      const m = { Text: 'chip-blue', Audio: 'chip-purple', Video: 'chip-orange', Embedding: 'chip-gray', Primary: 'chip-gray' };
+      return '<span class="chip ' + (m[c] || 'chip-gray') + '" style="font-size:10px;">' + c + '</span>';
+    };
+    const varChipD = (v) => {
+      const m = { Input: 'chip-blue', Output: 'chip-purple', Primary: 'chip-gray' };
+      return '<span class="chip ' + (m[v] || 'chip-gray') + '" style="font-size:10px;">' + v + '</span>';
+    };
+    // Group snapshot.services by serviceCode
+    const groupedDetail = {};
+    s.services.forEach(sv => { (groupedDetail[sv.serviceCode] = groupedDetail[sv.serviceCode] || []).push(sv); });
+    const svcRows = Object.keys(groupedDetail).map(code => {
+      const dimsList = groupedDetail[code];
+      const n = dimsList.length;
+      return dimsList.map((sv, i) => {
+        const cat = sv.category || 'Primary';
+        const vrt = sv.variant || 'Primary';
+        const liveDims = d.serviceDimensions(sv.serviceCode);
+        const liveDim = liveDims.find(x => x.category === cat && x.variant === vrt);
+        const liveCost = liveDim ? liveDim.cost : 0;
+        const lockedMargin = sv.sell > 0 ? ((sv.sell - sv.cost) / sv.sell) * 100 : 0;
+        const currentMargin = sv.sell > 0 ? ((sv.sell - liveCost) / sv.sell) * 100 : 0;
+        const marginDelta = currentMargin - lockedMargin;
+        const isLoss = currentMargin < 0;
+        const costChanged = Math.abs(liveCost - sv.cost) > 1e-9;
+        const liveCostColor = isLoss ? 'var(--error)' : (costChanged ? '#f59e0b' : 'var(--text-muted)');
+        const marginNowColor = isLoss ? 'var(--error)' : 'var(--success)';
+        return `<tr ${i > 0 ? 'style="border-top:1px dashed var(--border);"' : ''}>
+          ${i === 0 ? `<td rowspan="${n}" style="vertical-align:top;border-right:1px solid var(--border);" class="mono text-sm font-600">${sv.serviceCode}${n > 1 ? `<div class="text-xs text-dim mt-2">${n} dims</div>` : ''}</td>` : ''}
+          <td>${catChipD(cat)}</td>
+          <td>${varChipD(vrt)}</td>
+          <td class="mono text-sm">${sv.cost.toFixed(6)}</td>
+          <td class="mono font-600">${sv.sell.toFixed(6)}</td>
+          <td class="mono text-sm" style="color:var(--success);">${lockedMargin.toFixed(1)}%</td>
+          <td class="mono text-sm" style="color:${liveCostColor};">${liveCost.toFixed(6)}${costChanged ? ` <span class="text-xs" style="opacity:0.7;">(${liveCost > sv.cost ? '+' : ''}${((liveCost/sv.cost - 1) * 100).toFixed(1)}%)</span>` : ''}</td>
+          <td class="mono font-600" style="color:${marginNowColor};">${isLoss ? '⚠ ' : ''}${currentMargin.toFixed(1)}%${marginDelta !== 0 ? ` <span class="text-xs" style="opacity:0.7;">(${marginDelta > 0 ? '+' : ''}${marginDelta.toFixed(1)}pt)</span>` : ''}</td>
+        </tr>`;
+      }).join('');
+    }).join('');
+
+    App.showModal(`
+      <div class="modal modal-wide">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title heading">${s.name}</div>
+        <div class="modal-subtitle mono">${s.id}</div>
+        <div class="flex gap-8 mb-12">
+          ${d.snapshotStatusChip(s)}
+          ${s.tenantIds.length > 1 ? `<span class="chip chip-purple">${s.tenantIds.length} tenants</span>` : ''}
+        </div>
+        <div class="grid-3 gap-16 mb-16">
+          <div class="card p-12"><div class="text-xs text-muted mb-4">Period</div><div class="mono text-sm">${s.startDate} → ${s.endDate}</div><div class="text-xs text-dim mt-2">${dur} วัน</div></div>
+          <div class="card p-12"><div class="text-xs text-muted mb-4">เหลือ</div><div class="mono font-700" style="font-size:22px;color:${rem !== null && rem <= 30 ? '#f59e0b' : 'var(--text)'};">${rem !== null ? rem + ' วัน' : '—'}</div>${s.status === 'scheduled' ? '<div class="text-xs text-dim mt-2">รอเริ่ม</div>' : ''}</div>
+          <div class="card p-12"><div class="text-xs text-muted mb-4">Services</div><div class="mono font-700" style="font-size:22px;">${s.services.length}</div></div>
+        </div>
+        <div class="section-title mb-8"><i class="fa-solid fa-users"></i> Tenants (${tenants.length})</div>
+        <div class="card p-12 mb-16">${tenants.map(t => `<span class="chip chip-blue" style="margin-right:6px;">${t.name} <span class="mono text-xs" style="opacity:0.6;">${t.id}</span></span>`).join('') || '<span class="text-muted">—</span>'}</div>
+
+        <div class="section-title mb-8"><i class="fa-solid fa-list"></i> Frozen Prices vs Live</div>
+        <div class="text-xs text-muted mb-10" style="padding:0 2px;">
+          <i class="fa-solid fa-circle-info"></i> <strong>Locked</strong> = ราคาที่ freeze ตอนสร้าง · <strong>Live Cost</strong> = ต้นทุนปัจจุบันจาก Cost Config (อัปเดตตาม Cost Change Request) · <strong>Margin (ตอนนี้)</strong> = กำไรถ้าเรายังขายที่ locked sell แต่ต้นทุนเปลี่ยนไปแล้ว
+        </div>
+        <div class="table-wrap"><table><thead>
+          <tr>
+            <th rowspan="2" style="vertical-align:bottom;">Service</th>
+            <th rowspan="2" style="vertical-align:bottom;">Category</th>
+            <th rowspan="2" style="vertical-align:bottom;">Variant</th>
+            <th colspan="3" style="text-align:center;border-bottom:1px solid var(--border);background:rgba(34,197,94,0.05);">ตอนสร้าง (Locked)</th>
+            <th colspan="2" style="text-align:center;border-bottom:1px solid var(--border);background:rgba(239,68,68,0.05);">ปัจจุบัน (Live)</th>
+          </tr>
+          <tr>
+            <th style="background:rgba(34,197,94,0.05);">Cost</th>
+            <th style="background:rgba(34,197,94,0.05);">Sell</th>
+            <th style="background:rgba(34,197,94,0.05);">Margin</th>
+            <th style="background:rgba(239,68,68,0.05);">Live Cost</th>
+            <th style="background:rgba(239,68,68,0.05);">Margin ตอนนี้</th>
+          </tr>
+        </thead><tbody>${svcRows}</tbody></table></div>
+
+        <div class="modal-actions" style="margin-top:20px;">
+          <button class="btn btn-outline" onclick="App.closeModal()">ปิด</button>
+          ${(s.status === 'active' || s.status === 'scheduled') ? `<button class="btn btn-danger" id="detail-cancel-snap" data-id="${s.id}"><i class="fa-solid fa-ban"></i> ยกเลิก Snapshot</button>` : ''}
+        </div>
+      </div>
+    `);
+    setTimeout(() => {
+      const btn = document.getElementById('detail-cancel-snap');
+      if (btn) btn.addEventListener('click', () => { App.closeModal(); setTimeout(() => this._showCancelModal(s.id), 150); });
+    }, 50);
+  },
+
+  _showWizard() {
+    const d = window.MockData;
+    const today = new Date().toISOString().split('T')[0];
+    const defaultEnd = (() => { const t = new Date(); t.setDate(t.getDate() + 90); return t.toISOString().split('T')[0]; })();
+
+    this._wizard = {
+      step: 1,
+      name: '',
+      tenantIds: [],
+      startDate: today,
+      endDate: defaultEnd,
+      services: (() => {
+        const rows = [];
+        d.costConfig.filter(c => c.status === 'Active').forEach(c => {
+          d.serviceDimensions(c.serviceCode).forEach(dim => {
+            const live = d.getLivePrice(c.serviceCode, dim.category, dim.variant);
+            rows.push({
+              serviceCode: c.serviceCode,
+              name: c.name,
+              provider: c.provider,
+              category: dim.category,
+              variant: dim.variant,
+              cost: live ? live.cost : dim.cost,
+              sell: live ? live.sell : dim.cost,
+              margin: live ? live.margin : 0,
+            });
+          });
+        });
+        return rows;
+      })(),
+      _tenantSearch: '',
+    };
+
+    this._renderWizard();
+  },
+
+  _renderWizard() {
+    const d = window.MockData;
+    const w = this._wizard;
+    if (!w) return;
+
+    const stepPill = (n, label) => `<div class="flex items-center gap-8">
+      <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;${w.step >= n ? 'background:var(--primary);color:#fff;' : 'background:var(--surface2);color:var(--text-muted);'}">${w.step > n ? '<i class="fa-solid fa-check"></i>' : n}</div>
+      <span class="text-sm ${w.step === n ? 'font-700' : 'text-muted'}">${label}</span>
+    </div>`;
+
+    let body = '';
+    let nextLabel = 'ถัดไป';
+    if (w.step === 1) {
+      const catChip = (c) => {
+        const m = { Text: 'chip-blue', Audio: 'chip-purple', Video: 'chip-orange', Embedding: 'chip-gray', Primary: 'chip-gray' };
+        return '<span class="chip ' + (m[c] || 'chip-gray') + '" style="font-size:10px;">' + c + '</span>';
+      };
+      const varChip = (v) => {
+        const m = { Input: 'chip-blue', Output: 'chip-purple', Primary: 'chip-gray' };
+        return '<span class="chip ' + (m[v] || 'chip-gray') + '" style="font-size:10px;">' + v + '</span>';
+      };
+      // Group by serviceCode
+      const grouped = {};
+      w.services.forEach(sv => { (grouped[sv.serviceCode] = grouped[sv.serviceCode] || []).push(sv); });
+      body = `
+        <div class="flex-col gap-12">
+        <div class="text-sm text-muted">👉 นี่คือราคาที่คุณกำลังจะ freeze — ณ เวลาปัจจุบัน <span class="text-xs text-dim">(service หลาย dimension รวมเป็นกลุ่มเดียว)</span></div>
+        <div class="table-wrap"><table><thead><tr>
+          <th>Service</th><th>Provider</th><th>Category</th><th>Variant</th><th class="text-right">Cost</th><th class="text-right">Margin</th><th class="text-right">Sell</th>
+        </tr></thead><tbody>
+          ${Object.keys(grouped).map(code => {
+            const dims = grouped[code];
+            const first = dims[0];
+            const n = dims.length;
+            return dims.map((sv, i) => `<tr ${i > 0 ? 'style="border-top:1px dashed var(--border);"' : ''}>
+              ${i === 0 ? `<td rowspan="${n}" style="vertical-align:top;border-right:1px solid var(--border);"><div class="font-600 text-sm">${first.name}</div><div class="text-xs text-dim mono">${first.serviceCode}</div>${n > 1 ? `<div class="text-xs text-dim mt-4">${n} dimensions</div>` : ''}</td><td rowspan="${n}" style="vertical-align:top;" class="text-sm">${first.provider}</td>` : ''}
+              <td>${catChip(sv.category)}</td>
+              <td>${varChip(sv.variant)}</td>
+              <td class="text-right mono text-sm">${sv.cost.toFixed(6)}</td>
+              <td class="text-right mono text-sm">${sv.margin}%</td>
+              <td class="text-right mono font-700">${sv.sell.toFixed(6)}</td>
+            </tr>`).join('');
+          }).join('')}
+        </tbody></table></div>
+        </div>`;
+    } else if (w.step === 2) {
+      const q = (w._tenantSearch || '').toLowerCase();
+      const matches = d.tenants.filter(t => t.status === 'Active').filter(t => !q || t.name.toLowerCase().includes(q) || t.id.toLowerCase().includes(q) || (t.email || '').toLowerCase().includes(q));
+      // Map tenantId → existing active/scheduled snapshot (first match)
+      const tenantSnapMap = {};
+      d.snapshots.forEach(s => {
+        if (s.status === 'active' || s.status === 'scheduled') {
+          s.tenantIds.forEach(tid => { if (!tenantSnapMap[tid]) tenantSnapMap[tid] = s; });
+        }
+      });
+      // Drop any pre-selected tenants that are now disabled
+      w.tenantIds = w.tenantIds.filter(tid => !tenantSnapMap[tid]);
+      const disabledCount = matches.filter(t => tenantSnapMap[t.id]).length;
+      body = `
+        <div class="flex-col gap-12">
+        <div class="text-sm text-muted">เลือก Tenants ที่จะ apply (อย่างน้อย 1):</div>
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="wizard-tenant-search" placeholder="ค้นหา tenant (ชื่อ / ID / email)..." value="${w._tenantSearch || ''}">
+        </div>
+        <div class="card p-12" style="max-height:320px;overflow-y:auto;" id="wizard-tenant-list">
+          ${matches.length === 0 ? '<div class="text-sm text-muted p-12" style="text-align:center;">ไม่พบ tenant ที่ตรง</div>' : matches.map(t => {
+            const existing = tenantSnapMap[t.id];
+            const disabled = !!existing;
+            return `
+            <label class="flex items-center gap-12" style="cursor:${disabled ? 'not-allowed' : 'pointer'};border-bottom:1px solid var(--border);padding:12px 8px;opacity:${disabled ? '0.55' : '1'};">
+              <input type="checkbox" class="wizard-tenant" value="${t.id}" ${w.tenantIds.indexOf(t.id) !== -1 ? 'checked' : ''} ${disabled ? 'disabled' : ''} style="width:16px;height:16px;cursor:${disabled ? 'not-allowed' : 'pointer'};">
+              <div class="flex-1">
+                <div class="font-600 text-sm">${t.name}</div>
+                <div class="mono text-xs text-dim" style="margin-top:2px;">${t.id} · ${t.email}</div>
+                ${disabled ? `<div class="text-xs" style="color:#f59e0b;margin-top:4px;"><i class="fa-solid fa-circle-info"></i> มี Snapshot ${existing.id} อยู่แล้ว (${existing.status === 'scheduled' ? 'เริ่ม ' + existing.startDate : 'ถึง ' + existing.endDate}) — ยกเลิกก่อนจึงสร้างใหม่ได้</div>` : ''}
+              </div>
+              ${disabled ? '' : `<span class="chip chip-gray text-xs">${t.plan}</span>`}
+            </label>`;
+          }).join('')}
+        </div>
+        <div class="text-sm"><strong>Selected:</strong> <span id="wizard-selected-count" class="mono font-700">${w.tenantIds.length}</span> tenants${q ? ` · กรองด้วย "${w._tenantSearch}" (เจอ ${matches.length})` : ''}${disabledCount > 0 ? ` · <span class="text-muted">${disabledCount} tenant มี snapshot อยู่แล้ว</span>` : ''}</div>
+        </div>`;
+    } else if (w.step === 3) {
+      const days = Math.max(0, Math.ceil((new Date(w.endDate) - new Date(w.startDate)) / 86400000));
+      const presets = [30, 60, 90, 180, 365];
+      body = `
+        <div class="flex-col gap-16">
+          <div class="form-group">
+            <label class="form-label">ชื่อ Snapshot</label>
+            <input type="text" class="form-input" id="wizard-name" placeholder="เช่น ACME Enterprise Q2 2026" value="${w.name}">
+          </div>
+          <div class="grid-2 gap-16">
+            <div class="form-group">
+              <label class="form-label">Start date <span class="text-error">*</span></label>
+              <input type="date" class="form-input" id="wizard-start" value="${w.startDate}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">End date <span class="text-error">*</span></label>
+              <input type="date" class="form-input" id="wizard-end" value="${w.endDate}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration (วัน)</label>
+            <div class="flex items-center gap-10">
+              <input type="number" class="form-input" id="wizard-duration-input" value="${days}" min="1" max="3650" style="max-width:140px;">
+              <div class="flex gap-6" style="flex-wrap:wrap;">
+                ${presets.map(p => `<button type="button" class="btn btn-sm btn-outline wizard-preset" data-days="${p}" style="font-size:11px;padding:4px 10px;${p === days ? 'background:var(--primary);color:#fff;border-color:var(--primary);' : ''}">${p}d</button>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    } else if (w.step === 4) {
+      const days = Math.max(0, Math.ceil((new Date(w.endDate) - new Date(w.startDate)) / 86400000));
+      const tenantNames = w.tenantIds.map(tid => (d.tenants.find(t => t.id === tid) || {}).name || tid).join(', ');
+      body = `
+        <div class="text-sm text-muted mb-12">📦 Summary — ตรวจสอบก่อนยืนยัน</div>
+        <div class="card p-16 flex-col gap-10">
+          <div class="flex justify-between"><span class="text-muted">ชื่อ:</span><span class="font-700">${w.name || '<span class="text-error">(ยังไม่ได้ตั้ง)</span>'}</span></div>
+          <div class="flex justify-between"><span class="text-muted">Services × Dimensions:</span><span class="mono font-700">${new Set(w.services.map(s=>s.serviceCode)).size} × avg ${(w.services.length / Math.max(1,new Set(w.services.map(s=>s.serviceCode)).size)).toFixed(1)} dims = ${w.services.length} rows</span></div>
+          <div class="flex justify-between"><span class="text-muted">Tenants:</span><span class="font-600">${tenantNames}</span></div>
+          <div class="flex justify-between"><span class="text-muted">Period:</span><span class="mono">${w.startDate} → ${w.endDate}</span></div>
+          <div class="flex justify-between"><span class="text-muted">Duration:</span><span class="mono font-700">${days} วัน</span></div>
+        </div>
+        <div class="card p-14 text-xs text-muted" style="background:rgba(59,130,246,0.06);border-left:3px solid var(--primary);margin-top:20px;">
+          <i class="fa-solid fa-circle-info"></i> ราคาจะ freeze ณ วันที่คุณกด Confirm — ไม่สามารถแก้ไขหลังสร้างได้ ถ้าต้องการเปลี่ยนต้อง cancel แล้วสร้างใหม่
+        </div>`;
+      nextLabel = '✓ Confirm';
+    }
+
+    App.showModal(`
+      <div class="modal modal-wide">
+        <button class="modal-close" onclick="App.closeModal();window.Pages.snapshots._wizard=null;"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title heading" style="margin-bottom:12px;">สร้าง Snapshot ใหม่ — Step ${w.step}/4</div>
+        <div class="flex items-center gap-16 mb-20" style="padding:10px 14px;background:var(--surface2);border-radius:10px;">
+          ${stepPill(1, 'Preview')} <div style="flex:1;height:2px;background:${w.step > 1 ? 'var(--primary)' : 'var(--border)'};"></div>
+          ${stepPill(2, 'Tenants')} <div style="flex:1;height:2px;background:${w.step > 2 ? 'var(--primary)' : 'var(--border)'};"></div>
+          ${stepPill(3, 'Period')} <div style="flex:1;height:2px;background:${w.step > 3 ? 'var(--primary)' : 'var(--border)'};"></div>
+          ${stepPill(4, 'Confirm')}
+        </div>
+        <div style="min-height:300px;">${body}</div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal();window.Pages.snapshots._wizard=null;">ยกเลิก</button>
+          ${w.step > 1 ? '<button class="btn btn-outline" id="wizard-back">← ย้อน</button>' : ''}
+          <button class="btn btn-primary" id="wizard-next">${nextLabel}</button>
+        </div>
+      </div>
+    `);
+
+    setTimeout(() => {
+      if (w.step === 2) {
+        const rebindCheckboxes = () => {
+          document.querySelectorAll('.wizard-tenant').forEach(cb => {
+            cb.addEventListener('change', () => {
+              const currentIds = new Set(w.tenantIds);
+              if (cb.checked) currentIds.add(cb.value); else currentIds.delete(cb.value);
+              w.tenantIds = Array.from(currentIds);
+              const el = document.getElementById('wizard-selected-count');
+              if (el) el.textContent = w.tenantIds.length;
+            });
+          });
+        };
+        rebindCheckboxes();
+        const searchEl = document.getElementById('wizard-tenant-search');
+        if (searchEl) {
+          searchEl.addEventListener('input', () => {
+            w._tenantSearch = searchEl.value;
+            // Re-render Step 2 list only, preserving focus + caret
+            const caret = searchEl.selectionStart;
+            this._renderWizard();
+            const restored = document.getElementById('wizard-tenant-search');
+            if (restored) { restored.focus(); try { restored.setSelectionRange(caret, caret); } catch(_){} }
+          });
+        }
+      }
+      if (w.step === 3) {
+        const nameEl = document.getElementById('wizard-name');
+        const sEl = document.getElementById('wizard-start');
+        const eEl = document.getElementById('wizard-end');
+        const durEl = document.getElementById('wizard-duration-input');
+        const setEndFromDuration = (d) => {
+          if (!sEl || !eEl || !d || d < 1) return;
+          const start = new Date(sEl.value);
+          start.setDate(start.getDate() + parseInt(d, 10));
+          eEl.value = start.toISOString().split('T')[0];
+          w.endDate = eEl.value;
+        };
+        const setDurationFromDates = () => {
+          if (!sEl || !eEl || !durEl) return;
+          const dd = Math.max(0, Math.ceil((new Date(eEl.value) - new Date(sEl.value)) / 86400000));
+          durEl.value = dd;
+          // Update preset button highlight
+          document.querySelectorAll('.wizard-preset').forEach(b => {
+            const isSel = parseInt(b.getAttribute('data-days'), 10) === dd;
+            b.style.cssText = 'font-size:11px;padding:4px 10px;' + (isSel ? 'background:var(--primary);color:#fff;border-color:var(--primary);' : '');
+          });
+        };
+        if (nameEl) nameEl.addEventListener('input', () => { w.name = nameEl.value.trim(); });
+        if (sEl) sEl.addEventListener('change', () => { w.startDate = sEl.value; setDurationFromDates(); });
+        if (eEl) eEl.addEventListener('change', () => { w.endDate = eEl.value; setDurationFromDates(); });
+        if (durEl) durEl.addEventListener('input', () => {
+          const d = parseInt(durEl.value, 10);
+          if (!isNaN(d) && d >= 1) { setEndFromDuration(d); setDurationFromDates(); }
+        });
+        document.querySelectorAll('.wizard-preset').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const d = parseInt(btn.getAttribute('data-days'), 10);
+            if (durEl) durEl.value = d;
+            setEndFromDuration(d);
+            setDurationFromDates();
+          });
+        });
+      }
+      const nextBtn = document.getElementById('wizard-next');
+      if (nextBtn) nextBtn.addEventListener('click', () => this._wizardNext());
+      const backBtn = document.getElementById('wizard-back');
+      if (backBtn) backBtn.addEventListener('click', () => { w.step--; this._renderWizard(); });
+    }, 50);
+  },
+
+  _wizardNext() {
+    const d = window.MockData;
+    const w = this._wizard;
+    if (!w) return;
+
+    if (w.step === 2 && w.tenantIds.length === 0) { App.toast('เลือกอย่างน้อย 1 tenant', 'error'); return; }
+    if (w.step === 3) {
+      if (!w.name) { App.toast('กรุณาตั้งชื่อ Snapshot', 'error'); return; }
+      if (!w.startDate || !w.endDate) { App.toast('กรุณากรอกวันที่ให้ครบ', 'error'); return; }
+      if (new Date(w.endDate) <= new Date(w.startDate)) { App.toast('End date ต้องอยู่หลัง Start date', 'error'); return; }
+    }
+
+    if (w.step < 4) { w.step++; this._renderWizard(); return; }
+    this._commitSnapshot();
+  },
+
+  _commitSnapshot(effectiveDate) {
+    const d = window.MockData;
+    const w = this._wizard;
+    if (!w) return;
+    const today = new Date().toISOString().split('T')[0];
+    const user = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+    const maxNum = d.snapshots.reduce((m, s) => { const n = parseInt((s.id.split('-')[1] || '0'), 10); return Math.max(m, isNaN(n) ? 0 : n); }, 0);
+    const newId = 'SNAP-' + String(maxNum + 1).padStart(3, '0');
+    const startDate = effectiveDate || w.startDate;
+    const status = new Date(startDate) > new Date() ? 'scheduled' : 'active';
+    d.snapshots.push({
+      id: newId, name: w.name,
+      tenantIds: w.tenantIds.slice(),
+      services: w.services.map(sv => ({ serviceCode: sv.serviceCode, category: sv.category, variant: sv.variant, cost: sv.cost, sell: sv.sell })),
+      startDate, endDate: w.endDate,
+      status,
+      createdDate: today, createdBy: user, modifiedDate: today, modifiedBy: user,
+    });
+    this._wizard = null;
+    App.closeModal();
+    App.toast('สร้าง Snapshot ' + newId + ' สำเร็จ', 'success');
+    this._rerender();
+  },
+
+  _showCancelModal(id) {
+    const d = window.MockData;
+    const s = d.snapshots.find(x => x.id === id);
+    if (!s) return;
+    const today = new Date().toISOString().split('T')[0];
+    const tenantNames = s.tenantIds.map(tid => (d.tenants.find(t => t.id === tid) || {}).name || tid);
+
+    App.showModal(`
+      <div class="modal">
+        <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="modal-title heading">❓ Cancel Snapshot ${s.id}?</div>
+        <div class="modal-subtitle">${s.name}</div>
+        <div class="flex-col gap-12 mb-12">
+          <label class="flex items-center gap-8" style="cursor:pointer;">
+            <input type="radio" name="cancel-mode" value="immediate" checked>
+            <span>Cancel ทันที (วันนี้ — ${today})</span>
+          </label>
+          <label class="flex items-center gap-8" style="cursor:pointer;">
+            <input type="radio" name="cancel-mode" value="scheduled">
+            <span>Cancel ในวันที่</span>
+            <input type="date" class="form-input" id="cancel-date" value="${today}" style="max-width:160px;" disabled>
+          </label>
+        </div>
+        <div class="card p-12 text-sm" style="background:var(--surface2);">
+          <div class="font-600 mb-4">หลัง cancel:</div>
+          ${tenantNames.map(n => `<div>• ${n} → ใช้ราคา <strong>Live</strong></div>`).join('')}
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="App.closeModal()">ย้อน</button>
+          <button class="btn btn-danger" id="confirm-cancel"><i class="fa-solid fa-ban"></i> Confirm Cancel</button>
+        </div>
+      </div>
+    `);
+    setTimeout(() => {
+      const dateInput = document.getElementById('cancel-date');
+      document.querySelectorAll('input[name="cancel-mode"]').forEach(r => {
+        r.addEventListener('change', () => { dateInput.disabled = document.querySelector('input[name="cancel-mode"]:checked').value !== 'scheduled'; });
+      });
+      document.getElementById('confirm-cancel').addEventListener('click', () => {
+        const mode = document.querySelector('input[name="cancel-mode"]:checked').value;
+        const cancelDate = mode === 'scheduled' ? dateInput.value : today;
+        if (!cancelDate) { App.toast('กรุณาเลือกวัน', 'error'); return; }
+        const user = (window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system';
+        s.status = 'canceled';
+        s.canceledDate = cancelDate;
+        s.canceledBy = user;
+        if (new Date(cancelDate) < new Date(s.endDate)) s.endDate = cancelDate;
+        s.modifiedDate = today;
+        App.closeModal();
+        App.toast('Cancel ' + s.id + ' สำเร็จ', 'success');
+        this._rerender();
+      });
+    }, 50);
   },
 
   init() {
     const d = window.MockData;
-    const self = window.Pages.costSnapshots;
+    const self = window.Pages.snapshots;
 
-    // ─── Price Locks Filter ───
-    self._renderPriceLocks();
-    const plSearch = document.getElementById('pl-search');
-    const plStatus = document.getElementById('pl-status-filter');
-    if (plSearch) plSearch.addEventListener('input', () => self._renderPriceLocks());
-    if (plStatus) plStatus.addEventListener('change', () => self._renderPriceLocks());
+    self._renderTable();
 
-    // ─── Create Snapshot ───
-    const btnCreateSnapshot = document.getElementById('btn-create-snapshot');
-    if (btnCreateSnapshot) {
-      btnCreateSnapshot.addEventListener('click', () => {
-        window.App.showModal(`
-          <div class="modal modal-wide">
-            <button class="modal-close" onclick="App.closeModal()"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-title heading">สร้าง Pricing Snapshot ใหม่</div>
-            <div class="modal-subtitle">บันทึกสำเนาราคาปัจจุบันเพื่อกำหนดให้ลูกค้าเฉพาะกลุ่ม</div>
-            <div class="flex-col gap-16">
-              <div class="form-group">
-                <label class="form-label">ชื่อ Snapshot</label>
-                <input type="text" class="form-input" id="snap-name" placeholder="เช่น Enterprise Q2 2026">
-              </div>
-              <div class="grid-2 gap-16">
-                <div class="form-group">
-                  <label class="form-label">ประเภท</label>
-                  <select class="form-input" id="snap-type">
-                    <option value="Custom">Custom</option>
-                    <option value="Default">Default</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Global Margin (%)</label>
-                  <input type="number" class="form-input" id="snap-margin" value="${d.marginConfig.global}" step="0.1" min="0" max="99.99">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">ผูกกับ Tenant (ถ้ามี)</label>
-                <select class="form-input" id="snap-tenant">
-                  <option value="">-- ไม่ระบุ (ใช้ทั่วไป) --</option>
-                  ${d.tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-                </select>
-              </div>
-            </div>
-            <div class="modal-actions">
-              <button class="btn btn-outline" onclick="App.closeModal()">ยกเลิก</button>
-              <button class="btn btn-primary" id="modal-submit-snapshot"><i class="fa-solid fa-camera"></i> สร้าง Snapshot</button>
-            </div>
-          </div>
-        `);
+    const bindFilter = (id, key) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(evt, () => { self._filters[key] = el.value; self._renderTable(); });
+    };
+    bindFilter('sn-search', 'search');
+    bindFilter('sn-status-filter', 'status');
 
-        setTimeout(() => {
-          const submitBtn = document.getElementById('modal-submit-snapshot');
-          if (!submitBtn) return;
-          submitBtn.addEventListener('click', () => {
-            const name = document.getElementById('snap-name').value.trim();
-            const type = document.getElementById('snap-type').value;
-            const margin = parseFloat(document.getElementById('snap-margin').value);
-            const tenantId = document.getElementById('snap-tenant').value || null;
+    document.addEventListener('click', function snDelegate(e) {
+      const viewBtn = e.target.closest('.btn-view-snap');
+      const cancelBtn = e.target.closest('.btn-cancel-snap');
+      if (viewBtn) { self._showDetail(viewBtn.getAttribute('data-id')); return; }
+      if (cancelBtn) { self._showCancelModal(cancelBtn.getAttribute('data-id')); return; }
+    }, { once: false });
 
-            if (!name || isNaN(margin)) {
-              App.toast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-              return;
-            }
-
-            const newId = 'SNAP-' + String(d.snapshots.length + 1).padStart(3, '0');
-            const today = new Date().toISOString().split('T')[0];
-
-            d.snapshots.push({
-              id: newId,
-              name: name,
-              type: type,
-              createdDate: today,
-              assignedCustomers: tenantId ? 1 : 0,
-              isActive: true,
-              tenantId: tenantId,
-              data: { globalMargin: margin },
-              modifiedDate: today,
-              modifiedBy: ((window.Auth && Auth.currentUser()) ? Auth.currentUser().email : 'system'),
-            });
-
-            window.App.closeModal();
-            self._rerender();
-          });
-        }, 50);
+    // ─── PriceGuard + Expiration strip toggles ───
+    const pgToggle = document.getElementById('pg-toggle');
+    const pgBody = document.getElementById('pg-body');
+    const pgChev = document.getElementById('pg-chev');
+    if (pgToggle && pgBody) {
+      pgToggle.addEventListener('click', () => {
+        const hidden = pgBody.style.display === 'none';
+        pgBody.style.display = hidden ? 'block' : 'none';
+        if (pgChev) pgChev.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
       });
     }
+    const expToggle = document.getElementById('exp-toggle');
+    const expBody = document.getElementById('exp-body');
+    const expChev = document.getElementById('exp-chev');
+    if (expToggle && expBody) {
+      expToggle.addEventListener('click', () => {
+        const hidden = expBody.style.display === 'none';
+        expBody.style.display = hidden ? 'block' : 'none';
+        if (expChev) expChev.className = hidden ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+      });
+    }
+
+    const btnNew = document.getElementById('btn-new-snapshot');
+    if (btnNew) btnNew.addEventListener('click', () => self._showWizard());
   },
 };
 

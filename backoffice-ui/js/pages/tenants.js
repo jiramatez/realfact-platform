@@ -515,6 +515,62 @@ window.Pages.tenants = {
           ${subs.length === 0 ? '<div class="text-sm text-muted">ไม่มี Subscription</div>' : subRows}
         </div>
 
+        <!-- Active Snapshot (resolver) or Live Price -->
+        ${(() => {
+          const snap = d.resolveSnapshotForTenant(tenantId);
+          const tenantSnaps = d.snapshots.filter(s => s.tenantIds && s.tenantIds.indexOf(tenantId) !== -1);
+          const rem = snap ? d.snapshotDaysRemaining(snap) : null;
+          const snapLink = snap ? `onclick="App.closeModal();setTimeout(()=>{App.navigate('cost-snapshots');setTimeout(()=>window.Pages.snapshots._showDetail('${snap.id}'),200)},100);"` : '';
+          return `
+          <div class="card p-16 mb-16" style="border-left:3px solid ${snap ? 'var(--primary)' : '#6b7280'};">
+            <div class="flex items-center gap-8 mb-12">
+              <i class="fa-solid ${snap ? 'fa-camera' : 'fa-bolt'}" style="color:${snap ? 'var(--primary)' : '#6b7280'}"></i>
+              <span class="font-700 text-sm uppercase">Active Price</span>
+              <span style="margin-left:auto;">${snap ? '<span class="chip chip-blue">📸 Snapshot</span>' : '<span class="chip chip-gray">💱 Live Price</span>'}</span>
+            </div>
+            ${snap ? `
+              <div class="flex items-center justify-between mb-8">
+                <div>
+                  <div class="font-600" style="font-size:15px;cursor:pointer;text-decoration:underline;" ${snapLink}>${snap.name}</div>
+                  <div class="mono text-xs text-dim">${snap.id} · ${snap.startDate} → ${snap.endDate}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="mono font-700" style="font-size:22px;color:${rem !== null && rem <= 30 ? '#f59e0b' : 'var(--text)'};">${rem !== null ? rem + 'd' : '—'}</div>
+                  <div class="text-xs text-muted">เหลือ</div>
+                </div>
+              </div>
+              <div class="p-8" style="background:rgba(59,130,246,0.06);border-radius:6px;">
+                <div class="flex items-center gap-8 text-sm">
+                  <i class="fa-solid fa-list" style="color:var(--primary);"></i>
+                  <span class="font-600">${snap.services.length} services frozen</span>
+                  ${snap.tenantIds.length > 1 ? `<span class="text-muted">· shared กับ ${snap.tenantIds.length - 1} tenants อื่น</span>` : ''}
+                </div>
+              </div>
+            ` : '<div class="text-sm text-muted">ไม่มี Snapshot active — ใช้ <strong>Live Price</strong> (cost × margin ปัจจุบัน)</div>'}
+            ${tenantSnaps.length ? `
+              <div class="mt-10">
+                <div class="text-xs text-muted uppercase mb-6">ประวัติ Snapshot ของ Tenant นี้ (${tenantSnaps.length})</div>
+                ${tenantSnaps.map(sn => `<div class="flex items-center justify-between py-4" style="border-bottom:1px solid var(--border);font-size:12px;">
+                  <div class="flex gap-8 items-center">
+                    <span class="mono">${sn.id}</span>
+                    <span>${sn.name}</span>
+                    ${d.snapshotStatusChip(sn)}
+                  </div>
+                  <div class="text-dim mono">${sn.startDate} → ${sn.endDate}</div>
+                </div>`).join('')}
+              </div>
+            ` : ''}
+            <div class="flex gap-8 mt-12">
+              <button class="btn btn-outline btn-sm" onclick="App.closeModal();setTimeout(()=>{App.navigate('cost-snapshots');setTimeout(()=>window.Pages.snapshots._showWizard(),200)},100);">
+                <i class="fa-solid fa-plus"></i> สร้าง Snapshot ให้ Tenant นี้
+              </button>
+              ${snap ? `<button class="btn btn-outline btn-sm" style="color:var(--error);border-color:var(--error);" onclick="App.closeModal();setTimeout(()=>{App.navigate('cost-snapshots');setTimeout(()=>window.Pages.snapshots._showCancelModal('${snap.id}'),200)},100);">
+                <i class="fa-solid fa-ban"></i> Cancel Snapshot
+              </button>` : ''}
+            </div>
+          </div>`;
+        })()}
+
         <!-- Recent Token Activity -->
         <div class="card p-16 mb-16">
           <div class="flex items-center gap-8 mb-12">

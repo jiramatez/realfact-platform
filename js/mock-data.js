@@ -153,32 +153,32 @@ window.MockData = {
   // type: 'primary' → costPerUnit, 'input' → costPerUnit (input), 'output' → outputCostPerUnit
   sessionUsageLogs: [
     // S-001: 13 min Avatar session
-    { sessionId: 'S-001', serviceCode: 'avatar-session',              type: 'primary', quantity: 13 },
-    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3250 },
-    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1100 },
-    { sessionId: 'S-001', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 26 },
+    { sessionId: 'S-001', serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 13 },
+    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 3250 },
+    { sessionId: 'S-001', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 1100 },
+    { sessionId: 'S-001', serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 26 },
     // S-002: 5 min Avatar session
-    { sessionId: 'S-002', serviceCode: 'avatar-session',              type: 'primary', quantity: 5 },
-    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 1200 },
-    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 480 },
-    { sessionId: 'S-002', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 10 },
+    { sessionId: 'S-002', serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 5 },
+    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 1200 },
+    { sessionId: 'S-002', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 480 },
+    { sessionId: 'S-002', serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 10 },
     // S-004: 27 min Avatar session (long session)
-    { sessionId: 'S-004', serviceCode: 'avatar-session',              type: 'primary', quantity: 27 },
-    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 6750 },
-    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2700 },
-    { sessionId: 'S-004', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 54 },
-    { sessionId: 'S-004', serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 1500 },
+    { sessionId: 'S-004', serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 27 },
+    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 6750 },
+    { sessionId: 'S-004', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 2700 },
+    { sessionId: 'S-004', serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 54 },
+    { sessionId: 'S-004', serviceCode: 'openai-embedding-3-small',    category: 'Text',   variant: 'Input',   quantity: 1500 },
     // S-007: 15 min Avatar session
-    { sessionId: 'S-007', serviceCode: 'avatar-session',              type: 'primary', quantity: 15 },
-    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 3800 },
-    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 1500 },
-    { sessionId: 'S-007', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 30 },
-    { sessionId: 'S-007', serviceCode: 'openai-embedding-3-small',    type: 'input',   quantity: 800 },
+    { sessionId: 'S-007', serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 15 },
+    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 3800 },
+    { sessionId: 'S-007', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 1500 },
+    { sessionId: 'S-007', serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 30 },
+    { sessionId: 'S-007', serviceCode: 'openai-embedding-3-small',    category: 'Text',   variant: 'Input',   quantity: 800 },
     // S-008: 22 min Avatar session
-    { sessionId: 'S-008', serviceCode: 'avatar-session',              type: 'primary', quantity: 22 },
-    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'input',   quantity: 5500 },
-    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', type: 'output',  quantity: 2200 },
-    { sessionId: 'S-008', serviceCode: 'elevenlabs-turbo-v2-5',       type: 'primary', quantity: 44 },
+    { sessionId: 'S-008', serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 22 },
+    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 5500 },
+    { sessionId: 'S-008', serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 2200 },
+    { sessionId: 'S-008', serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 44 },
   ],
 
   // ─── Settlements (auto-generated per completed session) ───
@@ -188,10 +188,10 @@ window.MockData = {
     {
       settlementId: 'STL-20260302-001', sessionId: '53a6cf11-e5ae-4554-9730-bf68b87e1a4f', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 13,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 6.500,  totalSell: 13.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 3250, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.975,  totalSell: 1.573 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 1100, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 1.650,  totalSell: 2.661 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 26,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.988, totalSell: 1.647 },
+        { serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 13,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 6.500,  totalSell: 13.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 3250, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.975,  totalSell: 1.573 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 1100, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 1.650,  totalSell: 2.661 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 26,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.988, totalSell: 1.647 },
       ],
       summary: { totalCost: 10.113, totalSell: 18.881, profit: 8.768, blendedMargin: 46.4, tokensToDeduct: 18.881 },
       createdAt: '2026-03-02T09:28:00Z',
@@ -200,10 +200,10 @@ window.MockData = {
     {
       settlementId: 'STL-20260302-002', sessionId: 'f0bd84ae-7c21-4e88-a3f5-91d2c4e7b530', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 5,    costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 2.500,  totalSell: 5.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 1200, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.360,  totalSell: 0.581 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 480,  costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 0.720,  totalSell: 1.161 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 10,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.380, totalSell: 0.633 },
+        { serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 5,    costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override', sellPerUnit: 1.000000, totalCost: 2.500,  totalSell: 5.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 1200, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.000484, totalCost: 0.360,  totalSell: 0.581 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 480,  costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override', sellPerUnit: 0.002419, totalCost: 0.720,  totalSell: 1.161 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 10,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 0.380, totalSell: 0.633 },
       ],
       summary: { totalCost: 3.960, totalSell: 7.375, profit: 3.415, blendedMargin: 46.3, tokensToDeduct: 7.375 },
       createdAt: '2026-03-02T09:35:00Z',
@@ -212,11 +212,11 @@ window.MockData = {
     {
       settlementId: 'STL-20260302-003', sessionId: '0010c2fe-4b8a-49c3-b6d1-a8e3f5c72d19', tenantId: 'T-005', tenantName: 'Northern Star Hotel', subPlatform: 'avatar', date: '2026-03-02',
       breakdown: [
-        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 27,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 13.500, totalSell: 27.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 6750, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 2.025,  totalSell: 3.267 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 2700, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 4.050,  totalSell: 6.531 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 54,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 2.052,  totalSell: 3.420 },
-        { serviceCode: 'openai-embedding-3-small',    category: 'TEXT',  type: 'input',   quantity: 1500, costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+        { serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 27,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 13.500, totalSell: 27.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 6750, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 2.025,  totalSell: 3.267 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 2700, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 4.050,  totalSell: 6.531 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 54,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 2.052,  totalSell: 3.420 },
+        { serviceCode: 'openai-embedding-3-small',    category: 'Text',   variant: 'Input',   quantity: 1500, costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
       ],
       summary: { totalCost: 21.628, totalSell: 40.219, profit: 18.591, blendedMargin: 46.2, tokensToDeduct: 40.219 },
       createdAt: '2026-03-02T09:12:00Z',
@@ -225,11 +225,11 @@ window.MockData = {
     {
       settlementId: 'STL-20260301-001', sessionId: 'fed2bca2-d914-4a7f-8831-5c0a6e3d91b7', tenantId: 'T-003', tenantName: 'Thai Finance Group', subPlatform: 'avatar', date: '2026-03-01',
       breakdown: [
-        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 15,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 7.500,  totalSell: 15.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 3800, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 1.140,  totalSell: 1.839 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 1500, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 2.250,  totalSell: 3.629 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 30,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 1.140,  totalSell: 1.900 },
-        { serviceCode: 'openai-embedding-3-small',    category: 'TEXT',  type: 'input',   quantity: 800,  costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
+        { serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 15,   costPerUnit: 0.5000,     effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000,   totalCost: 7.500,  totalSell: 15.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 3800, costPerUnit: 0.0003,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484,   totalCost: 1.140,  totalSell: 1.839 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 1500, costPerUnit: 0.0015,     effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419,   totalCost: 2.250,  totalSell: 3.629 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 30,   costPerUnit: 0.0380,     effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333,   totalCost: 1.140,  totalSell: 1.900 },
+        { serviceCode: 'openai-embedding-3-small',    category: 'Text',   variant: 'Input',   quantity: 800,  costPerUnit: 0.0000007,  effectiveMargin: 0.20, marginSource: 'service_override',  sellPerUnit: 0.000000875, totalCost: 0.001, totalSell: 0.001 },
       ],
       summary: { totalCost: 12.031, totalSell: 22.369, profit: 10.338, blendedMargin: 46.2, tokensToDeduct: 22.369 },
       createdAt: '2026-03-01T14:35:00Z',
@@ -238,10 +238,10 @@ window.MockData = {
     {
       settlementId: 'STL-20260301-002', sessionId: 'c57cac11-3b6e-4d92-af18-e7b4a2f8c653', tenantId: 'T-001', tenantName: 'ABC Corporation', subPlatform: 'avatar', date: '2026-03-01',
       breakdown: [
-        { serviceCode: 'avatar-session',              category: 'VIDEO', type: 'primary', quantity: 22,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000, totalCost: 11.000, totalSell: 22.000 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'input',   quantity: 5500, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484, totalCost: 1.650,  totalSell: 2.662 },
-        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'TEXT',  type: 'output',  quantity: 2200, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419, totalCost: 3.300,  totalSell: 5.322 },
-        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'AUDIO', type: 'primary', quantity: 44,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 1.672,  totalSell: 2.787 },
+        { serviceCode: 'avatar-session',              category: 'Video', variant: 'Primary', quantity: 22,   costPerUnit: 0.5000,   effectiveMargin: 0.50, marginSource: 'service_override',  sellPerUnit: 1.000000, totalCost: 11.000, totalSell: 22.000 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   quantity: 5500, costPerUnit: 0.0003,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.000484, totalCost: 1.650,  totalSell: 2.662 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  quantity: 2200, costPerUnit: 0.0015,   effectiveMargin: 0.38, marginSource: 'service_override',  sellPerUnit: 0.002419, totalCost: 3.300,  totalSell: 5.322 },
+        { serviceCode: 'elevenlabs-turbo-v2-5',       category: 'Audio', variant: 'Primary', quantity: 44,   costPerUnit: 0.0380,   effectiveMargin: 0.40, marginSource: 'provider_override', sellPerUnit: 0.063333, totalCost: 1.672,  totalSell: 2.787 },
       ],
       summary: { totalCost: 17.622, totalSell: 32.771, profit: 15.149, blendedMargin: 46.2, tokensToDeduct: 32.771 },
       createdAt: '2026-03-01T16:22:00Z',
@@ -251,8 +251,8 @@ window.MockData = {
   // ─── Safeguard Alerts (ระบบแจ้งเตือนป้องกันขาดทุน) ───
   safeguardAlerts: [
     { id: 'ALT-001', severity: 'critical', status: 'active', icon: 'fa-triangle-exclamation', type: 'package_below_cost', title: 'Token Package ราคาต่ำกว่าต้นทุน', message: 'Package TP-004 (Enterprise 50,000 tkn @ 0.60/tkn) ต่ำกว่า avgCost — อาจขาดทุนทุก Token', action: { label: 'ดู Package Guard', route: 'cost-pricing', section: 'package-guard' }, createdAt: '2026-03-10T08:00:00Z' },
-    { id: 'ALT-002', severity: 'warning', status: 'active', icon: 'fa-arrow-trend-up', type: 'cost_increase_margin_drop', title: 'ต้นทุน Claude Opus 4.5 อาจเพิ่ม → margin ลด', message: 'CCR-001 pending — หากอนุมัติ margin อาจลดลงสำหรับ Snapshot ที่ใช้ service นี้', action: { label: 'ดู Margin Config', route: 'cost-pricing', section: 'margin-config' }, createdAt: '2026-03-10T08:00:00Z' },
-    { id: 'ALT-003', severity: 'critical', status: 'active', icon: 'fa-lock', type: 'price_lock_loss', title: 'PriceLock ทำให้ขาดทุน', message: 'Thai Finance Group — PriceLock ล็อคราคาเดิม แต่ต้นทุนเพิ่ม → ขาดทุน 12.5% อีก 134 วัน', action: { label: 'ดู PriceLock', route: 'cost-pricing', section: 'pricelocks' }, createdAt: '2026-03-10T08:00:00Z' },
+    { id: 'ALT-002', severity: 'warning', status: 'active', icon: 'fa-arrow-trend-up', type: 'cost_increase_margin_drop', title: 'ต้นทุน Claude Opus 4.5 อาจเพิ่ม → margin ลด', message: 'CCR-001 pending — หากอนุมัติ margin อาจลดลงสำหรับ Snapshot ที่ freeze service นี้ไว้', action: { label: 'ดู Margin Config', route: 'cost-pricing', section: 'margin-config' }, createdAt: '2026-03-10T08:00:00Z' },
+    { id: 'ALT-003', severity: 'critical', status: 'active', icon: 'fa-shield-halved', type: 'priceguard_loss', title: 'PriceGuard: Snapshot ทำให้แพลตฟอร์มขาดทุน', message: 'BigCo Enterprise 2025 — ElevenLabs locked sell 0.035 < live cost 0.040 → ขาดทุน 0.005/หน่วย', action: { label: 'ดู PriceGuard', route: 'cost-snapshots', section: 'priceguard' }, createdAt: '2026-03-10T08:00:00Z' },
     { id: 'ALT-004', severity: 'info', status: 'active', icon: 'fa-magnifying-glass-dollar', type: 'retroactive_under_charge', title: 'Session ย้อนหลังหัก Token น้อยกว่าที่ควร', message: 'พบ 2 sessions หักน้อยไป 9.238 Token จากต้นทุนที่เปลี่ยน', action: { label: 'ดู Settlement Log', route: 'cost-pricing', section: 'settlement-log' }, createdAt: '2026-03-10T08:00:00Z' },
   ],
 
@@ -293,16 +293,60 @@ window.MockData = {
   ],
 
   // ─── Cost Config (Service Codes) ───
+  // dimensions: [{category, variant, cost}] — 1..N rows per service (category × variant)
+  // Legacy costPerUnit / outputCostPerUnit เก็บไว้เพื่อ backward-compat (computed from dimensions[0] / output variant)
   costConfig: [
-    // ── Platform ──
-    { serviceCode: 'avatar-session',              name: 'Avatar Session',     provider: 'RealfactAI', model: '-',                     billingType: 'Per Minute',  costPerUnit: 0.50,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
-    // ── LLM ──
-    { serviceCode: 'anthropic-claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic',  model: 'claude-sonnet-4-6',     billingType: 'Per Token',   costPerUnit: 0.003,  outputCostPerUnit: 0.015,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
-    { serviceCode: 'openai-gpt-4o',               name: 'GPT-4o',            provider: 'OpenAI',     model: 'gpt-4o',                billingType: 'Per Token',   costPerUnit: 0.002,  outputCostPerUnit: 0.006,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
-    // ── TTS ──
-    { serviceCode: 'elevenlabs-turbo-v2-5',       name: 'ElevenLabs Turbo',  provider: 'ElevenLabs', model: 'eleven_turbo_v2_5',     billingType: 'Per Request', costPerUnit: 0.04,   currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
-    // ── Embedding ──
-    { serviceCode: 'openai-embedding-3-small',    name: 'Embedding 3 Small', provider: 'OpenAI',     model: 'text-embedding-3-small', billingType: 'Per Token',  costPerUnit: 0.001,  currency: 'THB', effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+    // ── Platform · Video/Primary ──
+    { serviceCode: 'avatar-session', name: 'Avatar Session', provider: 'RealfactAI', model: '-',
+      billingType: 'Per Minute', currency: 'THB',
+      dimensions: [ { category: 'Video', variant: 'Primary', cost: 0.50 } ],
+      costPerUnit: 0.50,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'super@realfact.ai' },
+
+    // ── LLM · Text/Input + Text/Output (2D) ──
+    { serviceCode: 'anthropic-claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'Anthropic', model: 'claude-sonnet-4-6',
+      billingType: 'Per Token', currency: 'THB',
+      dimensions: [
+        { category: 'Text', variant: 'Input',  cost: 0.003 },
+        { category: 'Text', variant: 'Output', cost: 0.015 },
+      ],
+      costPerUnit: 0.003, outputCostPerUnit: 0.015,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+
+    { serviceCode: 'openai-gpt-4o', name: 'GPT-4o', provider: 'OpenAI', model: 'gpt-4o',
+      billingType: 'Per Token', currency: 'THB',
+      dimensions: [
+        { category: 'Text', variant: 'Input',  cost: 0.002 },
+        { category: 'Text', variant: 'Output', cost: 0.006 },
+      ],
+      costPerUnit: 0.002, outputCostPerUnit: 0.006,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+
+    // ── Realtime LLM · Text+Audio × Input+Output (4D) ──
+    { serviceCode: 'openai-gpt-4o-realtime-preview', name: 'GPT-4o Realtime Preview', provider: 'OpenAI', model: 'gpt-4o-realtime-preview',
+      billingType: 'Per Token', currency: 'THB',
+      dimensions: [
+        { category: 'Text',  variant: 'Input',  cost: 0.00001971 },
+        { category: 'Text',  variant: 'Output', cost: 0.00007882 },
+        { category: 'Audio', variant: 'Input',  cost: 0.00032843 },
+        { category: 'Audio', variant: 'Output', cost: 0.00065686 },
+      ],
+      costPerUnit: 0.00001971, outputCostPerUnit: 0.00007882,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+
+    // ── TTS · Audio/Primary ──
+    { serviceCode: 'elevenlabs-turbo-v2-5', name: 'ElevenLabs Turbo', provider: 'ElevenLabs', model: 'eleven_turbo_v2_5',
+      billingType: 'Per Request', currency: 'THB',
+      dimensions: [ { category: 'Audio', variant: 'Primary', cost: 0.04 } ],
+      costPerUnit: 0.04,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
+
+    // ── Embedding · Text/Primary ──
+    { serviceCode: 'openai-embedding-3-small', name: 'Embedding 3 Small', provider: 'OpenAI', model: 'text-embedding-3-small',
+      billingType: 'Per Token', currency: 'THB',
+      dimensions: [ { category: 'Text', variant: 'Primary', cost: 0.001 } ],
+      costPerUnit: 0.001,
+      effectiveDate: '2026-01-01', status: 'Active', modifiedDate: '2026-01-01', modifiedBy: 'admin@realfact.ai' },
   ],
 
   // ─── Margin Config ───
@@ -369,16 +413,97 @@ window.MockData = {
     { id: 'MCR-001', level: 'Service Code', target: 'anthropic-claude-opus-4-5', currentMargin: 35, newMargin: 40, reason: 'ปรับ margin Claude Opus 4.5 เพิ่มตามต้นทุนจริง', status: 'Pending', requestedBy: 'Platform Admin', requestDate: '2026-03-02', requestTime: '10:45', approvedBy: null, modifiedDate: '2026-03-02', modifiedBy: 'admin@realfact.ai' },
   ],
 
-  // ─── Snapshots (M-BE-06 FR39-42) ───
+  // ─── Snapshots (M-BE-06 FR39-43) ───
+  // Every snapshot: freeze cost+sell per service × apply to 1..N tenants × date range (required)
+  // Resolution: has active snapshot covering tenantId → use it / else → Live Price (cost × live margin)
   snapshots: [
-    { id: 'SNAP-DEFAULT', name: 'Default Snapshot (Mar 2026)',  type: 'Default', createdDate: '2026-03-01', assignedCustomers: 40, isActive: true, data: { globalMargin: 30 }, modifiedDate: '2026-03-01', modifiedBy: 'super@realfact.ai' },
-    { id: 'SNAP-001',     name: 'Thai Finance Group — Custom',  type: 'Custom',  createdDate: '2026-01-15', assignedCustomers: 1,  isActive: true, tenantId: 'T-003', data: { globalMargin: 25 }, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
-    { id: 'SNAP-002',     name: 'Hotel Group Bundle',           type: 'Custom',  createdDate: '2026-02-10', assignedCustomers: 2,  isActive: true, tenantId: null,    data: { globalMargin: 20 }, modifiedDate: '2026-02-10', modifiedBy: 'super@realfact.ai' },
-  ],
+    // Active · Thai Finance Group · ends 2026-07-15 (~86 days left from 2026-04-20)
+    { id: 'SNAP-001', name: 'Thai Finance Group Q1-Q2 2026',
+      tenantIds: ['T-003'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.50, sell: 0.75 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   cost: 0.003,  sell: 0.0045  },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  cost: 0.015,  sell: 0.0225  },
+        { serviceCode: 'openai-gpt-4o',               category: 'Text',   variant: 'Input',   cost: 0.002,  sell: 0.0028  },
+        { serviceCode: 'openai-gpt-4o',               category: 'Text',   variant: 'Output',  cost: 0.006,  sell: 0.0084  },
+        { serviceCode: 'elevenlabs-turbo-v2-5', category: 'Audio', variant: 'Primary', cost: 0.04, sell: 0.055 },
+        { serviceCode: 'openai-embedding-3-small', category: 'Text', variant: 'Primary', cost: 0.001, sell: 0.00125 },
+      ],
+      startDate: '2026-01-15', endDate: '2026-07-15',
+      status: 'active',
+      createdDate: '2026-01-15', createdBy: 'super@realfact.ai',
+      modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai'
+    },
 
-  // ─── Price Locks (M-BE-06 FR43) ───
-  priceLocks: [
-    { id: 'PL-LOCK-001', tenantId: 'T-003', tenantName: 'Thai Finance Group', snapshotId: 'SNAP-001', startDate: '2026-01-15', endDate: '2026-07-15', daysRemaining: 134, status: 'Active', notified30d: false, modifiedDate: '2026-01-15', modifiedBy: 'super@realfact.ai' },
+    // Active · BigCo · PriceGuard demo — ElevenLabs locked sell 0.035 < live cost 0.040 (LOSS)
+    // ends 2026-05-13 (~23 days left)
+    { id: 'SNAP-002', name: 'BigCo Enterprise 2025',
+      tenantIds: ['T-001'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.45, sell: 0.70 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   cost: 0.0025, sell: 0.004  },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  cost: 0.012,  sell: 0.018  },
+        { serviceCode: 'elevenlabs-turbo-v2-5', category: 'Audio', variant: 'Primary', cost: 0.03, sell: 0.035 },
+      ],
+      startDate: '2025-05-13', endDate: '2026-05-13',
+      status: 'active',
+      createdDate: '2025-05-13', createdBy: 'super@realfact.ai',
+      modifiedDate: '2025-05-13', modifiedBy: 'super@realfact.ai'
+    },
+
+    // Active · Multi-tenant Hotel Group Bundle
+    { id: 'SNAP-003', name: 'Hotel Group Bundle',
+      tenantIds: ['T-005', 'T-006'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.50, sell: 0.625 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   cost: 0.003, sell: 0.00428 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  cost: 0.015, sell: 0.0214  },
+      ],
+      startDate: '2026-02-10', endDate: '2026-08-10',
+      status: 'active',
+      createdDate: '2026-02-10', createdBy: 'super@realfact.ai',
+      modifiedDate: '2026-02-10', modifiedBy: 'super@realfact.ai'
+    },
+
+    // Scheduled · Future · StartupX pilot (not yet active)
+    { id: 'SNAP-004', name: 'StartupX Pilot 60d',
+      tenantIds: ['T-004'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.50, sell: 0.65 },
+        { serviceCode: 'openai-gpt-4o',               category: 'Text',   variant: 'Input',   cost: 0.002, sell: 0.003 },
+        { serviceCode: 'openai-gpt-4o',               category: 'Text',   variant: 'Output',  cost: 0.006, sell: 0.009 },
+      ],
+      startDate: '2026-05-01', endDate: '2026-06-30',
+      status: 'scheduled',
+      createdDate: '2026-04-15', createdBy: 'super@realfact.ai',
+      modifiedDate: '2026-04-15', modifiedBy: 'super@realfact.ai'
+    },
+
+    // Expired · Thai Finance predecessor
+    { id: 'SNAP-000', name: 'Thai Finance Group Q4 2025',
+      tenantIds: ['T-003'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.48, sell: 0.72 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Input',   cost: 0.003, sell: 0.0046 },
+        { serviceCode: 'anthropic-claude-sonnet-4-6', category: 'Text',   variant: 'Output',  cost: 0.015, sell: 0.023  },
+      ],
+      startDate: '2025-10-01', endDate: '2026-01-14',
+      status: 'expired',
+      createdDate: '2025-10-01', createdBy: 'super@realfact.ai',
+      modifiedDate: '2026-01-14', modifiedBy: 'super@realfact.ai'
+    },
+
+    // Canceled · Hospital trial (canceled by admin before expiry)
+    { id: 'SNAP-005', name: 'Metro Hospital Trial',
+      tenantIds: ['T-007'],
+      services: [
+        { serviceCode: 'avatar-session', category: 'Video', variant: 'Primary', cost: 0.50, sell: 0.60 },
+      ],
+      startDate: '2026-02-01', endDate: '2026-05-01',
+      status: 'canceled', canceledDate: '2026-03-15', canceledBy: 'super@realfact.ai',
+      createdDate: '2026-02-01', createdBy: 'super@realfact.ai',
+      modifiedDate: '2026-03-15', modifiedBy: 'super@realfact.ai'
+    },
   ],
 
   // ─── Avatar Defaults (A-FR37-40) ───
@@ -894,6 +1019,142 @@ window.MockData = {
     const cls = map[status] || 'chip-gray';
     const label = this._thaiStatusMap[status] || status;
     return `<span class="chip ${cls}">${label}</span>`;
+  },
+
+  // ─── Snapshot + Live Price + PriceGuard ───
+  // Resolution: active snapshot covers tenant → use frozen price / else → Live Price
+  isSnapshotActive(s, at) {
+    if (!s || s.status !== 'active') return false;
+    const now = at instanceof Date ? at : (at ? new Date(at) : new Date());
+    const start = new Date(s.startDate);
+    const end = new Date(s.endDate);
+    return now >= start && now <= end;
+  },
+  snapshotDaysRemaining(s, at) {
+    if (!s || !s.endDate) return null;
+    const now = at instanceof Date ? at : (at ? new Date(at) : new Date());
+    const end = new Date(s.endDate);
+    return Math.max(0, Math.ceil((end - now) / 86400000));
+  },
+  snapshotDaysUsed(s, at) {
+    if (!s || !s.startDate) return null;
+    const now = at instanceof Date ? at : (at ? new Date(at) : new Date());
+    const start = new Date(s.startDate);
+    return Math.max(0, Math.ceil((now - start) / 86400000));
+  },
+  resolveSnapshotForTenant(tenantId, at) {
+    if (!tenantId) return null;
+    return this.snapshots.find(s =>
+      s.status === 'active' &&
+      s.tenantIds && s.tenantIds.indexOf(tenantId) !== -1 &&
+      this.isSnapshotActive(s, at)
+    ) || null;
+  },
+  // Live margin for a service (mirrors settlement marginSource logic)
+  liveMarginFor(serviceCode) {
+    const mc = this.marginConfig || { global: 30, providers: [], serviceCodes: [] };
+    const svc = (mc.serviceCodes || []).find(s => s.code === serviceCode);
+    if (svc) return svc.margin;
+    const costEntry = (this.costConfig || []).find(c => c.serviceCode === serviceCode);
+    if (costEntry) {
+      const prov = (mc.providers || []).find(p => p.name === costEntry.provider);
+      if (prov) return prov.margin;
+    }
+    return mc.global || 30;
+  },
+  // Returns the service's dimension list [{category, variant, cost}]
+  // Falls back to legacy costPerUnit / outputCostPerUnit when dimensions[] is absent
+  serviceDimensions(serviceCode) {
+    const c = (this.costConfig || []).find(x => x.serviceCode === serviceCode);
+    if (!c) return [];
+    if (c.dimensions && c.dimensions.length) return c.dimensions.slice();
+    if (typeof c.outputCostPerUnit === 'number') {
+      return [
+        { category: 'Text', variant: 'Input',  cost: c.costPerUnit },
+        { category: 'Text', variant: 'Output', cost: c.outputCostPerUnit },
+      ];
+    }
+    return [{ category: 'Primary', variant: 'Primary', cost: c.costPerUnit }];
+  },
+  // getLivePrice(code) → primary/first dim · getLivePrice(code, category, variant) → specific dim
+  getLivePrice(serviceCode, category, variant) {
+    const dims = this.serviceDimensions(serviceCode);
+    if (!dims.length) return null;
+    let dim;
+    if (category || variant) {
+      dim = dims.find(d => (!category || d.category === category) && (!variant || d.variant === variant));
+    } else {
+      dim = dims[0];
+    }
+    if (!dim) return null;
+    const margin = this.liveMarginFor(serviceCode);
+    const sell = margin > 0 ? dim.cost / (1 - margin / 100) : dim.cost;
+    return { cost: dim.cost, sell, margin, source: 'live', category: dim.category, variant: dim.variant };
+  },
+  getPriceForTenant(tenantId, serviceCode, category, variant, at) {
+    const snap = this.resolveSnapshotForTenant(tenantId, at);
+    if (snap) {
+      const line = (snap.services || []).find(sv =>
+        sv.serviceCode === serviceCode &&
+        (!category || sv.category === category) &&
+        (!variant || sv.variant === variant)
+      );
+      if (line) return { cost: line.cost, sell: line.sell, source: 'snapshot', snapshotId: snap.id, snapshotName: snap.name, category: line.category, variant: line.variant };
+    }
+    return this.getLivePrice(serviceCode, category, variant);
+  },
+  getExpiringSnapshots(daysThreshold, at) {
+    const threshold = (typeof daysThreshold === 'number') ? daysThreshold : 30;
+    return this.snapshots.filter(s => {
+      if (s.status !== 'active') return false;
+      const rem = this.snapshotDaysRemaining(s, at);
+      return rem !== null && rem > 0 && rem <= threshold;
+    }).sort((a, b) => this.snapshotDaysRemaining(a, at) - this.snapshotDaysRemaining(b, at));
+  },
+  // Find any active/scheduled snapshots overlapping the given tenants+range
+  // PriceGuard: detect snapshots where live cost exceeds locked sell (platform losing)
+  // or where margin is shrinking significantly
+  // PriceGuard: only alert when live cost exceeds locked sell (actual loss).
+  // Margin shrink warnings removed — platform still profits until live cost > sell.
+  getPriceGuardAlerts(at) {
+    const alerts = [];
+    this.snapshots.filter(s => this.isSnapshotActive(s, at)).forEach(s => {
+      (s.services || []).forEach(svc => {
+        const meta = (this.costConfig || []).find(c => c.serviceCode === svc.serviceCode);
+        if (!meta) return;
+        const cat = svc.category || 'Primary';
+        const vrt = svc.variant || 'Primary';
+        const dims = this.serviceDimensions(svc.serviceCode);
+        const liveDim = dims.find(d => d.category === cat && d.variant === vrt);
+        if (!liveDim) return;
+        const liveCost = liveDim.cost;
+        if (liveCost > svc.sell) {
+          const loss = liveCost - svc.sell;
+          alerts.push({
+            snapshotId: s.id, snapshotName: s.name,
+            tenantIds: s.tenantIds.slice(),
+            serviceCode: svc.serviceCode, serviceName: meta.name,
+            category: cat, variant: vrt,
+            lockedCost: svc.cost, lockedSell: svc.sell, liveCost,
+            lossPerUnit: loss,
+            lossPct: svc.sell > 0 ? (loss / svc.sell) * 100 : 0,
+            daysRemaining: this.snapshotDaysRemaining(s, at),
+          });
+        }
+      });
+    });
+    return alerts.sort((a, b) => (b.lossPerUnit || 0) - (a.lossPerUnit || 0));
+  },
+  snapshotStatusChip(s) {
+    if (!s) return '';
+    const map = {
+      active:    'chip-green',
+      scheduled: 'chip-blue',
+      expired:   'chip-gray',
+      canceled:  'chip-red',
+    };
+    const labels = { active: 'Active', scheduled: 'Scheduled', expired: 'Expired', canceled: 'Canceled' };
+    return `<span class="chip ${map[s.status] || 'chip-gray'}">${labels[s.status] || s.status}</span>`;
   },
 
   // ═══════════════════════════════════════════════════════════════
