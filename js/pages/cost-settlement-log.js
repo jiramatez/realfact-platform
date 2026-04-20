@@ -368,7 +368,7 @@
                       <tr>
                         <td class="mono text-sm font-600">${b.serviceCode}</td>
                         <td>${categoryChip(b.category)}</td>
-                        <td><span class="chip chip-gray text-xs">${b.type.toUpperCase()}</span></td>
+                        <td><span class="chip chip-gray text-xs">${(b.variant || '-').toUpperCase()}</span></td>
                         <td class="mono">${d.formatNumber(b.quantity)}</td>
                         <td class="mono text-sm">${b.costPerUnit.toFixed(4)}</td>
                         <td class="mono font-600">${(b.effectiveMargin * 100).toFixed(0)}%</td>
